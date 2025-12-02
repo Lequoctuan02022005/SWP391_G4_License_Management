@@ -4,11 +4,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class  G5LicenseManagementSystemApplication {
+public class G4LicenseManagementSystemApplication {
 
     public static void main(String[] args) {
 
-        SpringApplication.run(G5LicenseManagementSystemApplication.class, args);
+        SpringApplication.run(G4LicenseManagementSystemApplication.class, args);
         System.out.println("📂 Working directory = " + System.getProperty("user.dir"));
     }
 

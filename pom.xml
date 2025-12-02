@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>swp391.fa25.lms</groupId>
-    <artifactId>G5-License-Management-System</artifactId>
+    <artifactId>G4-License-Management-System</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>G5-License-Management-System</name>
-    <description>G5-License-Management-System</description>
+    <name>G4-License-Management-System</name>
+    <description>G4-License-Management-System</description>
     <url/>
     <licenses>
         <license/>
