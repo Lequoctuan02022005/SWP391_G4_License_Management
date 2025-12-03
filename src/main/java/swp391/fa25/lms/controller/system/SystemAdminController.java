@@ -11,7 +11,7 @@ import swp391.fa25.lms.service.AccountService;
 import javax.sql.DataSource;
 
 @Controller
-@RequestMapping("/admin/accounts")
+@RequestMapping("/templates/admin/accounts")
 public class SystemAdminController {
 
     @Autowired
@@ -41,7 +41,7 @@ public class SystemAdminController {
 
         model.addAttribute("keyword", keyword);
 
-        return "admin/account-list";
+        return "templates/admin/account-list";
     }
 
 
@@ -49,7 +49,7 @@ public class SystemAdminController {
     public String createForm(Model model) {
         model.addAttribute("account", new Account());
         model.addAttribute("roles", roleRepository.findAll());
-        return "admin/account-create";
+        return "templates/admin/account-create";
     }
 
     @PostMapping("/create")
@@ -70,7 +70,7 @@ public class SystemAdminController {
         model.addAttribute("account", acc);
         model.addAttribute("roles", roleRepository.findAll());
 
-        return "admin/account-edit";
+        return "templates/admin/account-edit";
     }
 
     @PostMapping("/edit/{id}")
