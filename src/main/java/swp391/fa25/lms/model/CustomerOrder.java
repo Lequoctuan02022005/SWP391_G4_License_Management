@@ -18,7 +18,7 @@ public class CustomerOrder {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", nullable = false)
     @JsonIgnoreProperties({
-            "orders", "wallet", "favorites", "feedbacks", "tools"
+            "orders", "favorites", "feedbacks", "tools"
     })
     private Account account;
 
@@ -42,12 +42,12 @@ public class CustomerOrder {
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
-    public enum PaymentMethod { WALLET, BANK, PAYPAL }
+    public enum PaymentMethod { BANK }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id")
-    @JsonIgnoreProperties({"wallet", "customerOrders", "licenseRenewLogs"})
-    private WalletTransaction transaction;
+    @JsonIgnoreProperties({"orders", "renewLogs", "account", "vnpayDetail"})
+    private PaymentTransaction transaction;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -70,7 +70,7 @@ public class CustomerOrder {
     public CustomerOrder() {
     }
 
-    public CustomerOrder(Long orderId, Account account, Tool tool, License license, Double price, OrderStatus orderStatus, PaymentMethod paymentMethod, WalletTransaction transaction, LocalDateTime createdAt, LicenseAccount licenseAccount) {
+    public CustomerOrder(Long orderId, Account account, Tool tool, License license, Double price, OrderStatus orderStatus, PaymentMethod paymentMethod, PaymentTransaction transaction, LocalDateTime createdAt, LicenseAccount licenseAccount) {
         this.orderId = orderId;
         this.account = account;
         this.tool = tool;
@@ -173,11 +173,11 @@ public class CustomerOrder {
         this.paymentMethod = paymentMethod;
     }
 
-    public WalletTransaction getTransaction() {
+    public PaymentTransaction getTransaction() {
         return transaction;
     }
 
-    public void setTransaction(WalletTransaction transaction) {
+    public void setTransaction(PaymentTransaction transaction) {
         this.transaction = transaction;
     }
 

@@ -14,7 +14,7 @@ public class Favorite {
 
     @ManyToOne
     @JoinColumn(name = "account_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"favorites", "tools", "wallet", "orders"})
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"favorites", "tools", "orders"})
     private Account account;
 
     @ManyToOne
