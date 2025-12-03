@@ -1,0 +1,14 @@
+package swp391.fa25.lms.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import swp391.fa25.lms.model.Role;
+import swp391.fa25.lms.model.Role.RoleName;
+
+import java.util.Optional;
+
+@Repository
+public interface RoleRepository extends JpaRepository<Role, Integer> {
+    Optional<Role> findByRoleName(RoleName roleName);
+    boolean existsByRoleName(RoleName roleName);
+}
