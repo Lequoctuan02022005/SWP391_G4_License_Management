@@ -22,6 +22,11 @@ public class AccountService {
         return accountRepository.findById(id).orElse(null);
     }
 
+    public List<Account> search(String keyword) {
+        return accountRepository.search(keyword);
+    }
+
+
     public Account create(Account account) {
 
         if (accountRepository.existsByEmail(account.getEmail())) {

@@ -8,6 +8,8 @@ import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.repository.RoleRepository;
 import swp391.fa25.lms.service.AccountService;
 
+import javax.sql.DataSource;
+
 @Controller
 @RequestMapping("/admin/accounts")
 public class SystemAdminController {
@@ -18,12 +20,30 @@ public class SystemAdminController {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private DataSource dataSource;
+
+    @GetMapping("/debug-db")
+    @ResponseBody
+    public String debugDB() throws Exception {
+        return "Connected DB = " + dataSource.getConnection().getCatalog();
+    }
+
 
     @GetMapping
-    public String listAccounts(Model model) {
-        model.addAttribute("accounts", accountService.getAll());
-        return "admin/account-list";  // ➜ view Thymeleaf
+    public String listAccounts(@RequestParam(required = false) String keyword, Model model) {
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            model.addAttribute("accounts", accountService.search(keyword.trim()));
+        } else {
+            model.addAttribute("accounts", accountService.getAll());
+        }
+
+        model.addAttribute("keyword", keyword);
+
+        return "admin/account-list";
     }
+
 
     @GetMapping("/create")
     public String createForm(Model model) {

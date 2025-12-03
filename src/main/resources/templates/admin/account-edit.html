@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Account</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+</head>
+
+<body class="bg-light">
+<div class="container mt-5">
+    <h2 class="fw-bold mb-4">Edit Account</h2>
+
+    <form th:action="@{'/admin/accounts/edit/' + ${account.accountId}}" method="post"
+          class="card p-4 shadow-sm">
+
+        <input type="hidden" th:value="${account.accountId}" name="accountId"/>
+
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="text" class="form-control" th:value="${account.email}" name="email" required/>
+        </div>
+
+        <div class="mb-3">
+            <label>Full Name</label>
+            <input type="text" class="form-control" th:value="${account.fullName}"
+                   name="fullName" required/>
+        </div>
+
+        <div class="mb-3">
+            <label>Phone</label>
+            <input type="text" class="form-control" th:value="${account.phone}" name="phone"/>
+        </div>
+
+        <div class="mb-3">
+            <label>Address</label>
+            <input type="text" class="form-control" th:value="${account.address}" name="address"/>
+        </div>
+
+        <div class="mb-3">
+            <label>Status</label>
+            <select name="status" class="form-select">
+                <option value="ACTIVE"
+                        th:selected="${account.status == T(swp391.fa25.lms.model.Account.AccountStatus).ACTIVE}">
+                    ACTIVE
+                </option>
+                <option value="DEACTIVATED"
+                        th:selected="${account.status == T(swp391.fa25.lms.model.Account.AccountStatus).DEACTIVATED}">
+                    DEACTIVATED
+                </option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Role</label>
+            <select class="form-select" name="role.roleId">
+                <option th:each="r : ${roles}"
+                        th:value="${r.roleId}"
+                        th:text="${r.roleName}"
+                        th:selected="${account.role != null && account.role.roleId == r.roleId}">
+                </option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="/admin/accounts" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+</body>
+</html>
