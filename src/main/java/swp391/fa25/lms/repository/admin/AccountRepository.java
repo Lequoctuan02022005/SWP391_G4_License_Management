@@ -1,5 +1,7 @@
-package swp391.fa25.lms.repository;
+package swp391.fa25.lms.repository.admin;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,7 +22,5 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             "OR a.fullName LIKE %:keyword% " +
             "OR a.phone LIKE %:keyword% " +
             "OR a.address LIKE %:keyword%")
-    List<Account> search(@Param("keyword") String keyword);
-
-
+    Page<Account> searchPage(@Param("keyword") String keyword, Pageable pageable);
 }

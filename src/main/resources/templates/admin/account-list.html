@@ -24,7 +24,7 @@
             <button class="btn btn-outline-primary">Search</button>
         </form>
 
-        <a href="/templates/admin/accounts/create" class="btn btn-primary">
+        <a href="/admin/accounts/create" class="btn btn-primary">
             + Create New Account
         </a>
     </div>
@@ -88,6 +88,38 @@
     </div>
 
 </div>
+
+<nav>
+    <ul class="pagination justify-content-center">
+
+        <!-- Previous -->
+        <li th:classappend="${currentPage == 0} ? 'disabled'" class="page-item">
+            <a class="page-link"
+               th:href="@{'/admin/accounts?page=' + ${currentPage - 1} + '&keyword=' + ${keyword}}">
+                Previous
+            </a>
+        </li>
+
+        <!-- Page numbers -->
+        <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+            th:classappend="${i == currentPage} ? 'active'" class="page-item">
+
+            <a class="page-link"
+               th:text="${i + 1}"
+               th:href="@{'/admin/accounts?page=' + ${i} + '&keyword=' + ${keyword}}">
+            </a>
+        </li>
+
+        <!-- Next -->
+        <li th:classappend="${currentPage + 1 == totalPages} ? 'disabled'" class="page-item">
+            <a class="page-link"
+               th:href="@{'/admin/accounts?page=' + ${currentPage + 1} + '&keyword=' + ${keyword}}">
+                Next
+            </a>
+        </li>
+
+    </ul>
+</nav>
 
 </body>
 </html>

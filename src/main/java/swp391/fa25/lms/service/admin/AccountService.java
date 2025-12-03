@@ -1,9 +1,11 @@
-package swp391.fa25.lms.service;
+package swp391.fa25.lms.service.admin;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import swp391.fa25.lms.model.Account;
-import swp391.fa25.lms.repository.AccountRepository;
+import swp391.fa25.lms.repository.admin.AccountRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,16 +16,16 @@ public class AccountService {
     @Autowired
     private AccountRepository accountRepository;
 
-    public List<Account> getAll() {
-        return accountRepository.findAll();
+    public Page<Account> getAll(Pageable pageable) {
+        return accountRepository.findAll(pageable);
     }
 
     public Account getById(Long id) {
         return accountRepository.findById(id).orElse(null);
     }
 
-    public List<Account> search(String keyword) {
-        return accountRepository.search(keyword);
+    public Page<Account> search(String keyword, Pageable pageable) {
+        return accountRepository.searchPage(keyword, pageable);
     }
 
 

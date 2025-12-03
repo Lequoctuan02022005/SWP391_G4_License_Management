@@ -30,6 +30,11 @@
         <div class="mb-3">
             <label>Phone</label>
             <input type="text" class="form-control" th:value="${account.phone}" name="phone"/>
+
+            <div class="text-danger mt-1"
+                 th:if="${#fields.hasErrors('phone')}"
+                 th:errors="*{phone}">
+            </div>
         </div>
 
         <div class="mb-3">
@@ -63,7 +68,7 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Save</button>
-        <a href="/templates/admin/accounts" class="btn btn-secondary">Cancel</a>
+        <a href="/admin/accounts" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 </body>
