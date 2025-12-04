@@ -11,4 +11,5 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
             "c.categoryName LIKE %?1% OR " +
             "c.description LIKE %?1%")
     List<Category> search(String keyword);
+    List<Category> findByStatus(Category.Status status);
 }
