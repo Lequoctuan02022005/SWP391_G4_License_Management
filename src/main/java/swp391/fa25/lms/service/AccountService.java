@@ -5,6 +5,8 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -412,6 +414,75 @@ public class AccountService {
         sendVerificationCode(account, code);
 
         return account;
+    }
+
+    //admin_crud account
+    public Page<Account> getAll(Pageable pageable) {
+        return accountRepo.findAll(pageable);
+    }
+
+    public Account getById(Long id) {
+        return accountRepo.findById(id).orElse(null);
+    }
+
+    public Page<Account> search(String keyword, Pageable pageable) {
+        return accountRepo.search(keyword,null, pageable);
+    }
+
+
+    public Account create(Account account) {
+
+        if (accountRepo.existsByEmail(account.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        // SET ROLE từ roleId được form submit lên
+        if (account.getRole() != null && account.getRole().getRoleId() != null) {
+            Role role = roleRepository.findById(account.getRole().getRoleId())
+                    .orElseThrow(() -> new RuntimeException("Role not found"));
+            account.setRole(role);
+        }
+
+        account.setCreatedAt(LocalDateTime.now());
+        account.setUpdatedAt(LocalDateTime.now());
+
+        if (account.getStatus() == null) {
+            account.setStatus(Account.AccountStatus.ACTIVE);
+        }
+
+        return accountRepo.save(account);
+    }
+
+
+    public Account update(Long id, Account updated) {
+        Account acc = accountRepo.findById(id).orElse(null);
+        if (acc == null) return null;
+
+        acc.setEmail(updated.getEmail());
+        acc.setFullName(updated.getFullName());
+        acc.setPhone(updated.getPhone());
+        acc.setAddress(updated.getAddress());
+        acc.setStatus(updated.getStatus());
+        acc.setUpdatedAt(LocalDateTime.now());
+
+        // FIX: Load role FROM DB thay vì gán object rỗng
+        if (updated.getRole() != null && updated.getRole().getRoleId() != null) {
+            Role role = roleRepository.findById(updated.getRole().getRoleId())
+                    .orElse(null);
+            acc.setRole(role);
+        }
+
+        // KHÔNG update password tại đây
+        return accountRepo.save(acc);
+    }
+
+
+    public void delete(Long id) {
+        accountRepo.deleteById(id);
+    }
+
+    public boolean emailExists(String email) {
+        return accountRepo.existsByEmail(email);
     }
 
 }

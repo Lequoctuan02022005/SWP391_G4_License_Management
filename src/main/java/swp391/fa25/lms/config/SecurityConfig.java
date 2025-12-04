@@ -20,30 +20,40 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//        http
+//                .csrf(csrf -> csrf.disable())
+//                .authorizeHttpRequests(auth -> auth
+//                        // CHO PHÉP TRUY CẬP TRANG CHỦ VÀ LOGIN KHÔNG CẦN ĐĂNG NHẬP
+//                        .requestMatchers("/", "/home", "/home/**", "/css/**", "/js/**", "/images/**", "/login", "/register", "/error").permitAll()
+//
+//                        // Các trang cần quyền
+//                        .requestMatchers("/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/mod/**").hasRole("MODERATOR")
+//                        .requestMatchers("/seller/**").hasRole("SELLER")
+//
+//                        // Còn lại phải login
+//                        .anyRequest().authenticated()
+//                )
+//                .formLogin(form -> form
+//                        .loginPage("/login")
+//                        // QUAN TRỌNG: bỏ "true" đi → chỉ redirect khi login thành công, không redirect khi chưa login
+//                        .defaultSuccessUrl("/home")     // <-- bỏ ", true"
+//                        .permitAll()
+//                )
+//                .logout(logout -> logout
+//                        .logoutSuccessUrl("/login")
+//                        .permitAll()
+//                );
+//
+//        return http.build();
+
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // CHO PHÉP TRUY CẬP TRANG CHỦ VÀ LOGIN KHÔNG CẦN ĐĂNG NHẬP
-                        .requestMatchers("/", "/home", "/home/**", "/css/**", "/js/**", "/images/**", "/login", "/register", "/error").permitAll()
-
-                        // Các trang cần quyền
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/mod/**").hasRole("MODERATOR")
-                        .requestMatchers("/seller/**").hasRole("SELLER")
-
-                        // Còn lại phải login
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()  // <-- Cho tất cả vào, KHÔNG redirect login
                 )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        // QUAN TRỌNG: bỏ "true" đi → chỉ redirect khi login thành công, không redirect khi chưa login
-                        .defaultSuccessUrl("/home")     // <-- bỏ ", true"
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/login")
-                        .permitAll()
-                );
+                .formLogin(form -> form.disable()) // <-- Tắt luôn login form
+                .logout(logout -> logout.disable()); // <-- Tắt logout
 
         return http.build();
     }
