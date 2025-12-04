@@ -15,7 +15,7 @@ public class CategoryService {
 
     public List<Category> getAll() {
         return repo.findAll();
-    }//chưa lấy status
+    }
 
     public Category getById(Long id) {
         return repo.findById(id).orElse(null);
