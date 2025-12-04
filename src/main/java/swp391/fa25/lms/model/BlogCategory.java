@@ -115,6 +115,11 @@ public class BlogCategory {
         this.blogCategoryId = blogCategoryId;
     }
 
+    // Alias getter for DTO mapping
+    public Long getCategoryId() {
+        return blogCategoryId;
+    }
+
     public String getCategoryName() {
         return categoryName;
     }
