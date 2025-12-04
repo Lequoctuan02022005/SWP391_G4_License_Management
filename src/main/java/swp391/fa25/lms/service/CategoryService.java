@@ -13,9 +13,9 @@ public class CategoryService {
     @Autowired
     private CategoryRepository repo;
 
-    public List<Category> getAll() {
-        return repo.findAll();
-    }//chưa lấy status
+    public List<Category> getAllCategories() {
+        return repo.findByStatus(Category.Status.ACTIVE);
+    }
 
     public Category getById(Long id) {
         return repo.findById(id).orElse(null);
