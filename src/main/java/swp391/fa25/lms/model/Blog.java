@@ -126,6 +126,18 @@ public class Blog {
     private String generateSlug(String title) {
         if (title == null) return "";
         
+        String baseSlug = toSlug(title);
+        // Add timestamp to ensure uniqueness
+        return baseSlug + "-" + System.currentTimeMillis();
+    }
+
+    /**
+     * Public static method to convert Vietnamese text to slug
+     * Used by both entity and service layer
+     */
+    public static String toSlug(String title) {
+        if (title == null) return "";
+        
         // Convert Vietnamese to ASCII
         String slug = title.toLowerCase();
         
@@ -144,8 +156,7 @@ public class Blog {
                    .replaceAll("-+", "-")
                    .trim();
         
-        // Add timestamp to ensure uniqueness
-        return slug + "-" + System.currentTimeMillis();
+        return slug;
     }
 
     public boolean isDraft() {
