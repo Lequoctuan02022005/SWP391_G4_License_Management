@@ -5,6 +5,8 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -412,6 +414,63 @@ public class AccountService {
         sendVerificationCode(account, code);
 
         return account;
+    }
+
+    //admin_crud account
+    public Page<Account> getAll(Pageable pageable) {
+        return accountRepo.findAll(pageable);
+    }
+
+    public Account getById(Long id) {
+        return accountRepo.findById(id).orElse(null);
+    }
+
+    public Page<Account> search(String keyword, Pageable pageable) {
+        return accountRepo.search(keyword,null, pageable);
+    }
+
+
+    public Account create(Account account) {
+
+        if (accountRepo.existsByEmail(account.getEmail())) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        account.setCreatedAt(LocalDateTime.now());
+        account.setUpdatedAt(LocalDateTime.now());
+
+        if (account.getStatus() == null) {
+            account.setStatus(Account.AccountStatus.ACTIVE);
+        }
+
+        return accountRepo.save(account);
+    }
+
+    public Account update(Long id, Account updated) {
+        Account acc = accountRepo.findById(id).orElse(null);
+        if (acc == null) return null;
+
+        acc.setEmail(updated.getEmail());
+        acc.setFullName(updated.getFullName());
+        acc.setPhone(updated.getPhone());
+        acc.setAddress(updated.getAddress());
+        acc.setRole(updated.getRole());
+        acc.setStatus(updated.getStatus());
+        acc.setUpdatedAt(LocalDateTime.now());
+
+        if (updated.getPassword() != null && !updated.getPassword().isBlank()) {
+            acc.setPassword(updated.getPassword());
+        }
+
+        return accountRepo.save(acc);
+    }
+
+    public void delete(Long id) {
+        accountRepo.deleteById(id);
+    }
+
+    public boolean emailExists(String email) {
+        return accountRepo.existsByEmail(email);
     }
 
 }

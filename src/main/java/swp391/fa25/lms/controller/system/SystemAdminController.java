@@ -11,9 +11,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Role;
-import swp391.fa25.lms.repository.admin.RoleRepository;
-import swp391.fa25.lms.service.admin.AccountService;
-import swp391.fa25.lms.service.admin.RoleService;
+import swp391.fa25.lms.repository.RoleRepository;
+import swp391.fa25.lms.service.RoleService;
+import swp391.fa25.lms.service.AccountService;
 
 import javax.sql.DataSource;
 

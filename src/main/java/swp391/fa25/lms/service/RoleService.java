@@ -1,13 +1,11 @@
-package swp391.fa25.lms.service.admin;
+package swp391.fa25.lms.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import swp391.fa25.lms.model.Role;
-import swp391.fa25.lms.repository.admin.RoleRepository;
-
-import java.util.List;
+import swp391.fa25.lms.repository.RoleRepository;
 
 @Service
 public class RoleService {
