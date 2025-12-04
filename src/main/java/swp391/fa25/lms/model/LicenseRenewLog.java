@@ -23,7 +23,7 @@ public class LicenseRenewLog {
 
     @ManyToOne
     @JoinColumn(name = "transaction_id")
-    private WalletTransaction transaction;
+    private PaymentTransaction transaction;
 
     public Long getRenewLogId() {
         return renewLogId;
@@ -65,11 +65,11 @@ public class LicenseRenewLog {
         this.amountPaid = amountPaid;
     }
 
-    public WalletTransaction getTransaction() {
+    public PaymentTransaction getTransaction() {
         return transaction;
     }
 
-    public void setTransaction(WalletTransaction transaction) {
+    public void setTransaction(PaymentTransaction transaction) {
         this.transaction = transaction;
     }
 }
