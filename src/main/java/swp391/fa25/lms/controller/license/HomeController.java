@@ -15,7 +15,7 @@ public class HomeController {
     private final CategoryService categoryService;
     @GetMapping("/")
     public String root() {
-        return "redirect:/home";   // Điều hướng localhost:7070 cũng vào home
+        return "redirect:/home";   // Điều hướng tới localhost:7070 cũng vào home
     }
     @GetMapping
     public String home(Model model) {
