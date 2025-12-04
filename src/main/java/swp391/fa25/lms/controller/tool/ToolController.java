@@ -2,7 +2,6 @@ package swp391.fa25.lms.controller.tool;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +15,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 
 @Controller
-@RequestMapping("/mod/tools")
-@PreAuthorize("hasRole('MODERATOR')")
+@RequestMapping("/tools")
 public class ToolController {
 
     @Autowired
@@ -27,9 +25,9 @@ public class ToolController {
     private ToolReportRepository reportRepo;
 
 
-    //  1. LIST PENDING TOOL UPLOADS
-    // Route: /mod/tools/uploads
-    @GetMapping("/uploads")
+
+    // 1. LIST PENDING TOOL UPLOADS
+    @GetMapping("/mod/uploads")
     public String listPendingUploads(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") int page,
@@ -47,10 +45,9 @@ public class ToolController {
         return "mod/tool-upload-list";
     }
 
-    //  2. VIEW PENDING TOOL DETAIL
-    // Route: /mod/tools/uploads/{id}
 
-    @GetMapping("/uploads/{id}")
+    // 2. VIEW PENDING TOOL DETAIL
+    @GetMapping("/mod/uploads/{id}")
     public String viewUploadDetail(@PathVariable Long id, Model model) {
 
         Tool tool = toolRepo.findById(id)
@@ -61,10 +58,8 @@ public class ToolController {
     }
 
 
-    //  3. APPROVE TOOL UPLOAD
-    // Route: POST /mod/tools/uploads/{id}/approve
-
-    @PostMapping("/uploads/{id}/approve")
+    // 3. APPROVE TOOL UPLOAD
+    @PostMapping("/mod/uploads/{id}/approve")
     public String approveUpload(
             @PathVariable Long id,
             Principal principal,
@@ -82,13 +77,12 @@ public class ToolController {
         toolRepo.save(tool);
 
         ra.addFlashAttribute("success", "Tool approved successfully.");
-        return "redirect:/mod/tools/uploads";
+        return "redirect:/tools/mod/uploads";
     }
 
-    //  4. REJECT TOOL UPLOAD
-    // Route: POST /mod/tools/uploads/{id}/reject
 
-    @PostMapping("/uploads/{id}/reject")
+    // 4. REJECT TOOL UPLOAD
+    @PostMapping("/mod/uploads/{id}/reject")
     public String rejectUpload(
             @PathVariable Long id,
             @RequestParam String note,
@@ -108,14 +102,12 @@ public class ToolController {
         toolRepo.save(tool);
 
         ra.addFlashAttribute("success", "Tool rejected.");
-        return "redirect:/mod/tools/uploads";
+        return "redirect:/tools/mod/uploads";
     }
 
 
-    //  5. LIST TOOL REPORTS
-    // Route: /mod/tools/reports
-
-    @GetMapping("/reports")
+    // 5. LIST REPORTS
+    @GetMapping("/mod/reports")
     public String listReports(
             @RequestParam(required = false) ToolReport.Status status,
             @RequestParam(defaultValue = "0") int page,
@@ -134,10 +126,8 @@ public class ToolController {
     }
 
 
-    //  6. VIEW TOOL REPORT DETAIL
-    // Route: /mod/tools/reports/{id}
-
-    @GetMapping("/reports/{id}")
+    // 6. VIEW REPORT DETAIL
+    @GetMapping("/mod/reports/{id}")
     public String reportDetail(@PathVariable Long id, Model model) {
 
         ToolReport report = reportRepo.findById(id)
@@ -148,10 +138,8 @@ public class ToolController {
     }
 
 
-    //  7. APPROVE TOOL REPORT
-    // Route: POST /mod/tools/reports/{id}/approve
-
-    @PostMapping("/reports/{id}/approve")
+    // 7. APPROVE REPORT
+    @PostMapping("/mod/reports/{id}/approve")
     public String approveReport(@PathVariable Long id,
                                 RedirectAttributes ra) {
 
@@ -162,13 +150,12 @@ public class ToolController {
         reportRepo.save(report);
 
         ra.addFlashAttribute("success", "Report approved.");
-        return "redirect:/mod/tools/reports";
+        return "redirect:/tools/mod/reports";
     }
 
-    //  8. REJECT TOOL REPORT
-    // Route: POST /mod/tools/reports/{id}/reject
 
-    @PostMapping("/reports/{id}/reject")
+    // 8. REJECT REPORT
+    @PostMapping("/mod/reports/{id}/reject")
     public String rejectReport(@PathVariable Long id,
                                RedirectAttributes ra) {
 
@@ -179,6 +166,6 @@ public class ToolController {
         reportRepo.save(report);
 
         ra.addFlashAttribute("success", "Report rejected.");
-        return "redirect:/mod/tools/reports";
+        return "redirect:/tools/mod/reports";
     }
 }
