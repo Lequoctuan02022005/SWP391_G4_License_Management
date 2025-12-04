@@ -23,7 +23,7 @@ public class Cart {
     @JoinColumn(name = "account_id", nullable = false)
     @JsonIgnoreProperties({
             "orders", "favorites", "feedbacks", "tools",
-            "uploadedFiles", "wallet"
+            "uploadedFiles"
     })
     private Account account;
 
