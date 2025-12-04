@@ -57,7 +57,6 @@ public class SystemAdminController {
         return "admin/account-list";
     }
 
-
     @GetMapping("/accounts/create")
     public String createForm(Model model) {
         model.addAttribute("account", new Account());
@@ -80,8 +79,6 @@ public class SystemAdminController {
         return "redirect:/admin/accounts";
     }
 
-
-
     @GetMapping("/accounts/edit/{id}")
     public String editForm(@PathVariable Long id, Model model) {
         Account acc = accountService.getById(id);
@@ -98,9 +95,12 @@ public class SystemAdminController {
     @PostMapping("/accounts/edit/{id}")
     public String editAccount(
             @PathVariable Long id,
-            @Valid @ModelAttribute("account") Account account,
+            @ModelAttribute("account") Account account,
             BindingResult bindingResult,
             Model model) {
+
+        // Không validate password khi edit → Không cần rejectValue
+        // Không dùng clear() → vì sẽ lỗi unmodifiable list
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("roles", roleRepository.findAll());
@@ -110,6 +110,8 @@ public class SystemAdminController {
         accountService.update(id, account);
         return "redirect:/admin/accounts";
     }
+
+
 
 
     @GetMapping("/accounts/delete/{id}")

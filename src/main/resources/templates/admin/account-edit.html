@@ -11,25 +11,26 @@
 <div class="container mt-5">
     <h2 class="fw-bold mb-4">Edit Account</h2>
 
-    <form th:action="@{'/admin/accounts/edit/' + ${account.accountId}}" method="post"
+    <form th:action="@{'/admin/accounts/edit/' + ${account.accountId}}"
+          th:object="${account}"
+          method="post"
           class="card p-4 shadow-sm">
 
-        <input type="hidden" th:value="${account.accountId}" name="accountId"/>
+        <input type="hidden" th:field="*{accountId}" />
 
         <div class="mb-3">
             <label>Email</label>
-            <input type="text" class="form-control" th:value="${account.email}" name="email" required/>
+            <input type="text" class="form-control" th:field="*{email}" required/>
         </div>
 
         <div class="mb-3">
             <label>Full Name</label>
-            <input type="text" class="form-control" th:value="${account.fullName}"
-                   name="fullName" required/>
+            <input type="text" class="form-control" th:field="*{fullName}" required/>
         </div>
 
         <div class="mb-3">
             <label>Phone</label>
-            <input type="text" class="form-control" th:value="${account.phone}" name="phone"/>
+            <input type="text" class="form-control" th:field="*{phone}" />
 
             <div class="text-danger mt-1"
                  th:if="${#fields.hasErrors('phone')}"
@@ -39,30 +40,23 @@
 
         <div class="mb-3">
             <label>Address</label>
-            <input type="text" class="form-control" th:value="${account.address}" name="address"/>
+            <input type="text" class="form-control" th:field="*{address}"/>
         </div>
 
         <div class="mb-3">
             <label>Status</label>
-            <select name="status" class="form-select">
-                <option value="ACTIVE"
-                        th:selected="${account.status == T(swp391.fa25.lms.model.Account.AccountStatus).ACTIVE}">
-                    ACTIVE
-                </option>
-                <option value="DEACTIVATED"
-                        th:selected="${account.status == T(swp391.fa25.lms.model.Account.AccountStatus).DEACTIVATED}">
-                    DEACTIVATED
-                </option>
+            <select th:field="*{status}" class="form-select">
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="DEACTIVATED">DEACTIVATED</option>
             </select>
         </div>
 
         <div class="mb-3">
             <label>Role</label>
-            <select class="form-select" name="role.roleId">
+            <select class="form-select" th:field="*{role.roleId}">
                 <option th:each="r : ${roles}"
                         th:value="${r.roleId}"
-                        th:text="${r.roleName}"
-                        th:selected="${account.role != null && account.role.roleId == r.roleId}">
+                        th:text="${r.roleName}">
                 </option>
             </select>
         </div>
@@ -70,6 +64,7 @@
         <button type="submit" class="btn btn-primary">Save</button>
         <a href="/admin/accounts" class="btn btn-secondary">Cancel</a>
     </form>
+
 </div>
 </body>
 </html>

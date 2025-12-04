@@ -436,6 +436,13 @@ public class AccountService {
             throw new RuntimeException("Email already exists");
         }
 
+        // SET ROLE từ roleId được form submit lên
+        if (account.getRole() != null && account.getRole().getRoleId() != null) {
+            Role role = roleRepository.findById(account.getRole().getRoleId())
+                    .orElseThrow(() -> new RuntimeException("Role not found"));
+            account.setRole(role);
+        }
+
         account.setCreatedAt(LocalDateTime.now());
         account.setUpdatedAt(LocalDateTime.now());
 
@@ -446,6 +453,7 @@ public class AccountService {
         return accountRepo.save(account);
     }
 
+
     public Account update(Long id, Account updated) {
         Account acc = accountRepo.findById(id).orElse(null);
         if (acc == null) return null;
@@ -454,16 +462,20 @@ public class AccountService {
         acc.setFullName(updated.getFullName());
         acc.setPhone(updated.getPhone());
         acc.setAddress(updated.getAddress());
-        acc.setRole(updated.getRole());
         acc.setStatus(updated.getStatus());
         acc.setUpdatedAt(LocalDateTime.now());
 
-        if (updated.getPassword() != null && !updated.getPassword().isBlank()) {
-            acc.setPassword(updated.getPassword());
+        // FIX: Load role FROM DB thay vì gán object rỗng
+        if (updated.getRole() != null && updated.getRole().getRoleId() != null) {
+            Role role = roleRepository.findById(updated.getRole().getRoleId())
+                    .orElse(null);
+            acc.setRole(role);
         }
 
+        // KHÔNG update password tại đây
         return accountRepo.save(acc);
     }
+
 
     public void delete(Long id) {
         accountRepo.deleteById(id);
