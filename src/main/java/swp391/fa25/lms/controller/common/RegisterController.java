@@ -21,7 +21,7 @@ public class RegisterController {
         if (!model.containsAttribute("account")) {
             model.addAttribute("account", new Account());
         }
-        return "public/register";
+        return "common/register";
     }
 
     // Xử lý đăng ký
@@ -43,7 +43,7 @@ public class RegisterController {
             model.addAttribute("showAlert", true);
             model.addAttribute("alertType", "danger");
             model.addAttribute("alertMessage", "Vui lòng sửa các lỗi bên dưới và thử lại.");
-            return "public/register";
+            return "common/register";
         }
 
         // Nếu thành công hiển thị alert rồi chuyển sang verify
@@ -51,7 +51,7 @@ public class RegisterController {
         model.addAttribute("alertType", "success");
         model.addAttribute("alertMessage", "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã xác minh.");
         model.addAttribute("redirectUrl", "/verify");
-        return "public/register";
+        return "common/register";
 
     }
 
@@ -73,7 +73,7 @@ public class RegisterController {
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
         }
-        return "public/verify-code";
+        return "common/verify-code";
     }
 
 }
