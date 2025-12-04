@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Category List</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between mb-4">
+        <h2 class="fw-bold">Category Management</h2>
+
+        <form method="get" th:action="@{/mod/categories}" class="d-flex">
+            <input type="text" name="keyword" th:value="${keyword}"
+                   class="form-control me-2" placeholder="Search...">
+            <button class="btn btn-outline-primary">Search</button>
+        </form>
+
+        <a href="/mod/categories/create" class="btn btn-primary ms-3">+ Create</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <table class="table table-bordered text-center align-middle">
+                <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th width="180px">Actions</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="c : ${categories}">
+                    <td th:text="${c.categoryId}"></td>
+                    <td th:text="${c.categoryName}"></td>
+                    <td th:text="${c.description}"></td>
+                    <td th:text="${c.status}"></td>
+
+                    <td>
+                        <a class="btn btn-warning btn-sm" th:href="@{'/mod/categories/edit/' + ${c.categoryId}}">
+                            Edit
+                        </a>
+                        <a class="btn btn-danger btn-sm"
+                           th:href="@{'/mod/categories/delete/' + ${c.categoryId}}"
+                           onclick="return confirm('Delete this category?')">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+
+                <tr th:if="${categories.size() == 0}">
+                    <td colspan="6">No categories found.</td>
+                </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
