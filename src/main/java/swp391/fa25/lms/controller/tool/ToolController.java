@@ -3,10 +3,7 @@ package swp391.fa25.lms.controller.tool;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -26,8 +23,10 @@ import java.util.List;
 import java.util.Objects;
 
 @Controller
-@RequestMapping("/tool")
+@RequestMapping("/tools")
 public class ToolController {
+
+    // ========== SELLER DEPENDENCIES ==========
     @Autowired
     private FileStorageService fileStorageService;
 
@@ -37,144 +36,33 @@ public class ToolController {
     @Autowired
     private ToolFlowService toolFlowService;
 
-    @Autowired
-    private AccountService accountService;
-
     private Account requireActiveSeller(HttpSession session, RedirectAttributes redirectAttrs) {
         Account seller = (Account) session.getAttribute("loggedInAccount");
         if (seller == null) {
             redirectAttrs.addFlashAttribute("error", "Please login again.");
             return null;
         }
-        if (!accountService.isSellerActive(seller)) {
-            redirectAttrs.addFlashAttribute("error", "Your seller package has expired. Please renew before continuing.");
-            return null;
-        }
+//        if (!accountService.isSellerActive(seller)) {
+//            redirectAttrs.addFlashAttribute("error", "Your seller package has expired. Please renew before continuing.");
+//            return null;
+//        }
         return seller;
     }
     /**
      *  Trang danh sách Tool của seller
      * GET /tools/seller
      */
-    @GetMapping("/seller")
-    public String showSellerToolList(
-            Model model,
-            HttpSession session,
-            RedirectAttributes redirectAttrs,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "6") int size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String loginMethod,
-            @RequestParam(required = false) Double minPrice,
-            @RequestParam(required = false) Double maxPrice,
-            @RequestParam(defaultValue = "newest") String sort
-    ) {
-        Account seller = requireActiveSeller(session, redirectAttrs);
-        if (seller == null) {
-            // đã set message + login/renew trong helper
-            return "redirect:/login";
-        }
-        //  Check active
-        model.addAttribute("sellerExpired", !accountService.isSellerActive(seller));
-
-        //  Cấu hình sort
-        Pageable pageable = switch (sort) {
-            case "oldest" -> PageRequest.of(page, size, Sort.by("createdAt").ascending());
-            case "price,asc" -> PageRequest.of(page, size, Sort.by("licenses.price").ascending());
-            case "price,desc" -> PageRequest.of(page, size, Sort.by("licenses.price").descending());
-            default -> PageRequest.of(page, size, Sort.by("createdAt").descending());
-        };
-
-        //  Lấy danh sách tool theo feature Tool + role Seller
-        Page<Tool> tools = toolService.searchToolsForSeller(
-                seller.getAccountId(),
-                keyword,
-                categoryId,
-                status,
-                loginMethod,
-                minPrice,
-                maxPrice,
-                pageable
-        );
-
-        model.addAttribute("categories", toolService.getAllCategories());
-        model.addAttribute("tools", tools);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("categoryId", categoryId);
-        model.addAttribute("status", status);
-        model.addAttribute("loginMethod", loginMethod);
-        model.addAttribute("minPrice", minPrice);
-        model.addAttribute("maxPrice", maxPrice);
-        model.addAttribute("sort", sort);
-
-        return "seller/tool-list";
-    }
-
-    /**
-     *  Seller deactivate tool
-     * POST /tools/seller/{id}/deactivate
-     */
-    @PostMapping("/seller/{id}/deactivate")
-    public String deactivateTool(
-            @PathVariable Long id,
-            HttpSession session,
-            RedirectAttributes redirectAttrs
-    ) {
-        Account seller = requireActiveSeller(session, redirectAttrs);
-        if (seller == null) {
-            return "redirect:/login";
-        }
-
-        try {
-            toolService.deactivateTool(id);
-            redirectAttrs.addFlashAttribute("success", "Tool has been deactivated successfully!");
-        } catch (Exception e) {
-            redirectAttrs.addFlashAttribute("error", e.getMessage());
-        }
-
-        return "redirect:/tools/seller";
-    }
-
-    /**
-     *  Seller activate tool
-     * POST /tools/seller/{id}/activate
-     */
-    @PostMapping("/seller/{id}/activate")
-    public String activateTool(
-            @PathVariable Long id,
-            HttpSession session,
-            RedirectAttributes redirectAttrs
-    ) {
-        Account seller = requireActiveSeller(session, redirectAttrs);
-        if (seller == null) {
-            return "redirect:/login";
-        }
-
-        try {
-            toolService.activateTool(id);
-            redirectAttrs.addFlashAttribute("success", "Tool has been activated successfully!");
-        } catch (Exception e) {
-            redirectAttrs.addFlashAttribute("error", e.getMessage());
-        }
-
-        return "redirect:/tools/seller";
-    }
-    /**
-     *  Form Add Tool cho seller
-     * GET /tools/seller/add
-     */
+    @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller/add")
     public String showAddToolForm(
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttrs
     ) {
-        Account seller = requireActiveSeller(session, redirectAttrs);
-        if (seller == null) {
-            return "redirect:/login";
-        }
+//        Account seller = requireActiveSeller(session, redirectAttrs);
+//        if (seller == null) {
+//            return "redirect:/login";
+//        }
 
         ToolFlowService.ToolSessionData pending =
                 (ToolFlowService.ToolSessionData) session.getAttribute("pendingTool");
@@ -188,13 +76,13 @@ public class ToolController {
         }
 
         model.addAttribute("categories", toolService.getAllCategories());
-        return "seller/tool-add";
+        return "tool/tool-add";
     }
-
     /**
      *  Xử lý submit Add Tool
      * POST /tools/seller/add
      */
+    @PreAuthorize("hasRole('SELLER')")
     @PostMapping("/seller/add")
     public String addTool(
             @Valid @ModelAttribute("tool") Tool tool,
@@ -214,7 +102,7 @@ public class ToolController {
 
         if (result.hasErrors()) {
             model.addAttribute("categories", toolService.getAllCategories());
-            return "seller/tool-add";
+            return "tool/tool-add";
         }
 
         try {
@@ -230,24 +118,24 @@ public class ToolController {
 
             if (tool.getLoginMethod() == Tool.LoginMethod.TOKEN) {
                 redirectAttrs.addFlashAttribute("info", "Please add tokens to finalize your tool.");
-                return "redirect:/seller/token-manage";
+                // hiện tại bạn vẫn dùng TokenController riêng ở /seller/token-manage
+                return "redirect:/tool/token-manage";
             }
 
             redirectAttrs.addFlashAttribute("success", "Tool created successfully!");
             return "redirect:/tools/seller";
 
-        } catch (IOException e) {
-            redirectAttrs.addFlashAttribute("error", "File upload error: " + e.getMessage());
         } catch (Exception e) {
             redirectAttrs.addFlashAttribute("error", e.getMessage());
         }
-
         return "redirect:/tools/seller/add";
     }
+
     /**
      *  Form Edit Tool cho seller
      * GET /tools/seller/edit/{id}
      */
+    @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller/edit/{id}")
     public String showEditToolForm(
             @PathVariable Long id,
@@ -270,13 +158,9 @@ public class ToolController {
         model.addAttribute("categories", toolService.getAllCategories());
         model.addAttribute("isEdit", true);
         model.addAttribute("isTokenLogin", tool.getLoginMethod() == Tool.LoginMethod.TOKEN);
-        return "seller/tool-edit";
+        return "tool/tool-edit";
     }
-
-    /**
-     *  Xử lý cập nhật Tool
-     * POST /tools/seller/edit/{id}
-     */
+    @PreAuthorize("hasRole('SELLER')")
     @PostMapping("/seller/edit/{id}")
     public String updateTool(
             @PathVariable Long id,
@@ -311,7 +195,7 @@ public class ToolController {
                 toolPath = fileStorageService.uploadToolFile(toolFile);
             }
 
-            // ✅ TOKEN → redirect sang token-edit flow
+            // Nếu loginMethod = TOKEN và action=token => chuyển sang flow token-edit
             if (Objects.equals(action, "token") && existing.getLoginMethod() == Tool.LoginMethod.TOKEN) {
                 List<Integer> days = (licenseDays != null) ? licenseDays : new ArrayList<>();
                 List<Double> prices = (licensePrices != null) ? licensePrices : new ArrayList<>();
@@ -326,10 +210,11 @@ public class ToolController {
                         session
                 );
                 redirectAttrs.addFlashAttribute("info", "Please review and update tokens for this tool.");
-                return "redirect:/seller/token-manage/edit";
+                // hiện tại vẫn dùng TokenController ở /seller/token-manage/edit
+                return "redirect:/tool/token-manage/edit";
             }
 
-            //  USER_PASSWORD → cập nhật trực tiếp
+            // USER_PASSWORD → cập nhật trực tiếp
             toolService.updateTool(
                     id,
                     updatedTool,

@@ -10,5 +10,5 @@ import java.util.List;
 public interface LicenseToolRepository extends JpaRepository<License, Long> {
 
     // Lấy tất cả license của một tool
-    List<License> findByTool_ToolId(Long toolId);
+    List<License> findByTool_ToolId(Long toolId);;
 }
