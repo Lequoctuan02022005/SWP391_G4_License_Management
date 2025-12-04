@@ -12,7 +12,7 @@ import java.util.List;
 @Table(name = "Account")
 @JsonIgnoreProperties({
         "hibernateLazyInitializer", "handler",
-        "orders", "favorites", "feedbacks", "tools", "uploadedFiles", "wallet"
+        "orders", "favorites", "feedbacks", "tools", "uploadedFiles"
 })
 public class Account {
     @Id
@@ -64,10 +64,6 @@ public class Account {
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL)
-    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"transactions"})
-    private Wallet wallet;
-
     // quan hệ với các bảng con
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL)
     @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"account", "license", "tool", "transaction"})
@@ -101,7 +97,7 @@ public class Account {
     public Account() {
     }
 
-    public Account(Long accountId, String email, String password, String fullName, LocalDateTime createdAt, AccountStatus status, LocalDateTime updatedAt, String phone, String address, Boolean verified, String verificationCode, LocalDateTime codeExpiry, String confirmPassword, Role role, Wallet wallet, LocalDateTime sellerExpiryDate, Boolean sellerActive, SellerPackage sellerPackage, List<Tool> tools, List<Favorite> favorites, List<Feedback> feedbacks, List<CustomerOrder> orders) {
+    public Account(Long accountId, String email, String password, String fullName, LocalDateTime createdAt, AccountStatus status, LocalDateTime updatedAt, String phone, String address, Boolean verified, String verificationCode, LocalDateTime codeExpiry, String confirmPassword, Role role, LocalDateTime sellerExpiryDate, Boolean sellerActive, SellerPackage sellerPackage, List<Tool> tools, List<Favorite> favorites, List<Feedback> feedbacks, List<CustomerOrder> orders) {
         this.accountId = accountId;
         this.email = email;
         this.password = password;
@@ -117,7 +113,6 @@ public class Account {
         this.codeExpiry = codeExpiry;
         this.confirmPassword = confirmPassword;
         this.role = role;
-        this.wallet = wallet;
         this.sellerExpiryDate = sellerExpiryDate;
         this.sellerActive = sellerActive;
         this.sellerPackage = sellerPackage;
@@ -237,14 +232,6 @@ public class Account {
 
     public void setRole(Role role) {
         this.role = role;
-    }
-
-    public Wallet getWallet() {
-        return wallet;
-    }
-
-    public void setWallet(Wallet wallet) {
-        this.wallet = wallet;
     }
 
     public List<CustomerOrder> getOrders() {
