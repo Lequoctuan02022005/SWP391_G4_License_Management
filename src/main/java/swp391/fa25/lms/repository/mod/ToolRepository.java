@@ -57,4 +57,25 @@ public interface ToolRepository extends JpaRepository<Tool, Long> {
 
     @Query("SELECT COUNT(t) FROM Tool t WHERE t.status = :status")
     long countByStatus(@Param("status") Tool.Status status);
+
+    @Query("""
+       SELECT t FROM Tool t
+       WHERE (:keyword IS NULL OR :keyword = '' 
+              OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+       """)
+    Page<Tool> findAllTools(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("""
+       SELECT t FROM Tool t
+       WHERE (:keyword IS NULL OR :keyword = '' 
+              OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+         AND (:status IS NULL OR t.status = :status)
+       """)
+    Page<Tool> filterTools(
+            @Param("keyword") String keyword,
+            @Param("status") Tool.Status status,
+            Pageable pageable
+    );
+
+
 }

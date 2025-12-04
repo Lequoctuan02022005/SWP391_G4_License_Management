@@ -2,6 +2,7 @@ package swp391.fa25.lms.controller.tool;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +28,11 @@ public class ToolController {
 
 
     // 1. LIST PENDING TOOL UPLOADS
+    @PreAuthorize("hasRole('MODERATOR')")
     @GetMapping("/mod/uploads")
-    public String listPendingUploads(
+    public String listUploads(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Tool.Status status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
@@ -37,16 +40,19 @@ public class ToolController {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by("createdAt").descending());
 
-        Page<Tool> tools = toolRepo.findPendingUploads(keyword, pageable);
+        Page<Tool> tools = toolRepo.filterTools(keyword, status, pageable);
 
         model.addAttribute("tools", tools);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("status", status != null ? status.name() : "");
 
         return "mod/tool-upload-list";
     }
 
 
+
     // 2. VIEW PENDING TOOL DETAIL
+    @PreAuthorize("hasRole('MODERATOR')")
     @GetMapping("/mod/uploads/{id}")
     public String viewUploadDetail(@PathVariable Long id, Model model) {
 
@@ -59,6 +65,7 @@ public class ToolController {
 
 
     // 3. APPROVE TOOL UPLOAD
+    @PreAuthorize("hasRole('MODERATOR')")
     @PostMapping("/mod/uploads/{id}/approve")
     public String approveUpload(
             @PathVariable Long id,
@@ -82,6 +89,7 @@ public class ToolController {
 
 
     // 4. REJECT TOOL UPLOAD
+    @PreAuthorize("hasRole('MODERATOR')")
     @PostMapping("/mod/uploads/{id}/reject")
     public String rejectUpload(
             @PathVariable Long id,
@@ -107,6 +115,7 @@ public class ToolController {
 
 
     // 5. LIST REPORTS
+    @PreAuthorize("hasRole('MODERATOR')")
     @GetMapping("/mod/reports")
     public String listReports(
             @RequestParam(required = false) ToolReport.Status status,
@@ -127,6 +136,7 @@ public class ToolController {
 
 
     // 6. VIEW REPORT DETAIL
+    @PreAuthorize("hasRole('MODERATOR')")
     @GetMapping("/mod/reports/{id}")
     public String reportDetail(@PathVariable Long id, Model model) {
 
@@ -139,6 +149,7 @@ public class ToolController {
 
 
     // 7. APPROVE REPORT
+    @PreAuthorize("hasRole('MODERATOR')")
     @PostMapping("/mod/reports/{id}/approve")
     public String approveReport(@PathVariable Long id,
                                 RedirectAttributes ra) {
@@ -155,6 +166,7 @@ public class ToolController {
 
 
     // 8. REJECT REPORT
+    @PreAuthorize("hasRole('MODERATOR')")
     @PostMapping("/mod/reports/{id}/reject")
     public String rejectReport(@PathVariable Long id,
                                RedirectAttributes ra) {

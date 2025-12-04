@@ -37,7 +37,7 @@
         <td th:text="${r.reason}"></td>
         <td th:text="${r.status}"></td>
         <td>
-            <a th:href="@{'/mod/tools/reports/' + ${r.toolReportId}}">View</a>
+            <a th:href="@{'/tools/mod/reports/' + ${r.toolReportId}}">View</a>
         </td>
     </tr>
 </table>
@@ -50,10 +50,10 @@
 
     <div>
         <a th:if="${reports.hasPrevious()}"
-           th:href="@{'/mod/tools/reports?page=' + ${reports.number - 1}}">Previous</a>
+           th:href="@{'/tools/mod/reports?page=' + ${reports.number - 1}}">Previous</a>
 
         <a th:if="${reports.hasNext()}"
-           th:href="@{'/mod/tools/reports?page=' + ${reports.number + 1}}">Next</a>
+           th:href="@{'/tools/mod/reports?page=' + ${reports.number + 1}}">Next</a>
     </div>
 </div>
 
