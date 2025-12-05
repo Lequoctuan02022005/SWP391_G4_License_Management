@@ -1,4 +1,4 @@
-package swp391.fa25.lms.repository.mod;
+package swp391.fa25.lms.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

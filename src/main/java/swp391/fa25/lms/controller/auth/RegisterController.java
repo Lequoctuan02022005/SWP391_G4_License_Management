@@ -1,11 +1,15 @@
-package swp391.fa25.lms.controller.common;
+package swp391.fa25.lms.controller.auth;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.service.AccountService;
 
@@ -21,18 +25,19 @@ public class RegisterController {
         if (!model.containsAttribute("account")) {
             model.addAttribute("account", new Account());
         }
-        return "common/register";
+        return "auth/register";
     }
 
     // Xử lý đăng ký
     @PostMapping("/register")
     public String handleRegister(@Valid @ModelAttribute("account") Account account,
                                  BindingResult result,
-                                 @RequestParam("confirmPassword") String confirmPassword,
-                                 Model model) {
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
 
         //  Lỗi xác nhận mật khẩu
-        if (!account.getPassword().equals(account.getConfirmPassword())) {
+        if (account.getConfirmPassword() == null ||
+                !account.getPassword().equals(account.getConfirmPassword())) {
             result.rejectValue("confirmPassword", "error.confirmPassword", "Mật khẩu không khớp.");
         }
 
@@ -43,22 +48,25 @@ public class RegisterController {
             model.addAttribute("showAlert", true);
             model.addAttribute("alertType", "danger");
             model.addAttribute("alertMessage", "Vui lòng sửa các lỗi bên dưới và thử lại.");
-            return "common/register";
+            return "auth/register";
         }
 
-        // Nếu thành công hiển thị alert rồi chuyển sang verify
-        model.addAttribute("showAlert", true);
-        model.addAttribute("alertType", "success");
-        model.addAttribute("alertMessage", "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã xác minh.");
-        model.addAttribute("redirectUrl", "/verify");
-        return "common/register";
-
+        // ✅ Nếu đăng ký OK:
+        // - Account đã được lưu với status = DEACTIVATED, verified = false
+        // - Mã verify đã được gửi email
+        // → Chuyển sang trang /verify để nhập mã
+        redirectAttributes.addFlashAttribute(
+                "infoMessage",
+                "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã xác minh."
+        );
+        return "redirect:/verify";
     }
 
     // Hiển thị form nhập mã code
     @GetMapping("/verify")
     public String showVerifyPage(Model model) {
-        return "public/verify-code";
+        // infoMessage có thể được set từ redirectAttributes
+        return "auth/verify-code";
     }
 
     // Xử lý mã code
@@ -67,13 +75,12 @@ public class RegisterController {
                              Model model) {
         try {
             accountService.verifyCode(code);
-            model.addAttribute("verified", true);
             model.addAttribute("successMessage", "Xác minh thành công! Bạn có thể đăng nhập ngay.");
-            model.addAttribute("redirectUrl", "/login");
+            model.addAttribute("redirectUrl", "/login");  // verify-code.html sẽ tự redirect sau 5s
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
         }
-        return "common/verify-code";
+        return "auth/verify-code";
     }
 
 }
