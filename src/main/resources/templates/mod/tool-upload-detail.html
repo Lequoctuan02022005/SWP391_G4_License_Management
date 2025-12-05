@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Review Tool Upload</title>
+</head>
+<body>
+
+<h2 th:text="${tool.toolName}"></h2>
+
+<p><strong>Description:</strong> <span th:text="${tool.description}"></span></p>
+<p><strong>Seller:</strong> <span th:text="${tool.seller.fullName}"></span></p>
+<p><strong>Status:</strong> <span th:text="${tool.status}"></span></p>
+
+<br/>
+
+<!-- APPROVE FORM -->
+<form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/approve'}" method="post">
+    <button type="submit">Approve</button>
+</form>
+
+<br/>
+
+<!-- REJECT FORM -->
+<form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/reject'}" method="post">
+    <textarea name="note" placeholder="Reason for rejection..." required></textarea>
+    <br/>
+    <button type="submit">Reject</button>
+</form>
+
+<br/>
+
+<a href="/tools/mod/uploads">Back to list</a>
+
+</body>
+</html>

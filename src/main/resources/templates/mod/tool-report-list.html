@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Tool Reports</title>
+</head>
+<body>
+
+<h2>Tool Reports</h2>
+
+<!-- FILTER -->
+<form method="get">
+    <select name="status">
+        <option value="">All</option>
+        <option value="PENDING" th:selected="${status == 'PENDING'}">Pending</option>
+        <option value="APPROVED" th:selected="${status == 'APPROVED'}">Approved</option>
+        <option value="REJECTED" th:selected="${status == 'REJECTED'}">Rejected</option>
+    </select>
+    <button type="submit">Filter</button>
+</form>
+
+<br/>
+
+<table border="1" cellpadding="8" cellspacing="0">
+    <tr>
+        <th>ID</th>
+        <th>Tool</th>
+        <th>Reporter</th>
+        <th>Reason</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+
+    <tr th:each="r : ${reports.content}">
+        <td th:text="${r.toolReportId}"></td>
+        <td th:text="${r.tool.toolName}"></td>
+        <td th:text="${r.reporter.fullName}"></td>
+        <td th:text="${r.reason}"></td>
+        <td th:text="${r.status}"></td>
+        <td>
+            <a th:href="@{'/tools/mod/reports/' + ${r.toolReportId}}">View</a>
+        </td>
+    </tr>
+</table>
+
+<br/>
+
+<!-- PAGINATION -->
+<div>
+    <span th:text="'Page ' + ${reports.number + 1} + ' of ' + ${reports.totalPages}"></span>
+
+    <div>
+        <a th:if="${reports.hasPrevious()}"
+           th:href="@{'/tools/mod/reports?page=' + ${reports.number - 1}}">Previous</a>
+
+        <a th:if="${reports.hasNext()}"
+           th:href="@{'/tools/mod/reports?page=' + ${reports.number + 1}}">Next</a>
+    </div>
+</div>
+
+</body>
+</html>

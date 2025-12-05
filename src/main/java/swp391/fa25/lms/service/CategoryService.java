@@ -13,6 +13,8 @@ public class CategoryService {
     @Autowired
     private CategoryRepository repo;
 
+    public List<Category> getAll() {
+        return repo.findAll();
     public List<Category> getAllCategories() {
         return repo.findByStatus(Category.Status.ACTIVE);
     }
