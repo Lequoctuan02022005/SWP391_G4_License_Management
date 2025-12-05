@@ -1,5 +1,6 @@
 package swp391.fa25.lms.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,11 +8,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
+import swp391.fa25.lms.config.security.CustomUserDetailsService;
+import swp391.fa25.lms.config.security.CustomAuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Autowired
+    private CustomAuthenticationSuccessHandler successHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -19,44 +24,37 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        http
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//                        // CHO PHÉP TRUY CẬP TRANG CHỦ VÀ LOGIN KHÔNG CẦN ĐĂNG NHẬP
-//                        .requestMatchers("/", "/home", "/home/**", "/css/**", "/js/**", "/images/**", "/login", "/register", "/error").permitAll()
-//
-//                        // Các trang cần quyền
-//                        .requestMatchers("/admin/**").hasRole("ADMIN")
-//                        .requestMatchers("/mod/**").hasRole("MODERATOR")
-//                        .requestMatchers("/seller/**").hasRole("SELLER")
-//
-//                        // Còn lại phải login
-//                        .anyRequest().authenticated()
-//                )
-//                .formLogin(form -> form
-//                        .loginPage("/login")
-//                        // QUAN TRỌNG: bỏ "true" đi → chỉ redirect khi login thành công, không redirect khi chưa login
-//                        .defaultSuccessUrl("/home")     // <-- bỏ ", true"
-//                        .permitAll()
-//                )
-//                .logout(logout -> logout
-//                        .logoutSuccessUrl("/login")
-//                        .permitAll()
-//                );
-//
-//        return http.build();
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           CustomUserDetailsService userDetailsService) throws Exception {
 
         http
                 .csrf(csrf -> csrf.disable())
+                .userDetailsService(userDetailsService)
+
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()  // <-- Cho tất cả vào, KHÔNG redirect login
+                        .requestMatchers("/", "/home", "/home/**",
+                                "/css/**", "/js/**", "/images/**",
+                                "/login", "/register", "/error").permitAll()
+
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/mod/**").hasRole("MODERATOR")
+                        .anyRequest().authenticated()
                 )
-                .formLogin(form -> form.disable()) // <-- Tắt luôn login form
-                .logout(logout -> logout.disable()); // <-- Tắt logout
+
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .loginProcessingUrl("/perform_login")
+                        .successHandler(successHandler)  // ⭐ Redirect theo ROLE
+                        .failureUrl("/login?error=true")
+                        .permitAll()
+                )
+
+                .logout(logout -> logout
+                        .logoutUrl("/perform_logout")
+                        .logoutSuccessUrl("/login?logout=true")
+                        .permitAll()
+                );
 
         return http.build();
     }
-
 }
-
