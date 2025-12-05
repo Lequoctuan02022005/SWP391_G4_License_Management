@@ -14,14 +14,14 @@
 <br/>
 
 <!-- APPROVE FORM -->
-<form th:action="@{'/mod/tools/uploads/' + ${tool.toolId} + '/approve'}" method="post">
+<form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/approve'}" method="post">
     <button type="submit">Approve</button>
 </form>
 
 <br/>
 
 <!-- REJECT FORM -->
-<form th:action="@{'/mod/tools/uploads/' + ${tool.toolId} + '/reject'}" method="post">
+<form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/reject'}" method="post">
     <textarea name="note" placeholder="Reason for rejection..." required></textarea>
     <br/>
     <button type="submit">Reject</button>
@@ -29,7 +29,7 @@
 
 <br/>
 
-<a href="/mod/tools/uploads">Back to list</a>
+<a href="/tools/mod/uploads">Back to list</a>
 
 </body>
 </html>

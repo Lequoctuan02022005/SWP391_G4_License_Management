@@ -1,0 +1,58 @@
+<link rel="stylesheet" href="/css/tool-form.css">
+
+<div class="tool-container">
+
+    <!-- Left panel -->
+    <div class="tool-left">
+        <div class="tool-image-placeholder">
+            <span>Token Setup</span>
+        </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="tool-right">
+        <h3>Manage Tokens</h3>
+        <hr>
+
+        <form method="post" th:action="@{/tools/token/manage/submit}">
+
+            <label>Tokens (auto generated)</label>
+
+            <div id="tokenList">
+                <div class="license-row" th:each="t, i : ${tokens}">
+                    <input type="text" name="tokens" th:value="${t}" maxlength="6">
+                    <button type="button" class="remove-license-btn" onclick="removeLicense(this)">X</button>
+                </div>
+            </div>
+
+            <button type="button" onclick="addToken()" class="btn-secondary-custom">+ Add Token</button>
+            <button type="button" onclick="randomAll()" class="btn-secondary-custom">Random All</button>
+            <br><br>
+
+            <button type="submit" class="btn-primary-custom">Finalize</button>
+            <button type="submit" formaction="/tools/token/manage/back" class="btn-secondary-custom">Back</button>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    function addToken() {
+        let row = document.createElement("div");
+        row.className = "license-row";
+        row.innerHTML = `
+         <input name="tokens" maxlength="6">
+         <button class="remove-license-btn" onclick="removeLicense(this)">X</button>
+    `;
+        document.getElementById("tokenList").appendChild(row);
+    }
+
+    function removeLicense(btn) {
+        btn.parentElement.remove();
+    }
+
+    function randomAll() {
+        let inputs = document.querySelectorAll("input[name='tokens']");
+        inputs.forEach(i => i.value = String(Math.floor(Math.random()*1000000)).padStart(6, '0'));
+    }
+</script>

@@ -1,0 +1,99 @@
+<link rel="stylesheet" href="/css/tool-form.css">
+
+<div class="tool-container">
+
+    <!-- Left: image preview -->
+    <div class="tool-left">
+        <div class="tool-image-placeholder" id="previewBox">
+            <img th:if="${tool.image != null}" th:src="@{${tool.image}}" style="max-height:280px;">
+            <span th:if="${tool.image == null}">No Image</span>
+        </div>
+    </div>
+
+    <!-- Right: form -->
+    <div class="tool-right">
+
+        <h3>Edit Tool</h3>
+        <hr>
+
+        <form class="tool-form" method="post" th:action="@{'/tools/seller/edit/' + ${tool.toolId}}" enctype="multipart/form-data">
+
+            <label>Tool Name</label>
+            <input type="text" name="toolName" th:value="${tool.toolName}" required>
+
+            <label>Upload New Image (optional)</label>
+            <input type="file" name="imageFile" accept="image/*" onchange="loadImage(event)">
+
+            <label>Upload New Tool File (optional)</label>
+            <input type="file" name="toolFile">
+
+            <label>Category</label>
+            <select name="categoryId" required>
+                <option value="">-- Select category --</option>
+                <th:block th:each="c : ${categories}">
+                    <option th:value="${c.categoryId}" th:text="${c.name}"
+                            th:selected="${tool.category.categoryId == c.categoryId}"></option>
+                </th:block>
+            </select>
+
+            <label>Description</label>
+            <textarea name="description" th:text="${tool.description}"></textarea>
+
+            <label>Login Method</label>
+            <select name="loginMethod" disabled>
+                <option value="USER_PASSWORD" th:selected="${tool.loginMethod.name() == 'USER_PASSWORD'}">User / Password</option>
+                <option value="TOKEN" th:selected="${tool.loginMethod.name() == 'TOKEN'}">Token</option>
+            </select>
+
+            <label>Quantity</label>
+            <input type="number" name="quantity" th:value="${tool.quantity}" min="1" required>
+
+            <label>License Packages</label>
+            <div id="licenseList">
+                <div class="license-row" th:each="lic, i : ${tool.licenses}">
+                    <input name="licenseDays" type="number" th:value="${lic.durationDays}">
+                    <input name="licensePrices" type="number" th:value="${lic.price}">
+                    <button type="button" class="remove-license-btn" onclick="removeLicense(this)">X</button>
+                </div>
+            </div>
+
+            <button type="button" class="btn-secondary-custom" onclick="addLicense()">+ Add another</button>
+            <br><br>
+
+            <button class="btn-primary-custom" type="submit" name="action" value="save">Save Changes</button>
+
+            <!-- BUTTON EDIT TOKEN -->
+            <a th:if="${tool.loginMethod.name() == 'TOKEN'}"
+               class="btn-secondary-custom"
+               th:href="@{/tools/token/edit}">
+                Edit Tokens
+            </a>
+
+            <a href="/tools/seller" class="btn-secondary-custom">Cancel</a>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    function loadImage(event) {
+        let box = document.getElementById("previewBox");
+        box.innerHTML = "";
+        let img = document.createElement("img");
+        img.src = URL.createObjectURL(event.target.files[0]);
+        box.appendChild(img);
+    }
+    function addLicense() {
+        let div = document.createElement("div");
+        div.className = "license-row";
+        div.innerHTML = `
+        <input name="licenseDays" type="number" placeholder="Days">
+        <input name="licensePrices" type="number" placeholder="Price (VND)">
+        <button type="button" onclick="removeLicense(this)" class="remove-license-btn">X</button>
+    `;
+        document.getElementById("licenseList").appendChild(div);
+    }
+    function removeLicense(btn) {
+        btn.parentElement.remove();
+    }
+</script>

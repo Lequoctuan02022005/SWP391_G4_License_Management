@@ -1,24 +1,244 @@
 package swp391.fa25.lms.controller.tool;
 
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Tool;
+import swp391.fa25.lms.service.FileStorageService;
+import swp391.fa25.lms.service.ToolFlowService;
+import swp391.fa25.lms.service.ToolService;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+import org.springframework.data.domain.*;
 import swp391.fa25.lms.model.ToolReport;
-import swp391.fa25.lms.repository.mod.ToolReportRepository;
-import swp391.fa25.lms.repository.mod.ToolRepository;
+import swp391.fa25.lms.repository.ToolReportRepository;
+import swp391.fa25.lms.repository.ToolRepository;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 
 @Controller
-@RequestMapping("/mod/tools")
-@PreAuthorize("hasRole('MODERATOR')")
+@RequestMapping("/tools")
 public class ToolController {
+
+    // ========== SELLER DEPENDENCIES ==========
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
+    private ToolService toolService;
+
+    @Autowired
+    private ToolFlowService toolFlowService;
+
+    private Account requireActiveSeller(HttpSession session, RedirectAttributes redirectAttrs) {
+        Account seller = (Account) session.getAttribute("loggedInAccount");
+        if (seller == null) {
+            redirectAttrs.addFlashAttribute("error", "Please login again.");
+            return null;
+        }
+//        if (!accountService.isSellerActive(seller)) {
+//            redirectAttrs.addFlashAttribute("error", "Your seller package has expired. Please renew before continuing.");
+//            return null;
+//        }
+        return seller;
+    }
+    /**
+     *  Trang danh sách Tool của seller
+     * GET /tools/seller
+     */
+    @PreAuthorize("hasRole('SELLER')")
+    @GetMapping("/seller/add")
+    public String showAddToolForm(
+            Model model,
+            HttpSession session,
+            RedirectAttributes redirectAttrs
+    ) {
+//        Account seller = requireActiveSeller(session, redirectAttrs);
+//        if (seller == null) {
+//            return "redirect:/login";
+//        }
+
+        ToolFlowService.ToolSessionData pending =
+                (ToolFlowService.ToolSessionData) session.getAttribute("pendingTool");
+        if (pending != null) {
+            model.addAttribute("tool", pending.getTool());
+            model.addAttribute("licenses", pending.getLicenses());
+            model.addAttribute("categoryId", pending.getCategory().getCategoryId());
+            model.addAttribute("restoreFromSession", true);
+        } else {
+            model.addAttribute("tool", new Tool());
+        }
+
+        model.addAttribute("categories", toolService.getAllCategories());
+        return "tool/tool-add";
+    }
+    /**
+     *  Xử lý submit Add Tool
+     * POST /tools/seller/add
+     */
+    @PreAuthorize("hasRole('SELLER')")
+    @PostMapping("/seller/add")
+    public String addTool(
+            @Valid @ModelAttribute("tool") Tool tool,
+            BindingResult result,
+            @RequestParam("imageFile") MultipartFile imageFile,
+            @RequestParam("toolFile") MultipartFile toolFile,
+            @RequestParam("licenseDays") List<Integer> licenseDays,
+            @RequestParam("licensePrices") List<Double> licensePrices,
+            HttpSession session,
+            RedirectAttributes redirectAttrs,
+            Model model
+    ) {
+        Account seller = requireActiveSeller(session, redirectAttrs);
+        if (seller == null) {
+            return "redirect:/login";
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("categories", toolService.getAllCategories());
+            return "tool/tool-add";
+        }
+
+        try {
+            toolFlowService.startCreateTool(
+                    tool,
+                    imageFile,
+                    toolFile,
+                    tool.getCategory().getCategoryId(),
+                    licenseDays,
+                    licensePrices,
+                    session
+            );
+
+            if (tool.getLoginMethod() == Tool.LoginMethod.TOKEN) {
+                redirectAttrs.addFlashAttribute("info", "Please add tokens to finalize your tool.");
+                // hiện tại bạn vẫn dùng TokenController riêng ở /seller/token-manage
+                return "redirect:/tool/token-manage";
+            }
+
+            redirectAttrs.addFlashAttribute("success", "Tool created successfully!");
+            return "redirect:/tools/seller";
+
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/tools/seller/add";
+    }
+
+    /**
+     *  Form Edit Tool cho seller
+     * GET /tools/seller/edit/{id}
+     */
+    @PreAuthorize("hasRole('SELLER')")
+    @GetMapping("/seller/edit/{id}")
+    public String showEditToolForm(
+            @PathVariable Long id,
+            Model model,
+            HttpSession session,
+            RedirectAttributes redirectAttrs
+    ) {
+        Account seller = requireActiveSeller(session, redirectAttrs);
+        if (seller == null) {
+            return "redirect:/login";
+        }
+
+        Tool tool = toolService.getToolByIdAndSeller(id, seller);
+        if (tool == null) {
+            redirectAttrs.addFlashAttribute("error", "Tool not found or unauthorized.");
+            return "redirect:/tools/seller";
+        }
+
+        model.addAttribute("tool", tool);
+        model.addAttribute("categories", toolService.getAllCategories());
+        model.addAttribute("isEdit", true);
+        model.addAttribute("isTokenLogin", tool.getLoginMethod() == Tool.LoginMethod.TOKEN);
+        return "tool/tool-edit";
+    }
+    @PreAuthorize("hasRole('SELLER')")
+    @PostMapping("/seller/edit/{id}")
+    public String updateTool(
+            @PathVariable Long id,
+            @ModelAttribute("tool") Tool updatedTool,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            @RequestParam(value = "toolFile", required = false) MultipartFile toolFile,
+            @RequestParam(value = "licenseDays", required = false) List<Integer> licenseDays,
+            @RequestParam(value = "licensePrices", required = false) List<Double> licensePrices,
+            @RequestParam(value = "action", required = false) String action,
+            HttpSession session,
+            RedirectAttributes redirectAttrs
+    ) {
+
+        Account seller = requireActiveSeller(session, redirectAttrs);
+        if (seller == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            Tool existing = toolService.getToolByIdAndSeller(id, seller);
+            if (existing == null) {
+                throw new IllegalArgumentException("Tool not found or unauthorized.");
+            }
+
+            String imagePath = null;
+            String toolPath = null;
+
+            if (imageFile != null && !imageFile.isEmpty()) {
+                imagePath = fileStorageService.uploadImage(imageFile);
+            }
+            if (toolFile != null && !toolFile.isEmpty()) {
+                toolPath = fileStorageService.uploadToolFile(toolFile);
+            }
+
+            // Nếu loginMethod = TOKEN và action=token => chuyển sang flow token-edit
+            if (Objects.equals(action, "token") && existing.getLoginMethod() == Tool.LoginMethod.TOKEN) {
+                List<Integer> days = (licenseDays != null) ? licenseDays : new ArrayList<>();
+                List<Double> prices = (licensePrices != null) ? licensePrices : new ArrayList<>();
+
+                toolFlowService.startEditToolSession(
+                        existing,
+                        updatedTool,
+                        imageFile,
+                        toolFile,
+                        days,
+                        prices,
+                        session
+                );
+                redirectAttrs.addFlashAttribute("info", "Please review and update tokens for this tool.");
+                // hiện tại vẫn dùng TokenController ở /seller/token-manage/edit
+                return "redirect:/tool/token-manage/edit";
+            }
+
+            // USER_PASSWORD → cập nhật trực tiếp
+            toolService.updateTool(
+                    id,
+                    updatedTool,
+                    imagePath,
+                    toolPath,
+                    licenseDays != null ? licenseDays : new ArrayList<>(),
+                    licensePrices != null ? licensePrices : new ArrayList<>(),
+                    seller
+            );
+
+            redirectAttrs.addFlashAttribute("success", "Tool updated successfully!");
+            return "redirect:/tools/seller";
+
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("error", e.getMessage());
+            return "redirect:/tools/seller/edit/" + id;
+        }
+    }
 
     @Autowired
     private ToolRepository toolRepo;
@@ -27,11 +247,13 @@ public class ToolController {
     private ToolReportRepository reportRepo;
 
 
-    //  1. LIST PENDING TOOL UPLOADS
-    // Route: /mod/tools/uploads
-    @GetMapping("/uploads")
-    public String listPendingUploads(
+
+    // 1. LIST ALL TOOL UPLOADS
+    @PreAuthorize("hasRole('MODERATOR')")
+    @GetMapping("/mod/uploads")
+    public String listUploads(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Tool.Status status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Model model) {
@@ -39,18 +261,20 @@ public class ToolController {
         Pageable pageable = PageRequest.of(page, size,
                 Sort.by("createdAt").descending());
 
-        Page<Tool> tools = toolRepo.findPendingUploads(keyword, pageable);
+        Page<Tool> tools = toolRepo.filterTools(keyword, status, pageable);
 
         model.addAttribute("tools", tools);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("status", status != null ? status.name() : "");
 
         return "mod/tool-upload-list";
     }
 
-    //  2. VIEW PENDING TOOL DETAIL
-    // Route: /mod/tools/uploads/{id}
 
-    @GetMapping("/uploads/{id}")
+
+    // 2. VIEW TOOL DETAIL
+    @PreAuthorize("hasRole('MODERATOR')")
+    @GetMapping("/mod/uploads/{id}")
     public String viewUploadDetail(@PathVariable Long id, Model model) {
 
         Tool tool = toolRepo.findById(id)
@@ -61,10 +285,9 @@ public class ToolController {
     }
 
 
-    //  3. APPROVE TOOL UPLOAD
-    // Route: POST /mod/tools/uploads/{id}/approve
-
-    @PostMapping("/uploads/{id}/approve")
+    // 3. APPROVE TOOL UPLOAD
+    @PreAuthorize("hasRole('MODERATOR')")
+    @PostMapping("/mod/uploads/{id}/approve")
     public String approveUpload(
             @PathVariable Long id,
             Principal principal,
@@ -82,13 +305,13 @@ public class ToolController {
         toolRepo.save(tool);
 
         ra.addFlashAttribute("success", "Tool approved successfully.");
-        return "redirect:/mod/tools/uploads";
+        return "redirect:/tools/mod/uploads";
     }
 
-    //  4. REJECT TOOL UPLOAD
-    // Route: POST /mod/tools/uploads/{id}/reject
 
-    @PostMapping("/uploads/{id}/reject")
+    // 4. REJECT TOOL UPLOAD
+    @PreAuthorize("hasRole('MODERATOR')")
+    @PostMapping("/mod/uploads/{id}/reject")
     public String rejectUpload(
             @PathVariable Long id,
             @RequestParam String note,
@@ -108,14 +331,13 @@ public class ToolController {
         toolRepo.save(tool);
 
         ra.addFlashAttribute("success", "Tool rejected.");
-        return "redirect:/mod/tools/uploads";
+        return "redirect:/tools/mod/uploads";
     }
 
 
-    //  5. LIST TOOL REPORTS
-    // Route: /mod/tools/reports
-
-    @GetMapping("/reports")
+    // 5. LIST REPORTS
+    @PreAuthorize("hasRole('MODERATOR')")
+    @GetMapping("/mod/reports")
     public String listReports(
             @RequestParam(required = false) ToolReport.Status status,
             @RequestParam(defaultValue = "0") int page,
@@ -134,10 +356,9 @@ public class ToolController {
     }
 
 
-    //  6. VIEW TOOL REPORT DETAIL
-    // Route: /mod/tools/reports/{id}
-
-    @GetMapping("/reports/{id}")
+    // 6. VIEW REPORT DETAIL
+    @PreAuthorize("hasRole('MODERATOR')")
+    @GetMapping("/mod/reports/{id}")
     public String reportDetail(@PathVariable Long id, Model model) {
 
         ToolReport report = reportRepo.findById(id)
@@ -148,10 +369,9 @@ public class ToolController {
     }
 
 
-    //  7. APPROVE TOOL REPORT
-    // Route: POST /mod/tools/reports/{id}/approve
-
-    @PostMapping("/reports/{id}/approve")
+    // 7. APPROVE REPORT
+    @PreAuthorize("hasRole('MODERATOR')")
+    @PostMapping("/mod/reports/{id}/approve")
     public String approveReport(@PathVariable Long id,
                                 RedirectAttributes ra) {
 
@@ -162,13 +382,13 @@ public class ToolController {
         reportRepo.save(report);
 
         ra.addFlashAttribute("success", "Report approved.");
-        return "redirect:/mod/tools/reports";
+        return "redirect:/tools/mod/reports";
     }
 
-    //  8. REJECT TOOL REPORT
-    // Route: POST /mod/tools/reports/{id}/reject
 
-    @PostMapping("/reports/{id}/reject")
+    // 8. REJECT REPORT
+    @PreAuthorize("hasRole('MODERATOR')")
+    @PostMapping("/mod/reports/{id}/reject")
     public String rejectReport(@PathVariable Long id,
                                RedirectAttributes ra) {
 
@@ -179,6 +399,6 @@ public class ToolController {
         reportRepo.save(report);
 
         ra.addFlashAttribute("success", "Report rejected.");
-        return "redirect:/mod/tools/reports";
+        return "redirect:/tools/mod/reports";
     }
 }

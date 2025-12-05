@@ -5,18 +5,31 @@
 </head>
 <body>
 
-<h2>Pending Tool Uploads</h2>
+<h2>All Tool Uploads</h2>
 
-<!-- SEARCH BAR -->
 <form method="get">
+    <!-- Fix keyword="null" -->
     <input type="text" name="keyword" placeholder="Search by tool name..."
-           th:value="${keyword}">
+           th:value="${keyword == null ? '' : keyword}"/>
+
+    <!-- Status Filter -->
+    <select name="status">
+        <option th:value="${null}" th:selected="${status == null}">All Status</option>
+
+        <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
+        <option value="APPROVED" th:selected="${status == 'APPROVED'}">APPROVED</option>
+        <option value="REJECTED" th:selected="${status == 'REJECTED'}">REJECTED</option>
+        <option value="PUBLISHED" th:selected="${status == 'PUBLISHED'}">PUBLISHED</option>
+        <option value="SUSPECT" th:selected="${status == 'SUSPECT'}">SUSPECT</option>
+        <option value="DEACTIVATED" th:selected="${status == 'DEACTIVATED'}">DEACTIVATED</option>
+        <option value="VIOLATED" th:selected="${status == 'VIOLATED'}">VIOLATED</option>
+    </select>
+
     <button type="submit">Search</button>
 </form>
 
 <br/>
 
-<!-- TABLE -->
 <table border="1" cellpadding="8" cellspacing="0">
     <tr>
         <th>ID</th>
@@ -34,7 +47,7 @@
         <td th:text="${t.createdAt}"></td>
         <td th:text="${t.status}"></td>
         <td>
-            <a th:href="@{'/mod/tools/uploads/' + ${t.toolId}}">Review</a>
+            <a th:href="@{'/tools/mod/uploads/' + ${t.toolId}}">Review</a>
         </td>
     </tr>
 </table>
@@ -44,11 +57,24 @@
     <span th:text="'Page ' + ${tools.number + 1} + ' of ' + ${tools.totalPages}"></span>
 
     <div>
+        <!--  Lưu đúng keyword + status khi chuyển trang -->
         <a th:if="${tools.hasPrevious()}"
-           th:href="@{'/mod/tools/uploads?page=' + ${tools.number - 1}}">Previous</a>
+           th:href="@{/tools/mod/uploads(
+                page=${tools.number - 1},
+                keyword=${keyword},
+                status=${status}
+           )}">
+            Previous
+        </a>
 
         <a th:if="${tools.hasNext()}"
-           th:href="@{'/mod/tools/uploads?page=' + ${tools.number + 1}}">Next</a>
+           th:href="@{/tools/mod/uploads(
+                page=${tools.number + 1},
+                keyword=${keyword},
+                status=${status}
+           )}">
+            Next
+        </a>
     </div>
 </div>
 

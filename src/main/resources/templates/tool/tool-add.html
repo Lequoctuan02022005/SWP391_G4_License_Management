@@ -1,0 +1,92 @@
+<link rel="stylesheet" href="/css/tool-form.css">
+
+<div class="tool-container">
+
+    <!-- LEFT PANEL (IMAGE PREVIEW) -->
+    <div class="tool-left">
+        <div class="tool-image-placeholder" id="previewBox">
+            Preview Image
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL (FORM) -->
+    <div class="tool-right">
+
+        <h3>Add New Tool</h3>
+        <hr>
+
+        <form class="tool-form" method="post" enctype="multipart/form-data">
+
+            <label>Tool Name</label>
+            <input type="text" name="toolName" required>
+
+            <label>Upload Image</label>
+            <input type="file" name="imageFile" accept="image/*" onchange="loadImage(event)" required>
+
+            <label>Upload Tool File (.exe, .zip)</label>
+            <input type="file" name="toolFile" required>
+
+            <label>Category</label>
+            <select name="categoryId" required>
+                <option value="">-- Select category --</option>
+                <th:block th:each="c : ${categories}">
+                    <option th:value="${c.categoryId}" th:text="${c.name}"></option>
+                </th:block>
+            </select>
+
+            <label>Description</label>
+            <textarea name="description"></textarea>
+
+            <label>Login Method</label>
+            <select name="loginMethod" required>
+                <option value="">-- Select method --</option>
+                <option value="USER_PASSWORD">Username + Password</option>
+                <option value="TOKEN">Token</option>
+            </select>
+
+            <label>Quantity</label>
+            <input type="number" name="quantity" min="1" value="1" required>
+
+            <label>License Packages</label>
+            <div id="licenseList">
+                <div class="license-row">
+                    <input name="licenseDays" type="number" placeholder="Days">
+                    <input name="licensePrices" type="number" placeholder="Price (VND)">
+                    <button type="button" class="remove-license-btn" onclick="removeLicense(this)">X</button>
+                </div>
+            </div>
+
+            <button type="button" class="btn-secondary-custom" onclick="addLicense()">+ Add another</button>
+            <br><br>
+
+            <button class="btn-primary-custom" type="submit">Save Tool</button>
+            <a href="/tools/seller" class="btn-secondary-custom">Cancel</a>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    function loadImage(event) {
+        let imgBox = document.getElementById("previewBox");
+        imgBox.innerHTML = "";
+        let img = document.createElement("img");
+        img.src = URL.createObjectURL(event.target.files[0]);
+        imgBox.appendChild(img);
+    }
+
+    function addLicense() {
+        let div = document.createElement("div");
+        div.classList.add("license-row");
+        div.innerHTML = `
+        <input name="licenseDays" type="number" placeholder="Days">
+        <input name="licensePrices" type="number" placeholder="Price (VND)">
+        <button type="button" class="remove-license-btn" onclick="removeLicense(this)">X</button>
+    `;
+        document.getElementById("licenseList").appendChild(div);
+    }
+
+    function removeLicense(btn) {
+        btn.parentElement.remove();
+    }
+</script>

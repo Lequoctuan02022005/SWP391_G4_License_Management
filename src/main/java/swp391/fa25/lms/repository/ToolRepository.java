@@ -1,19 +1,22 @@
-package swp391.fa25.lms.repository.mod;
-
+package swp391.fa25.lms.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Tool;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ToolRepository extends JpaRepository<Tool, Long> {
+    Optional<Tool> findByToolIdAndSeller(Long toolId, Account seller);
+    boolean existsByToolName(String toolName);
 
+    //mod
     // MODERATOR – find pending tools
     @Query("SELECT t FROM Tool t " +
             "WHERE t.status = swp391.fa25.lms.model.Tool.Status.PENDING " +
@@ -57,4 +60,23 @@ public interface ToolRepository extends JpaRepository<Tool, Long> {
 
     @Query("SELECT COUNT(t) FROM Tool t WHERE t.status = :status")
     long countByStatus(@Param("status") Tool.Status status);
+
+    @Query("""
+       SELECT t FROM Tool t
+       WHERE (:keyword IS NULL OR :keyword = '' 
+              OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+       """)
+    Page<Tool> findAllTools(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("""
+       SELECT t FROM Tool t
+       WHERE (:keyword IS NULL OR :keyword = '' 
+              OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+         AND (:status IS NULL OR t.status = :status)
+       """)
+    Page<Tool> filterTools(
+            @Param("keyword") String keyword,
+            @Param("status") Tool.Status status,
+            Pageable pageable
+    );
 }
