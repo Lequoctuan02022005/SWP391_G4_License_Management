@@ -12,26 +12,18 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Tool;
-import swp391.fa25.lms.service.AccountService;
 import swp391.fa25.lms.service.FileStorageService;
 import swp391.fa25.lms.service.ToolFlowService;
 import swp391.fa25.lms.service.ToolService;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.data.domain.*;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import swp391.fa25.lms.model.Tool;
 import swp391.fa25.lms.model.ToolReport;
-import swp391.fa25.lms.repository.mod.ToolReportRepository;
-import swp391.fa25.lms.repository.mod.ToolRepository;
+import swp391.fa25.lms.repository.ToolReportRepository;
+import swp391.fa25.lms.repository.ToolRepository;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -256,7 +248,7 @@ public class ToolController {
 
 
 
-    // 1. LIST PENDING TOOL UPLOADS
+    // 1. LIST ALL TOOL UPLOADS
     @PreAuthorize("hasRole('MODERATOR')")
     @GetMapping("/mod/uploads")
     public String listUploads(
@@ -280,7 +272,7 @@ public class ToolController {
 
 
 
-    // 2. VIEW PENDING TOOL DETAIL
+    // 2. VIEW TOOL DETAIL
     @PreAuthorize("hasRole('MODERATOR')")
     @GetMapping("/mod/uploads/{id}")
     public String viewUploadDetail(@PathVariable Long id, Model model) {
