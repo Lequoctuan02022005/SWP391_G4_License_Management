@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService)
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/home/**",
+                        .requestMatchers( "/home", "/home/**","/verify",
                                 "/css/**", "/js/**", "/images/**",
                                 "/login", "/register", "/error").permitAll()
 
