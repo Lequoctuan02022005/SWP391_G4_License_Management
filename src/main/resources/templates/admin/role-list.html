@@ -1,83 +1,143 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
-    <title>Role List</title>
+    <title>Role Management</title>
+
     <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+
+    <style>
+        body {
+            background: #f5f7fa;
+            font-family: "Inter", sans-serif;
+        }
+
+        .page-title {
+            font-weight: 700;
+            font-size: 28px;
+        }
+
+        .table-header {
+            background: #1f2937;
+            color: white;
+        }
+
+        .card {
+            border-radius: 12px;
+        }
+
+        .action-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+        }
+
+        .search-box input {
+            border-radius: 8px;
+        }
+
+        .pagination .page-link {
+            border-radius: 6px !important;
+        }
+    </style>
 </head>
-<body class="container mt-4">
 
-<h2>Role Management</h2>
+<body>
 
-<form class="d-flex mb-3" method="get" action="/admin/roles">
-    <input type="text" class="form-control me-2"
-           name="keyword"
-           placeholder="Search role name..."
-           th:value="${keyword}">
-    <button class="btn btn-primary">Search</button>
-</form>
+<!-- Admin Header -->
+<div th:replace="admin/admin-header :: adminHeader"></div>
 
+<div class="container mt-5">
 
-<!--<div class="mb-3">-->
-<!--    <a href="/admin/roles/create" class="btn btn-primary">+ Create Role</a>-->
-<!--</div>-->
+    <!-- Header + Search -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="page-title"> Role Management</h2>
 
-<table class="table table-bordered table-striped">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Role Name</th>
-        <th>Note</th>
-        <th style="width: 160px;">Actions</th>
-    </tr>
-    </thead>
+        <form class="d-flex search-box" method="get" action="/admin/roles">
+            <input type="text" class="form-control me-2"
+                   name="keyword"
+                   placeholder="Search role name..."
+                   th:value="${keyword}">
+            <button class="btn btn-outline-dark action-btn">Search</button>
+        </form>
 
-    <tbody>
-    <tr th:each="r : ${roles}">
-        <td th:text="${r.roleId}"></td>
-        <td th:text="${r.roleName}"></td>
-        <td th:text="${r.note}"></td>
+<!--        <a href="/admin/roles/create" class="btn btn-dark action-btn">-->
+<!--            + Create Role-->
+<!--        </a>-->
+    </div>
 
-        <td>
-            <a th:href="@{'/admin/roles/edit/' + ${r.roleId}}" class="btn btn-sm btn-warning">Edit</a>
-<!--            <a th:href="@{'/admin/roles/delete/' + ${r.roleId}}"-->
-<!--               onclick="return confirm('Delete this role?')"-->
-<!--               class="btn btn-sm btn-danger">Delete</a>-->
-        </td>
-    </tr>
-    </tbody>
-</table>
+    <!-- Table -->
+    <div class="card shadow-sm">
+        <div class="card-body">
 
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-header">
+                <tr>
+                    <th>ID</th>
+                    <th>Role Name</th>
+                    <th>Note</th>
+                    <th width="150px">Actions</th>
+                </tr>
+                </thead>
 
-<nav th:if="${totalPages > 1}">
-    <ul class="pagination">
+                <tbody>
+                <tr th:each="r : ${roles}">
+                    <td th:text="${r.roleId}"></td>
+                    <td th:text="${r.roleName}"></td>
+                    <td th:text="${r.note}"></td>
 
-        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-            <a class="page-link"
-               th:href="@{'/admin/roles?page=' + (${currentPage} - 1) + '&keyword=' + ${keyword}}">
-                Previous
-            </a>
-        </li>
+                    <td>
+                        <a th:href="@{'/admin/roles/edit/' + ${r.roleId}}"
+                           class="btn btn-warning btn-sm action-btn">
+                            Edit
+                        </a>
+                    </td>
+                </tr>
 
-        <li class="page-item"
-            th:each="i : ${#numbers.sequence(0, totalPages-1)}"
-            th:classappend="${i == currentPage} ? 'active'">
-            <a class="page-link"
-               th:text="${i + 1}"
-               th:href="@{'/admin/roles?page=' + ${i} + '&keyword=' + ${keyword}}">
-            </a>
-        </li>
+                <tr th:if="${roles.size() == 0}">
+                    <td colspan="4" class="text-muted py-4">No roles found.</td>
+                </tr>
+                </tbody>
+            </table>
 
-        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-            <a class="page-link"
-               th:href="@{'/admin/roles?page=' + (${currentPage} + 1) + '&keyword=' + ${keyword}}">
-                Next
-            </a>
-        </li>
+        </div>
+    </div>
 
-    </ul>
-</nav>
+    <!-- Pagination -->
+    <nav class="mt-4" th:if="${totalPages > 1}">
+        <ul class="pagination justify-content-center">
+
+            <!-- Previous -->
+            <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{'/admin/roles?page=' + (${currentPage} - 1) + '&keyword=' + ${keyword}}">
+                    Previous
+                </a>
+            </li>
+
+            <!-- Page numbers -->
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(0, totalPages-1)}"
+                th:classappend="${i == currentPage} ? 'active'">
+                <a class="page-link"
+                   th:text="${i + 1}"
+                   th:href="@{'/admin/roles?page=' + ${i} + '&keyword=' + ${keyword}}">
+                </a>
+            </li>
+
+            <!-- Next -->
+            <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{'/admin/roles?page=' + (${currentPage} + 1) + '&keyword=' + ${keyword}}">
+                    Next
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+
+</div>
 
 </body>
 </html>

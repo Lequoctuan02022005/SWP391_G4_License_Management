@@ -33,6 +33,12 @@ public class SystemAdminController {
     @Autowired
     private DataSource dataSource;
 
+    @GetMapping("/dashboard")
+    public String dashboard() {
+        return "admin/dashboard";
+    }
+
+
     // ACCOUNT MANAGEMENT
     @GetMapping("/accounts")
     public String listAccounts(
@@ -153,9 +159,18 @@ public class SystemAdminController {
 
     @PostMapping("/roles/create")
     public String createRole(@ModelAttribute Role role) {
+
+        // Lấy ID lớn nhất hiện tại rồi +1
+        Integer newId = roleRepository.findTopByOrderByRoleIdDesc()
+                .map(r -> r.getRoleId() + 1)
+                .orElse(1);
+
+        role.setRoleId(newId); // tự set ID vì model không tự sinh
+
         roleRepository.save(role);
         return "redirect:/admin/roles";
     }
+
 
     @GetMapping("/roles/edit/{id}")
     public String editRoleForm(@PathVariable Integer id, Model model) {
