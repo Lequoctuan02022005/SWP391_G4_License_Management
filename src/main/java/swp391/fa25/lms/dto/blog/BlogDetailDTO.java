@@ -43,11 +43,6 @@ public class BlogDetailDTO {
     private String authorEmail;
     private String authorAvatar;
 
-    // SEO fields
-    private String metaTitle;
-    private String metaDescription;
-    private String metaKeywords;
-
     // Related blogs (cùng category)
     private List<BlogListItemDTO> relatedBlogs;
 
@@ -87,11 +82,6 @@ public class BlogDetailDTO {
             this.authorEmail = blog.getAuthor().getEmail();
             // authorAvatar có thể lấy từ Account nếu có field
         }
-
-        // SEO fields
-        this.metaTitle = blog.getMetaTitle();
-        this.metaDescription = blog.getMetaDescription();
-        this.metaKeywords = blog.getMetaKeywords();
 
         // Estimate reading time
         if (this.content != null) {

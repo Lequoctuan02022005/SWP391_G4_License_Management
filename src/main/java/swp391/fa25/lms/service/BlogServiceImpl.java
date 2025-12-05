@@ -58,9 +58,6 @@ public class BlogServiceImpl implements BlogService {
         blog.setFeatured(dto.getFeatured() != null ? dto.getFeatured() : false);
         blog.setAllowComments(dto.getAllowComments() != null ? dto.getAllowComments() : true);
         blog.setScheduledPublishAt(dto.getScheduledPublishAt());
-        blog.setMetaTitle(dto.getMetaTitle());
-        blog.setMetaDescription(dto.getMetaDescription());
-        blog.setMetaKeywords(dto.getMetaKeywords());
 
         // Set status
         try {
@@ -113,9 +110,6 @@ public class BlogServiceImpl implements BlogService {
         }
         
         blog.setScheduledPublishAt(dto.getScheduledPublishAt());
-        blog.setMetaTitle(dto.getMetaTitle());
-        blog.setMetaDescription(dto.getMetaDescription());
-        blog.setMetaKeywords(dto.getMetaKeywords());
 
         // Update status if changed
         Blog.Status newStatus = Blog.Status.valueOf(dto.getStatus().toUpperCase());

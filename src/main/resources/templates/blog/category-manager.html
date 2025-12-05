@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Danh mục Blog - Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/css/blog.css}" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <h5 class="px-3">Quản lý Blog</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/blog/manager">
+                            <i class="bi bi-list-ul"></i> Danh sách Blog
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="bi bi-folder"></i> Quản lý Danh mục
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house"></i> Về trang chủ
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h2>Quản lý Danh mục Blog</h2>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="resetCategoryForm()">
+                    <i class="bi bi-plus-circle"></i> Thêm Danh mục
+                </button>
+            </div>
+
+            <!-- Category Table -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">Thứ tự</th>
+                            <th>Tên danh mục</th>
+                            <th>Mô tả</th>
+                            <th>Slug</th>
+                            <th>Số bài viết</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th style="width: 150px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                <div class="spinner-border" role="status"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Thêm Danh mục</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="categoryForm" onsubmit="submitCategory(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="categoryId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" required minlength="2" maxlength="100">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea class="form-control" id="description" rows="3" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Slug</label>
+                        <input type="text" class="form-control" id="slug" maxlength="100">
+                        <small class="text-muted">Để trống để tự động tạo từ tên</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Thứ tự hiển thị</label>
+                        <input type="number" class="form-control" id="displayOrder" min="0">
+                        <small class="text-muted">Để trống để tự động xếp cuối</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select class="form-select" id="status">
+                            <option value="ACTIVE">Kích hoạt</option>
+                            <option value="INACTIVE">Không kích hoạt</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let categoryModal;
+    let editingCategoryId = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        categoryModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+        loadCategories();
+    });
+    
+    function loadCategories() {
+        fetch('/api/manager/blog-categories')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                displayCategories(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Lỗi tải danh sách danh mục');
+        });
+    }
+    
+    function displayCategories(categories) {
+        const tbody = document.getElementById('categoryTableBody');
+        if (!categories || categories.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">Chưa có danh mục nào</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        categories.forEach(cat => {
+            const statusBadge = cat.status === 'ACTIVE' 
+                ? '<span class="badge bg-success">Kích hoạt</span>' 
+                : '<span class="badge bg-secondary">Không kích hoạt</span>';
+            
+            html += `
+                <tr>
+                    <td>
+                        <div class="btn-group-vertical btn-group-sm">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="moveCategory(${cat.categoryId}, 'up')" title="Lên">
+                                <i class="bi bi-arrow-up"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="moveCategory(${cat.categoryId}, 'down')" title="Xuống">
+                                <i class="bi bi-arrow-down"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td><strong>${cat.name}</strong></td>
+                    <td>${cat.description || '<em class="text-muted">Không có mô tả</em>'}</td>
+                    <td><code>${cat.slug}</code></td>
+                    <td>${cat.blogCount || 0}</td>
+                    <td>${statusBadge}</td>
+                    <td>${new Date(cat.createdDate).toLocaleDateString('vi-VN')}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editCategory(${cat.categoryId})" title="Sửa">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            ${cat.status === 'ACTIVE' ? `
+                                <button class="btn btn-outline-warning" onclick="deactivateCategory(${cat.categoryId})" title="Vô hiệu hóa">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            ` : `
+                                <button class="btn btn-outline-success" onclick="activateCategory(${cat.categoryId})" title="Kích hoạt">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                            `}
+                            <button class="btn btn-outline-danger" onclick="deleteCategory(${cat.categoryId})" title="Xóa">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+    
+    function resetCategoryForm() {
+        document.getElementById('categoryForm').reset();
+        document.getElementById('categoryId').value = '';
+        document.getElementById('modalTitle').textContent = 'Thêm Danh mục';
+        editingCategoryId = null;
+    }
+    
+    function editCategory(id) {
+        fetch(`/api/manager/blog-categories/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                const cat = data.data;
+                document.getElementById('categoryId').value = cat.categoryId;
+                document.getElementById('name').value = cat.name;
+                document.getElementById('description').value = cat.description || '';
+                document.getElementById('slug').value = cat.slug || '';
+                document.getElementById('displayOrder').value = cat.displayOrder || '';
+                document.getElementById('status').value = cat.status;
+                
+                document.getElementById('modalTitle').textContent = 'Chỉnh sửa Danh mục';
+                editingCategoryId = id;
+                categoryModal.show();
+            }
+        });
+    }
+    
+    function submitCategory(event) {
+        event.preventDefault();
+        
+        const categoryData = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value || null,
+            slug: document.getElementById('slug').value || null,
+            displayOrder: document.getElementById('displayOrder').value || null,
+            status: document.getElementById('status').value
+        };
+        
+        const url = editingCategoryId 
+            ? `/api/manager/blog-categories/${editingCategoryId}` 
+            : '/api/manager/blog-categories';
+        const method = editingCategoryId ? 'PUT' : 'POST';
+        
+        if (editingCategoryId) {
+            categoryData.categoryId = editingCategoryId;
+        }
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(categoryData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Lưu danh mục thành công!');
+                categoryModal.hide();
+                loadCategories();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Lỗi khi lưu danh mục');
+        });
+    }
+    
+    function moveCategory(id, direction) {
+        // Get current categories to find the one to swap with
+        fetch('/api/manager/blog-categories')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                const categories = data.data;
+                const currentIndex = categories.findIndex(c => c.categoryId === id);
+                
+                if (currentIndex === -1) return;
+                
+                const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+                if (targetIndex < 0 || targetIndex >= categories.length) return;
+                
+                const currentCat = categories[currentIndex];
+                const targetCat = categories[targetIndex];
+                
+                // Swap display orders
+                fetch(`/api/manager/blog-categories/reorder`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        categoryId1: currentCat.categoryId,
+                        categoryId2: targetCat.categoryId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadCategories();
+                    } else {
+                        alert('Lỗi: ' + data.message);
+                    }
+                });
+            }
+        });
+    }
+    
+    function activateCategory(id) {
+        fetch(`/api/manager/blog-categories/${id}/activate`, {
+            method: 'PUT'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Kích hoạt danh mục thành công!');
+                loadCategories();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+    
+    function deactivateCategory(id) {
+        if (!confirm('Bạn có chắc muốn vô hiệu hóa danh mục này?')) return;
+        
+        fetch(`/api/manager/blog-categories/${id}/deactivate`, {
+            method: 'PUT'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Vô hiệu hóa danh mục thành công!');
+                loadCategories();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+    
+    function deleteCategory(id) {
+        if (!confirm('Bạn có chắc muốn xóa danh mục này? Tất cả blog trong danh mục này sẽ bị ảnh hưởng.')) return;
+        
+        fetch(`/api/manager/blog-categories/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Xóa danh mục thành công!');
+                loadCategories();
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -68,16 +68,6 @@ public class Blog {
     @Column(name = "allow_comments")
     private Boolean allowComments = true;
 
-    // SEO fields
-    @Column(name = "meta_title", length = 200, columnDefinition = "NVARCHAR(200)")
-    private String metaTitle;
-
-    @Column(name = "meta_description", length = 500, columnDefinition = "NVARCHAR(500)")
-    private String metaDescription;
-
-    @Column(name = "meta_keywords", length = 500, columnDefinition = "NVARCHAR(500)")
-    private String metaKeywords;
-
     // Timestamps
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -301,30 +291,6 @@ public class Blog {
 
     public void setAllowComments(Boolean allowComments) {
         this.allowComments = allowComments;
-    }
-
-    public String getMetaTitle() {
-        return metaTitle;
-    }
-
-    public void setMetaTitle(String metaTitle) {
-        this.metaTitle = metaTitle;
-    }
-
-    public String getMetaDescription() {
-        return metaDescription;
-    }
-
-    public void setMetaDescription(String metaDescription) {
-        this.metaDescription = metaDescription;
-    }
-
-    public String getMetaKeywords() {
-        return metaKeywords;
-    }
-
-    public void setMetaKeywords(String metaKeywords) {
-        this.metaKeywords = metaKeywords;
     }
 
     public LocalDateTime getCreatedAt() {

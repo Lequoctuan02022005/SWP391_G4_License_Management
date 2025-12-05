@@ -10,9 +10,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 import swp391.fa25.lms.dto.blog.*;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Blog;
@@ -44,9 +44,9 @@ public class BlogController {
     @PostMapping
     public ResponseEntity<?> createBlog(
             @Valid @RequestBody CreateBlogDTO dto,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             BlogDetailDTO blog = blogService.createBlog(dto, account.getAccountId());
@@ -74,9 +74,9 @@ public class BlogController {
     public ResponseEntity<?> updateBlog(
             @PathVariable Long id,
             @Valid @RequestBody UpdateBlogDTO dto,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             dto.setBlogId(id);
@@ -104,9 +104,9 @@ public class BlogController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteBlog(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             blogService.deleteBlog(id, account.getAccountId());
@@ -133,9 +133,9 @@ public class BlogController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> permanentlyDeleteBlog(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             blogService.permanentlyDeleteBlog(id, account.getAccountId());
@@ -224,9 +224,9 @@ public class BlogController {
     public ResponseEntity<?> getMyBlogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -282,9 +282,9 @@ public class BlogController {
     @PutMapping("/{id}/publish")
     public ResponseEntity<?> publishBlog(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             BlogDetailDTO blog = blogService.publishBlog(id, account.getAccountId());
@@ -311,9 +311,9 @@ public class BlogController {
     @PutMapping("/{id}/unpublish")
     public ResponseEntity<?> unpublishBlog(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             BlogDetailDTO blog = blogService.unpublishBlog(id, account.getAccountId());
@@ -340,9 +340,9 @@ public class BlogController {
     @PutMapping("/{id}/archive")
     public ResponseEntity<?> archiveBlog(
             @PathVariable Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             BlogDetailDTO blog = blogService.archiveBlog(id, account.getAccountId());
@@ -367,9 +367,9 @@ public class BlogController {
      * GET /api/manager/blogs/stats
      */
     @GetMapping("/stats")
-    public ResponseEntity<?> getBlogStats(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<?> getBlogStats(Principal principal) {
         try {
-            Account account = accountRepository.findByEmail(userDetails.getUsername())
+            Account account = accountRepository.findByEmail(principal.getName())
                     .orElseThrow(() -> new RuntimeException("Account not found"));
 
             Map<String, Object> stats = new HashMap<>();

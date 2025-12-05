@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog Detail - License Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link th:href="@{/css/home.css}" rel="stylesheet">
+    <link th:href="@{/css/blog.css}" rel="stylesheet">
+</head>
+<body>
+<!--Header-->
+<div th:replace="home/header :: header"></div>
+
+<!-- Blog Content -->
+<section class="blog-detail-section py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <article id="blogContent">
+                    <!-- Loading spinner -->
+                    <div class="text-center py-5">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Related Posts -->
+                <div id="relatedPosts" class="related-posts mt-5" style="display: none;">
+                    <h4>Bài viết liên quan</h4>
+                    <div class="row" id="relatedPostsContent"></div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="blog-sidebar sticky-top" style="top: 20px;">
+                    <!-- Author Info -->
+                    <div class="sidebar-widget" id="authorInfo" style="display: none;">
+                        <h5>Tác giả</h5>
+                        <div class="author-card"></div>
+                    </div>
+
+                    <!-- Table of Contents -->
+                    <div class="sidebar-widget" id="tocWidget" style="display: none;">
+                        <h5>Mục lục</h5>
+                        <div id="tableOfContents"></div>
+                    </div>
+
+                    <!-- Popular Posts -->
+                    <div class="sidebar-widget">
+                        <h5>Bài viết xem nhiều</h5>
+                        <div id="popularPosts">
+                            <div class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Categories -->
+                    <div class="sidebar-widget">
+                        <h5>Danh mục</h5>
+                        <div id="categoriesList">
+                            <div class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!--Footer-->
+<div th:replace="home/footer :: footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Get slug from URL
+    const pathParts = window.location.pathname.split('/');
+    const slug = pathParts[pathParts.length - 1];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBlogDetail();
+        loadPopularPosts();
+        loadCategories();
+    });
+    
+    function loadBlogDetail() {
+        fetch(`/api/public/blogs/slug/${slug}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    displayBlogDetail(data.data);
+                    loadRelatedPosts(data.data.categoryId, data.data.blogId);
+                } else {
+                    document.getElementById('blogContent').innerHTML = 
+                        '<div class="alert alert-warning">Không tìm thấy bài viết</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading blog:', error);
+                document.getElementById('blogContent').innerHTML = 
+                    '<div class="alert alert-danger">Lỗi tải bài viết</div>';
+            });
+    }
+    
+    function displayBlogDetail(blog) {
+        const container = document.getElementById('blogContent');
+        
+        let html = `
+            <div class="blog-detail-header">
+                ${blog.thumbnailUrl ? `<img src="${blog.thumbnailUrl}" alt="${blog.title}" class="img-fluid mb-4">` : ''}
+                <div class="blog-meta mb-3">
+                    <span class="badge bg-primary">${blog.categoryName}</span>
+                    <span><i class="bi bi-calendar"></i> ${blog.publishedDate || blog.createdDate}</span>
+                    <span><i class="bi bi-person"></i> ${blog.authorName}</span>
+                    <span><i class="bi bi-eye"></i> ${blog.viewCount || 0} lượt xem</span>
+                    ${blog.readingTime ? `<span><i class="bi bi-clock"></i> ${blog.readingTime} phút đọc</span>` : ''}
+                </div>
+                <h1>${blog.title}</h1>
+                ${blog.summary ? `<p class="lead">${blog.summary}</p>` : ''}
+            </div>
+            
+            <div class="blog-detail-content">
+                ${blog.content}
+            </div>
+            
+            ${blog.tags ? `
+                <div class="blog-tags mt-4">
+                    <i class="bi bi-tags"></i>
+                    ${blog.tags.split(',').map(tag => `<span class="badge bg-secondary">${tag.trim()}</span>`).join(' ')}
+                </div>
+            ` : ''}
+        `;
+        
+        container.innerHTML = html;
+        
+        // Display author info if available
+        if (blog.authorName) {
+            document.getElementById('authorInfo').style.display = 'block';
+            document.querySelector('.author-card').innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="author-avatar me-3">
+                        <i class="bi bi-person-circle" style="font-size: 3rem;"></i>
+                    </div>
+                    <div>
+                        <h6 class="mb-0">${blog.authorName}</h6>
+                        <small class="text-muted">Tác giả</small>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Generate table of contents from headers
+        generateTableOfContents();
+        
+        // Update page title
+        document.title = blog.title + ' - License Management System';
+    }
+    
+    function generateTableOfContents() {
+        const content = document.querySelector('.blog-detail-content');
+        if (!content) return;
+        
+        const headers = content.querySelectorAll('h2, h3');
+        if (headers.length === 0) return;
+        
+        const tocWidget = document.getElementById('tocWidget');
+        const toc = document.getElementById('tableOfContents');
+        
+        let html = '<ul class="toc-list">';
+        headers.forEach((header, index) => {
+            const id = 'heading-' + index;
+            header.id = id;
+            const level = header.tagName === 'H2' ? '' : 'ms-3';
+            html += `<li class="${level}"><a href="#${id}">${header.textContent}</a></li>`;
+        });
+        html += '</ul>';
+        
+        toc.innerHTML = html;
+        tocWidget.style.display = 'block';
+        
+        // Smooth scroll for TOC links
+        document.querySelectorAll('.toc-list a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    }
+    
+    function loadRelatedPosts(categoryId, currentBlogId) {
+        fetch(`/api/public/blogs/category/${categoryId}?size=3`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data && data.data.content) {
+                    const related = data.data.content.filter(b => b.blogId !== currentBlogId);
+                    if (related.length > 0) {
+                        displayRelatedPosts(related);
+                    }
+                }
+            })
+            .catch(error => console.error('Error loading related posts:', error));
+    }
+    
+    function displayRelatedPosts(posts) {
+        const container = document.getElementById('relatedPostsContent');
+        const section = document.getElementById('relatedPosts');
+        
+        let html = '';
+        posts.forEach(post => {
+            html += `
+                <div class="col-md-4">
+                    <div class="blog-card">
+                        ${post.thumbnailUrl ? `<img src="${post.thumbnailUrl}" alt="${post.title}">` : '<div class="blog-card-no-image"><i class="bi bi-image"></i></div>'}
+                        <div class="blog-card-body">
+                            <h6>${post.title}</h6>
+                            <a href="/blog/${post.slug}" class="btn btn-sm btn-outline-primary">Đọc thêm</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        section.style.display = 'block';
+    }
+    
+    function loadPopularPosts() {
+        fetch('/api/public/blogs/top-viewed?size=5')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('popularPosts');
+                if (data.success && data.data && data.data.length > 0) {
+                    let html = '<ul class="list-unstyled">';
+                    data.data.forEach(blog => {
+                        html += `
+                            <li class="popular-post-item">
+                                <a href="/blog/${blog.slug}">
+                                    <h6>${blog.title}</h6>
+                                    <small><i class="bi bi-eye"></i> ${blog.viewCount || 0} lượt xem</small>
+                                </a>
+                            </li>
+                        `;
+                    });
+                    html += '</ul>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p class="text-muted">Chưa có bài viết</p>';
+                }
+            })
+            .catch(error => console.error('Error loading popular posts:', error));
+    }
+    
+    function loadCategories() {
+        fetch('/api/public/blog-categories')
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('categoriesList');
+                if (data.success && data.data && data.data.length > 0) {
+                    let html = '<ul class="list-unstyled">';
+                    data.data.forEach(cat => {
+                        html += `<li><a href="/blogs?category=${cat.categoryId}" class="category-link">${cat.name} (${cat.blogCount || 0})</a></li>`;
+                    });
+                    html += '</ul>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p class="text-muted">Không có danh mục</p>';
+                }
+            })
+            .catch(error => console.error('Error loading categories:', error));
+    }
+</script>
+</body>
+</html>

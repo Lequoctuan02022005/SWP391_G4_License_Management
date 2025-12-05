@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý Blog - Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link th:href="@{/css/blog.css}" rel="stylesheet">
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <h5 class="px-3">Quản lý Blog</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" onclick="showSection('list'); return false;">
+                            <i class="bi bi-list-ul"></i> Danh sách Blog
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="showSection('create'); return false;">
+                            <i class="bi bi-plus-circle"></i> Tạo Blog mới
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/blog/category-manager">
+                            <i class="bi bi-folder"></i> Quản lý Danh mục
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/home">
+                            <i class="bi bi-house"></i> Về trang chủ
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <!-- Blog List Section -->
+            <div id="listSection" class="content-section">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h2>Danh sách Blog</h2>
+                    <button class="btn btn-primary" onclick="showSection('create')">
+                        <i class="bi bi-plus-circle"></i> Tạo Blog mới
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <select class="form-select" id="filterStatus" onchange="loadBlogs()">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="DRAFT">Nháp</option>
+                            <option value="PUBLISHED">Đã xuất bản</option>
+                            <option value="ARCHIVED">Lưu trữ</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="filterCategory" onchange="loadBlogs()">
+                            <option value="">Tất cả danh mục</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchKeyword" placeholder="Tìm kiếm...">
+                            <button class="btn btn-outline-secondary" onclick="loadBlogs()">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blog Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tiêu đề</th>
+                                <th>Danh mục</th>
+                                <th>Trạng thái</th>
+                                <th>Lượt xem</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blogTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">
+                                    <div class="spinner-border" role="status"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav id="paginationNav">
+                    <ul class="pagination justify-content-center" id="pagination"></ul>
+                </nav>
+            </div>
+
+            <!-- Create/Edit Blog Section -->
+            <div id="formSection" class="content-section" style="display: none;">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h2 id="formTitle">Tạo Blog mới</h2>
+                    <button class="btn btn-secondary" onclick="showSection('list')">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </button>
+                </div>
+
+                <form id="blogForm" onsubmit="submitBlog(event)">
+                    <input type="hidden" id="blogId">
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="title" required minlength="10" maxlength="200">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tóm tắt <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="summary" rows="3" required maxlength="500"></textarea>
+                                <small class="text-muted">Tối đa 500 ký tự</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Nội dung <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="content" rows="15" required minlength="100"></textarea>
+                                <small class="text-muted">Tối thiểu 100 ký tự</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Danh mục <span class="text-danger">*</span></label>
+                                <select class="form-select" id="categoryId" required>
+                                    <option value="">Chọn danh mục</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ảnh đại diện (Thumbnail)</label>
+                                <input type="file" class="form-control" id="thumbnailFile" accept="image/*" onchange="previewThumbnail(event)">
+                                <input type="hidden" id="thumbnailImage">
+                                <div id="thumbnailPreview" class="mt-2" style="display: none;">
+                                    <img id="thumbnailPreviewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                    <button type="button" class="btn btn-sm btn-danger mt-1" onclick="removeThumbnail()">Xóa ảnh</button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ảnh Banner</label>
+                                <input type="file" class="form-control" id="bannerFile" accept="image/*" onchange="previewBanner(event)">
+                                <input type="hidden" id="bannerImage">
+                                <div id="bannerPreview" class="mt-2" style="display: none;">
+                                    <img id="bannerPreviewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px; max-height: 150px;">
+                                    <button type="button" class="btn btn-sm btn-danger mt-1" onclick="removeBanner()">Xóa ảnh</button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="featured">
+                                    <label class="form-check-label" for="featured">
+                                        Bài viết nổi bật
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ngày xuất bản</label>
+                                <input type="datetime-local" class="form-control" id="publishedDate">
+                                <small class="text-muted">Để trống nếu xuất bản ngay</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="saveBtn">
+                            <i class="bi bi-save"></i> Lưu nháp
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="publishBlog()">
+                            <i class="bi bi-send"></i> Xuất bản
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="showSection('list')">
+                            Hủy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentPage = 0;
+    let editingBlogId = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadBlogs();
+        loadCategoriesForFilter();
+        loadCategoriesForForm();
+    });
+    
+    function showSection(section) {
+        document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        
+        if (section === 'list') {
+            document.getElementById('listSection').style.display = 'block';
+            document.querySelector('.nav-link').classList.add('active');
+            loadBlogs();
+        } else if (section === 'create') {
+            document.getElementById('formSection').style.display = 'block';
+            document.querySelectorAll('.nav-link')[1].classList.add('active');
+            resetForm();
+            document.getElementById('formTitle').textContent = 'Tạo Blog mới';
+        }
+    }
+    
+    function loadBlogs(page = 0) {
+        currentPage = page;
+        const status = document.getElementById('filterStatus').value;
+        const categoryId = document.getElementById('filterCategory').value;
+        const keyword = document.getElementById('searchKeyword').value;
+        
+        let url = `/api/manager/blogs/search?page=${page}&size=10`;
+        const params = [];
+        if (status) params.push(`status=${status}`);
+        if (categoryId) params.push(`categoryId=${categoryId}`);
+        if (keyword) params.push(`keyword=${encodeURIComponent(keyword)}`);
+        if (params.length > 0) url += '&' + params.join('&');
+        
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                displayBlogs(data.data.content);
+                displayPagination(data.data);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Lỗi tải danh sách blog');
+        });
+    }
+    
+    function displayBlogs(blogs) {
+        const tbody = document.getElementById('blogTableBody');
+        if (!blogs || blogs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Không có blog nào</td></tr>';
+            return;
+        }
+        
+        let html = '';
+        blogs.forEach(blog => {
+            const statusBadge = {
+                'DRAFT': '<span class="badge bg-secondary">Nháp</span>',
+                'PUBLISHED': '<span class="badge bg-success">Đã xuất bản</span>',
+                'ARCHIVED': '<span class="badge bg-warning">Lưu trữ</span>'
+            };
+            
+            html += `
+                <tr>
+                    <td>${blog.blogId}</td>
+                    <td>${blog.title}</td>
+                    <td>${blog.categoryName}</td>
+                    <td>${statusBadge[blog.status] || blog.status}</td>
+                    <td>${blog.viewCount || 0}</td>
+                    <td>${new Date(blog.createdDate).toLocaleDateString('vi-VN')}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editBlog(${blog.blogId})" title="Sửa">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            ${blog.status === 'DRAFT' ? `
+                                <button class="btn btn-outline-success" onclick="publishBlogById(${blog.blogId})" title="Xuất bản">
+                                    <i class="bi bi-send"></i>
+                                </button>
+                            ` : ''}
+                            ${blog.status === 'PUBLISHED' ? `
+                                <button class="btn btn-outline-warning" onclick="archiveBlog(${blog.blogId})" title="Lưu trữ">
+                                    <i class="bi bi-archive"></i>
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-outline-danger" onclick="deleteBlog(${blog.blogId})" title="Xóa">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+    }
+    
+    function displayPagination(pageData) {
+        const pagination = document.getElementById('pagination');
+        if (pageData.totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        html += `<li class="page-item ${pageData.first ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="loadBlogs(${currentPage - 1}); return false;">Trước</a>
+        </li>`;
+        
+        for (let i = 0; i < pageData.totalPages; i++) {
+            html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="loadBlogs(${i}); return false;">${i + 1}</a>
+            </li>`;
+        }
+        
+        html += `<li class="page-item ${pageData.last ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="loadBlogs(${currentPage + 1}); return false;">Sau</a>
+        </li>`;
+        
+        pagination.innerHTML = html;
+    }
+    
+    function loadCategoriesForFilter() {
+        fetch('/api/public/blog-categories')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const select = document.getElementById('filterCategory');
+                    data.data.forEach(cat => {
+                        select.innerHTML += `<option value="${cat.categoryId}">${cat.name}</option>`;
+                    });
+                }
+            });
+    }
+    
+    function loadCategoriesForForm() {
+        fetch('/api/public/blog-categories')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const select = document.getElementById('categoryId');
+                    select.innerHTML = '<option value="">Chọn danh mục</option>';
+                    data.data.forEach(cat => {
+                        select.innerHTML += `<option value="${cat.categoryId}">${cat.name}</option>`;
+                    });
+                }
+            });
+    }
+    
+    function resetForm() {
+        document.getElementById('blogForm').reset();
+        document.getElementById('blogId').value = '';
+        editingBlogId = null;
+    }
+    
+    function editBlog(id) {
+        fetch(`/api/manager/blogs/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                const blog = data.data;
+                document.getElementById('blogId').value = blog.blogId;
+                document.getElementById('title').value = blog.title;
+                document.getElementById('summary').value = blog.summary;
+                document.getElementById('content').value = blog.content || '';
+                document.getElementById('categoryId').value = blog.categoryId;
+                
+                // Set thumbnail
+                if (blog.thumbnailImage) {
+                    document.getElementById('thumbnailImage').value = blog.thumbnailImage;
+                    document.getElementById('thumbnailPreviewImg').src = blog.thumbnailImage;
+                    document.getElementById('thumbnailPreview').style.display = 'block';
+                }
+                
+                // Set banner
+                if (blog.bannerImage) {
+                    document.getElementById('bannerImage').value = blog.bannerImage;
+                    document.getElementById('bannerPreviewImg').src = blog.bannerImage;
+                    document.getElementById('bannerPreview').style.display = 'block';
+                }
+                
+                document.getElementById('featured').checked = blog.featured;
+                
+                editingBlogId = id;
+                document.getElementById('formTitle').textContent = 'Chỉnh sửa Blog';
+                showSection('form');
+            }
+        });
+    }
+    
+    async function submitBlog(event) {
+        event.preventDefault();
+        
+        // Upload thumbnail if new file selected
+        let thumbnailUrl = document.getElementById('thumbnailImage').value;
+        const thumbnailFile = document.getElementById('thumbnailFile').files[0];
+        if (thumbnailFile) {
+            thumbnailUrl = await uploadImage(thumbnailFile, 'thumbnail');
+            if (!thumbnailUrl) return; // Upload failed
+        }
+        
+        // Upload banner if new file selected
+        let bannerUrl = document.getElementById('bannerImage').value;
+        const bannerFile = document.getElementById('bannerFile').files[0];
+        if (bannerFile) {
+            bannerUrl = await uploadImage(bannerFile, 'banner');
+            if (!bannerUrl) return; // Upload failed
+        }
+        
+        const blogData = {
+            title: document.getElementById('title').value,
+            summary: document.getElementById('summary').value,
+            content: document.getElementById('content').value,
+            categoryId: parseInt(document.getElementById('categoryId').value),
+            thumbnailImage: thumbnailUrl || null,
+            bannerImage: bannerUrl || null,
+            featured: document.getElementById('featured').checked,
+            status: 'DRAFT',
+            publishedDate: document.getElementById('publishedDate').value || null
+        };
+        
+        const url = editingBlogId ? `/api/manager/blogs/${editingBlogId}` : '/api/manager/blogs';
+        const method = editingBlogId ? 'PUT' : 'POST';
+        
+        if (editingBlogId) {
+            blogData.blogId = editingBlogId;
+        }
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(blogData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Lưu blog thành công!');
+                showSection('list');
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Lỗi khi lưu blog');
+        });
+    }
+    
+    function publishBlog() {
+        const blogId = document.getElementById('blogId').value;
+        if (!blogId) {
+            alert('Vui lòng lưu blog trước khi xuất bản');
+            return;
+        }
+        publishBlogById(parseInt(blogId));
+    }
+    
+    function publishBlogById(id) {
+        if (!confirm('Bạn có chắc muốn xuất bản blog này?')) return;
+        
+        fetch(`/api/manager/blogs/${id}/publish`, {
+            method: 'PUT'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Xuất bản blog thành công!');
+                loadBlogs(currentPage);
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+    
+    function archiveBlog(id) {
+        if (!confirm('Bạn có chắc muốn lưu trữ blog này?')) return;
+        
+        fetch(`/api/manager/blogs/${id}/archive`, {
+            method: 'PUT'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Lưu trữ blog thành công!');
+                loadBlogs(currentPage);
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+    
+    function deleteBlog(id) {
+        if (!confirm('Bạn có chắc muốn xóa blog này?')) return;
+        
+        fetch(`/api/manager/blogs/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Xóa blog thành công!');
+                loadBlogs(currentPage);
+            } else {
+                alert('Lỗi: ' + data.message);
+            }
+        });
+    }
+    
+    // Upload image helper function
+    async function uploadImage(file, type) {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            const response = await fetch(`/api/manager/blogs/upload/${type}`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                return data.url;
+            } else {
+                alert('Lỗi upload ảnh: ' + data.message);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('Lỗi khi upload ảnh');
+            return null;
+        }
+    }
+    
+    // Preview thumbnail
+    function previewThumbnail(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('thumbnailPreviewImg').src = e.target.result;
+                document.getElementById('thumbnailPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // Preview banner
+    function previewBanner(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('bannerPreviewImg').src = e.target.result;
+                document.getElementById('bannerPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    // Remove thumbnail
+    function removeThumbnail() {
+        document.getElementById('thumbnailFile').value = '';
+        document.getElementById('thumbnailImage').value = '';
+        document.getElementById('thumbnailPreview').style.display = 'none';
+    }
+    
+    // Remove banner
+    function removeBanner() {
+        document.getElementById('bannerFile').value = '';
+        document.getElementById('bannerImage').value = '';
+        document.getElementById('bannerPreview').style.display = 'none';
+    }
+</script>
+</body>
+</html>

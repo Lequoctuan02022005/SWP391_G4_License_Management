@@ -38,14 +38,4 @@ public class CreateBlogDTO {
     private Boolean allowComments = true;
 
     private LocalDateTime scheduledPublishAt;
-
-    // SEO fields
-    @Size(max = 60, message = "Meta title không được quá 60 ký tự")
-    private String metaTitle;
-
-    @Size(max = 160, message = "Meta description không được quá 160 ký tự")
-    private String metaDescription;
-
-    @Size(max = 200, message = "Meta keywords không được quá 200 ký tự")
-    private String metaKeywords;
 }
