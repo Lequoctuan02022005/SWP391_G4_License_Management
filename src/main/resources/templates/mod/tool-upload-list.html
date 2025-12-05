@@ -7,14 +7,15 @@
 
 <h2>All Tool Uploads</h2>
 
-<!-- SEARCH BAR -->
 <form method="get">
+    <!-- Fix keyword="null" -->
     <input type="text" name="keyword" placeholder="Search by tool name..."
-           th:value="${keyword}">
+           th:value="${keyword == null ? '' : keyword}"/>
 
     <!-- Status Filter -->
     <select name="status">
-        <option value="">All Status</option>
+        <option th:value="${null}" th:selected="${status == null}">All Status</option>
+
         <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
         <option value="APPROVED" th:selected="${status == 'APPROVED'}">APPROVED</option>
         <option value="REJECTED" th:selected="${status == 'REJECTED'}">REJECTED</option>
@@ -29,7 +30,6 @@
 
 <br/>
 
-<!-- TABLE -->
 <table border="1" cellpadding="8" cellspacing="0">
     <tr>
         <th>ID</th>
@@ -57,18 +57,26 @@
     <span th:text="'Page ' + ${tools.number + 1} + ' of ' + ${tools.totalPages}"></span>
 
     <div>
+        <!--  Lưu đúng keyword + status khi chuyển trang -->
         <a th:if="${tools.hasPrevious()}"
-           th:href="@{'/tools/mod/uploads?page=' + ${tools.number - 1}
-                     + '&keyword=' + ${keyword}
-                     + '&status=' + ${status}}">Previous</a>
+           th:href="@{/tools/mod/uploads(
+                page=${tools.number - 1},
+                keyword=${keyword},
+                status=${status}
+           )}">
+            Previous
+        </a>
 
         <a th:if="${tools.hasNext()}"
-           th:href="@{'/tools/mod/uploads?page=' + ${tools.number + 1}
-                     + '&keyword=' + ${keyword}
-                     + '&status=' + ${status}}">Next</a>
+           th:href="@{/tools/mod/uploads(
+                page=${tools.number + 1},
+                keyword=${keyword},
+                status=${status}
+           )}">
+            Next
+        </a>
     </div>
 </div>
-
 
 </body>
 </html>
