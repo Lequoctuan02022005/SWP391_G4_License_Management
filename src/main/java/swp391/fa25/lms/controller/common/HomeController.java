@@ -1,4 +1,4 @@
-package swp391.fa25.lms.controller.license;
+package swp391.fa25.lms.controller.common;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
