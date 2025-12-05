@@ -1,4 +1,4 @@
-package swp391.fa25.lms.controller.common;
+package swp391.fa25.lms.controller.license;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -21,10 +21,10 @@ public class HomeController {
     public String home(Model model) {
         // Giá trị mặc định cho form
 
-        model.addAttribute("categories", categoryService.getAll());
+        model.addAttribute("categories", categoryService.getAllCategories());
         model.addAttribute("keyword", "");
         model.addAttribute("selectedCategory", null);
 
-        return "/home";
+        return "common/home";
     }
 }
