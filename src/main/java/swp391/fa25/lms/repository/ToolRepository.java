@@ -89,4 +89,9 @@ public interface ToolRepository extends JpaRepository<Tool, Long> {
               AND (t.seller.sellerExpiryDate IS NULL OR t.seller.sellerExpiryDate >= CURRENT_TIMESTAMP)
             """)
     List<Tool> findAllPublishedAndSellerActive();
+
+
+    // Lấy Tool theo id status PUBLISHED
+    @EntityGraph(attributePaths = {"licenses", "seller", "category"})
+    Optional<Tool> findByToolIdAndStatus(Long toolId, Tool.Status status);
 }
