@@ -1,39 +1,72 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link th:href="@{/css/home.css}" rel="stylesheet">
-</head>
-<body>
-<!-- Footer -->
-<footer class="footer">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <h5>Liên hệ</h5>
-                <p>Liên hệ ngay nếu bạn có bất kỳ khó khăn khi sử dụng dịch vụ hoặc cần hợp tác.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <h5>Thông tin</h5>
-                <p>Một ứng dụng nhằm kết nối, trao đổi, mua bán trong cộng đồng</p>
-                <p>kiếm tiền online.</p>
-                <p>Thành toán tự động, nhận hàng ngay tức thì.</p>
-            </div>
+<footer th:fragment="footer" class="mt-5 bg-light pt-4 pb-4" xmlns:th="http://www.thymeleaf.org">
+    <style>
+        .footer-container {
+            text-align: center;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .footer-links a {
+            color: #555;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: #ff5722;
+        }
+
+        .footer-certificates img {
+            height: 50px;
+            margin: 0 8px;
+        }
+
+        .footer-company {
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .footer-text {
+            margin-top: 5px;
+            line-height: 1.7;
+        }
+    </style>
+
+    <div class="footer-container">
+
+        <!-- TOP LINKS -->
+        <div class="footer-links">
+            <a href="#">Giới thiệu</a>
+            <a href="#">Điều khoản sử dụng</a>
+            <a href="#">Chính sách bảo mật</a>
+            <a href="#">Chính sách vận chuyển</a>
+            <a href="#">Liên hệ</a>
         </div>
+
+        <!-- CERTIFICATES -->
+        <div class="footer-certificates">
+            <img src="https://down-vn.img.susercontent.com/file/94a0f5e0cbc4661106eb3b02f5089fca" alt="cert1">
+            <img src="https://down-vn.img.susercontent.com/file/5ac706c7b54d6a11e0ac7c969a3f0871" alt="cert2">
+            <img src="https://down-vn.img.susercontent.com/file/7320cd912d48785b0ef1f820457b258b" alt="cert3">
+        </div>
+
+        <!-- COMPANY INFO -->
+        <div class="footer-company">Công ty TNHH ToolMarket</div>
+
+        <div class="footer-text">
+            Địa chỉ: Tầng 5, Tòa nhà Sunrise Tower, Quận 7, TP. Hồ Chí Minh, Việt Nam<br>
+            Liên hệ hỗ trợ: support@toolmarket.vn (miễn phí) hoặc Fanpage ToolMarket Support<br>
+            Chịu trách nhiệm quản lý nội dung: Nguyễn Văn A<br>
+            Mã số doanh nghiệp: 0123456789 do Sở KH&ĐT TP.HCM cấp ngày 01/01/2020<br>
+            © 2025 - Bản quyền thuộc về Công ty TNHH ToolMarket
+        </div>
+
     </div>
 </footer>
-<div class="chat-button">
-    <i class="fas fa-comment-dots"></i>
-</div>
-</body>
-</html>
