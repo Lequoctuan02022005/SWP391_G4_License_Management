@@ -44,6 +44,10 @@ public class CustomAuthenticationSuccessHandler
         }
 
         Account account = optionalAccount.get();
+
+        //Lấy session
+        request.getSession().setAttribute("loggedInAccount", account);
+
         Role.RoleName role = account.getRole().getRoleName();
 
         if (role != Role.RoleName.SELLER) {
