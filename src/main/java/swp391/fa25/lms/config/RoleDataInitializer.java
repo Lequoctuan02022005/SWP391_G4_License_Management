@@ -66,6 +66,18 @@ public class RoleDataInitializer implements CommandLineRunner {
             System.out.println("⭐ User created");
         }
 
+        // ===== CREATE MODERATOR USER =====
+        if (!accountRepo.existsByEmail("mod@gmail.com")) {
+            Account mod = new Account();
+            mod.setEmail("mod@gmail.com");
+            mod.setFullName("Moderator User");
+            mod.setPassword(passwordEncoder.encode("123456"));
+            mod.setStatus(Account.AccountStatus.ACTIVE);
+            mod.setRole(roleRepo.findByRoleName(Role.RoleName.MOD).get());
+            accountRepo.save(mod);
+            System.out.println("⭐ Moderator created");
+        }
+
         System.out.println("✅ Initialization completed!");
     }
 
