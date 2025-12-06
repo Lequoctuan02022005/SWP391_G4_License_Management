@@ -32,12 +32,14 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService)
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/home", "/home/**",
+                        .requestMatchers( "/home", "/home/**","/verify",
                                 "/css/**", "/js/**", "/images/**",
+                                "/toollist", "/toollist/**",
                                 "/login", "/register", "/error").permitAll()
 
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/mod/**").hasRole("MODERATOR")
+                        .requestMatchers("/moderator/**").hasRole("MOD")
+                        .requestMatchers("/tools/moderator/**").hasRole("MOD")
                         .anyRequest().authenticated()
                 )
 

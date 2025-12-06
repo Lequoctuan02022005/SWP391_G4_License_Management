@@ -498,4 +498,8 @@ public class AccountService {
     public boolean emailExists(String email) {
         return accountRepo.existsByEmail(email);
     }
+    public Account findByEmail(String email) {
+        return accountRepo.findByEmail(email).orElse(null);
+    }
+
 }

@@ -16,7 +16,7 @@
 <br/><hr/><br/>
 
 <!-- APPROVE BUTTON -->
-<form th:action="@{'/mod/tools/reports/' + ${report.toolReportId} + '/approve'}"
+<form th:action="@{'/tools/mod/reports/' + ${report.toolReportId} + '/approve'}"
       method="post">
     <button type="submit">Approve</button>
 </form>
@@ -24,14 +24,14 @@
 <br/>
 
 <!-- REJECT BUTTON -->
-<form th:action="@{'/mod/tools/reports/' + ${report.toolReportId} + '/reject'}"
+<form th:action="@{'/tools/mod/reports/' + ${report.toolReportId} + '/reject'}"
       method="post">
     <button type="submit">Reject</button>
 </form>
 
 <br/>
 
-<a href="/mod/tools/reports">Back to list</a>
+<a href="/tools/mod/reports">Back to list</a>
 
 </body>
 </html>
