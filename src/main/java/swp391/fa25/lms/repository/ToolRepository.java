@@ -1,4 +1,5 @@
 package swp391.fa25.lms.repository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
@@ -14,6 +15,7 @@ import java.util.Optional;
 @Repository
 public interface ToolRepository extends JpaRepository<Tool, Long> {
     Optional<Tool> findByToolIdAndSeller(Long toolId, Account seller);
+
     boolean existsByToolName(String toolName);
 
     //mod
@@ -62,21 +64,29 @@ public interface ToolRepository extends JpaRepository<Tool, Long> {
     long countByStatus(@Param("status") Tool.Status status);
 
     @Query("""
-       SELECT t FROM Tool t
-       WHERE (:keyword IS NULL OR :keyword = '' 
-              OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
-       """)
+            SELECT t FROM Tool t
+            WHERE (:keyword IS NULL OR :keyword = '' 
+                   OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            """)
     Page<Tool> findAllTools(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("""
-       SELECT t FROM Tool t
-       WHERE (:keyword IS NULL OR :keyword = '' 
-              OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
-         AND (:status IS NULL OR t.status = :status)
-       """)
+            SELECT t FROM Tool t
+            WHERE (:keyword IS NULL OR :keyword = '' 
+                   OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:status IS NULL OR t.status = :status)
+            """)
     Page<Tool> filterTools(
             @Param("keyword") String keyword,
             @Param("status") Tool.Status status,
             Pageable pageable
     );
+
+    @Query("""
+            SELECT t FROM Tool t
+            WHERE t.status = 'PUBLISHED'
+              AND t.seller.sellerActive = true
+              AND (t.seller.sellerExpiryDate IS NULL OR t.seller.sellerExpiryDate >= CURRENT_TIMESTAMP)
+            """)
+    List<Tool> findAllPublishedAndSellerActive();
 }
