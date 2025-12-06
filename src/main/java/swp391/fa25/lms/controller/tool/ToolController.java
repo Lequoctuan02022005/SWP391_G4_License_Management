@@ -247,15 +247,14 @@ public class ToolController {
     private ToolReportRepository reportRepo;
 
 
-
     // 1. LIST ALL TOOL UPLOADS
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MOD')")
     @GetMapping("/mod/uploads")
     public String listUploads(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Tool.Status status,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "5") int size,
             Model model) {
 
         Pageable pageable = PageRequest.of(page, size,
@@ -267,13 +266,13 @@ public class ToolController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("status", status != null ? status.name() : "");
 
-        return "mod/tool-upload-list";
+        return "moderator/tool-upload-list";
     }
 
 
 
     // 2. VIEW TOOL DETAIL
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MOD')")
     @GetMapping("/mod/uploads/{id}")
     public String viewUploadDetail(@PathVariable Long id, Model model) {
 
@@ -281,12 +280,12 @@ public class ToolController {
                 .orElseThrow(() -> new RuntimeException("Tool not found"));
 
         model.addAttribute("tool", tool);
-        return "mod/tool-upload-detail";
+        return "moderator/tool-upload-detail";
     }
 
 
     // 3. APPROVE TOOL UPLOAD
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MOD')")
     @PostMapping("/mod/uploads/{id}/approve")
     public String approveUpload(
             @PathVariable Long id,
@@ -310,7 +309,7 @@ public class ToolController {
 
 
     // 4. REJECT TOOL UPLOAD
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MOD')")
     @PostMapping("/mod/uploads/{id}/reject")
     public String rejectUpload(
             @PathVariable Long id,
@@ -336,7 +335,7 @@ public class ToolController {
 
 
     // 5. LIST REPORTS
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MOD')")
     @GetMapping("/mod/reports")
     public String listReports(
             @RequestParam(required = false) ToolReport.Status status,
@@ -352,12 +351,12 @@ public class ToolController {
         model.addAttribute("reports", reports);
         model.addAttribute("status", status);
 
-        return "mod/tool-report-list";
+        return "moderator/tool-report-list";
     }
 
 
     // 6. VIEW REPORT DETAIL
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MOD')")
     @GetMapping("/mod/reports/{id}")
     public String reportDetail(@PathVariable Long id, Model model) {
 
@@ -365,12 +364,12 @@ public class ToolController {
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
         model.addAttribute("report", report);
-        return "mod/tool-report-detail";
+        return "moderator/tool-report-detail";
     }
 
 
     // 7. APPROVE REPORT
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MOD')")
     @PostMapping("/mod/reports/{id}/approve")
     public String approveReport(@PathVariable Long id,
                                 RedirectAttributes ra) {
@@ -387,7 +386,7 @@ public class ToolController {
 
 
     // 8. REJECT REPORT
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MOD')")
     @PostMapping("/mod/reports/{id}/reject")
     public String rejectReport(@PathVariable Long id,
                                RedirectAttributes ra) {
