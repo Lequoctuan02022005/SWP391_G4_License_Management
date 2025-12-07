@@ -118,7 +118,7 @@
 
                 <!-- Nút ADD cho SELLER -->
                 <div class="tl-top-right" sec:authorize="hasRole('SELLER')">
-                    <a th:href="@{/toollist/new}" class="tl-btn tl-btn-primary">
+                    <a th:href="@{/tools/seller/add}" class="tl-btn tl-btn-primary">
                         + Thêm Tool
                     </a>
                 </div>
@@ -132,7 +132,7 @@
 
                     <!-- ẢNH + BADGE TRẠNG THÁI -->
                     <div class="tl-card-image-wrapper">
-                        <img th:src="@{'/' + ${tool.image}}"
+                        <img th:src="@{ ${tool.image}}">
                              alt="Tool image"
                              class="tl-card-image" />
 
@@ -217,7 +217,7 @@
                     <div class="tl-card-footer">
 
                         <!-- Xem chi tiết: luôn có -->
-                        <a th:href="@{'/toollist/detail/' + ${tool.toolId}}"
+                        <a th:href="@{'/tools/detail/' + ${tool.toolId}}"
                            class="tl-btn tl-btn-outline tl-btn-sm">
                             Xem chi tiết
                         </a>
@@ -250,7 +250,7 @@
 
                             <!-- EDIT chỉ cho DEACTIVATED -->
                             <a th:if="${tool.status.name() == 'DEACTIVATED'}"
-                               th:href="@{'/toollist/edit/' + ${tool.toolId}}"
+                               th:href="@{'/tools/seller/edit/' + ${tool.toolId}}"
                                class="tl-btn tl-btn-success tl-btn-sm">
                                 Sửa
                             </a>

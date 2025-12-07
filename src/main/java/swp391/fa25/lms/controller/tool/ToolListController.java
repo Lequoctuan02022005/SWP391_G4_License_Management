@@ -57,14 +57,18 @@ public class ToolListController {
         // Convert enums safely
         Tool.LoginMethod loginMethodEnum = null;
         if (loginMethod != null && !loginMethod.isBlank()) {
-            try { loginMethodEnum = Tool.LoginMethod.valueOf(loginMethod); }
-            catch (Exception ignore) {}
+            try {
+                loginMethodEnum = Tool.LoginMethod.valueOf(loginMethod);
+            } catch (Exception ignore) {
+            }
         }
 
         Tool.Status statusEnum = null;
         if (status != null && !status.isBlank()) {
-            try { statusEnum = Tool.Status.valueOf(status); }
-            catch (Exception ignore) {}
+            try {
+                statusEnum = Tool.Status.valueOf(status);
+            } catch (Exception ignore) {
+            }
         }
 
         List<Tool> tools;
@@ -102,36 +106,6 @@ public class ToolListController {
         Long sellerId = acc.getAccountId();
         toolListService.toggleStatus(toolId, sellerId);
 
-        return "redirect:/toollist";
-    }
-
-    // =============== ADD TOOL ===============
-    @GetMapping("/new")
-    public String showCreateForm(Model model) {
-        model.addAttribute("tool", new Tool());
-        return "tool/toollist-add";
-    }
-
-    @PostMapping("/new")
-    public String createTool(@ModelAttribute Tool tool,
-                             Authentication auth) {
-
-        if (auth == null) return "redirect:/login";
-
-        String email = auth.getName();
-        Account acc = accountService.findByEmail(email);
-
-        if (acc == null || acc.getRole().getRoleId() != 2) {
-            return "redirect:/toollist";
-        }
-
-        toolListService.addTool(tool, acc.getAccountId());
-        return "redirect:/toollist";
-    }
-
-    // =============== EDIT TOOL (placeholder) ===============
-    @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable("id") Long toolId, Model model) {
         return "redirect:/toollist";
     }
 }
