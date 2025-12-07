@@ -231,7 +231,7 @@
                     <div class="tl-card-footer">
 
                         <!-- Xem chi tiết -->
-                        <a th:href="@{'/toollist/detail/' + ${tool.toolId}}"
+                        <a th:href="@{'/tools/detail/' + ${tool.toolId}}"
                            class="tl-btn tl-btn-outline tl-btn-sm">
                             Xem chi tiết
                         </a>
@@ -274,7 +274,7 @@
                                  - KHÔNG CHO EDIT NẾU STATUS = PUBLISHED
                                  - CÁC TRẠNG THÁI KHÁC → EDIT ĐƯỢC -->
                             <a th:if="${tool.status.name() != 'PUBLISHED'}"
-                               th:href="@{'/toollist/edit/' + ${tool.toolId}}"
+                               th:href="@{'/tools/seller/edit/' + ${tool.toolId}}"
                                class="tl-btn tl-btn-success tl-btn-sm">
                                 Sửa
                             </a>
