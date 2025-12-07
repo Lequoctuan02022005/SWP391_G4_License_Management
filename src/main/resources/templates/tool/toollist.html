@@ -144,7 +144,7 @@
 
                     <!-- ẢNH + BADGE -->
                     <div class="tl-card-image-wrapper">
-                        <img th:src="@{ ${tool.image}}">
+                        <img th:src="@{ ${tool.image}}"
                              alt="Tool image"
                              class="tl-card-image" />
                         <span class="tl-badge" th:switch="${tool.status}">
@@ -248,12 +248,12 @@
                         <!-- SELLER ACTIONS -->
                         <div class="tl-card-actions" sec:authorize="hasRole('SELLER')">
 
-                            <!-- Nút toggle trạng thái -->
-                            <form th:action="@{'/toollist/toggle/' + ${tool.toolId}}"
+                            <!-- Toggle chỉ cho PUBLISHED <-> DEACTIVATED -->
+                            <form th:if="${tool.status.name() == 'PUBLISHED'
+               or tool.status.name() == 'DEACTIVATED'}"
+                                  th:action="@{'/toollist/toggle/' + ${tool.toolId}}"
                                   method="post"
-                                  class="tl-inline-form"
-                                  th:if="${tool.status.name() != 'REJECTED'
-                      && tool.status.name() != 'VIOLATED'}">
+                                  class="tl-inline-form">
                                 <button type="submit"
                                         class="tl-btn-status"
                                         th:classappend="' status-' + ${tool.status.name().toLowerCase()}"
@@ -261,9 +261,9 @@
                                 </button>
                             </form>
 
-                            <!-- Nút toggle DISABLED CHO REJECTED / VIOLATED -->
-                            <button th:if="${tool.status.name() == 'REJECTED'
-                        || tool.status.name() == 'VIOLATED'}"
+                            <!-- Các trạng thái khác thì nút bị disable -->
+                            <button th:if="${tool.status.name() != 'PUBLISHED'
+                and tool.status.name() != 'DEACTIVATED'}"
                                     class="tl-btn-status"
                                     th:classappend="' status-' + ${tool.status.name().toLowerCase()}"
                                     disabled
@@ -271,8 +271,8 @@
                             </button>
 
                             <!-- EDIT RULES:
-                                 - KHÔNG CHO EDIT NẾU STATUS = PUBLISHED
-                                 - CÁC TRẠNG THÁI KHÁC → EDIT ĐƯỢC -->
+                                 - CHỈ ẨN KHI status = PUBLISHED
+                                 - CÁC TRẠNG THÁI KHÁC → HIỆN EDIT -->
                             <a th:if="${tool.status.name() != 'PUBLISHED'}"
                                th:href="@{'/tools/seller/edit/' + ${tool.toolId}}"
                                class="tl-btn tl-btn-success tl-btn-sm">
@@ -280,6 +280,7 @@
                             </a>
 
                         </div>
+
                     </div>
 
                 </article>
