@@ -92,11 +92,7 @@ public class BlogCategory {
     // Helper methods
     private String generateSlug(String name) {
         if (name == null) return "";
-        return name.toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "")
-                .replaceAll("\\s+", "-")
-                .replaceAll("-+", "-")
-                .trim();
+        return Blog.toSlug(name);
     }
 
     public boolean isActive() {

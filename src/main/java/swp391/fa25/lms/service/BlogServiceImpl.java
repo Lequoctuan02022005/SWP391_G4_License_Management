@@ -153,34 +153,9 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    @Transactional
-    public void permanentlyDeleteBlog(Long blogId, Long authorId) {
-        log.info("Permanently deleting blog ID: {} by author: {}", blogId, authorId);
-
-        Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new RuntimeException("Blog not found"));
-
-        // Check authorization: only author (MANAGER) can permanently delete
-        if (!blog.getAuthor().getAccountId().equals(authorId)) {
-            throw new RuntimeException("You don't have permission to permanently delete this blog. Only the author can delete.");
-        }
-
-        blogRepository.delete(blog);
-        log.info("Blog permanently deleted: {}", blogId);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public BlogDetailDTO getBlogById(Long blogId) {
         Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new RuntimeException("Blog not found"));
-        return new BlogDetailDTO(blog);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public BlogDetailDTO getBlogBySlug(String slug) {
-        Blog blog = blogRepository.findBySlug(slug)
                 .orElseThrow(() -> new RuntimeException("Blog not found"));
         return new BlogDetailDTO(blog);
     }
@@ -255,33 +230,6 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
-    @Transactional
-    public BlogDetailDTO archiveBlog(Long blogId, Long authorId) {
-        log.info("Archiving blog ID: {} by author: {}", blogId, authorId);
-
-        Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new RuntimeException("Blog not found"));
-
-        // Check authorization: only author (MANAGER) can archive
-        if (!blog.getAuthor().getAccountId().equals(authorId)) {
-            throw new RuntimeException("You don't have permission to archive this blog. Only the author can archive.");
-        }
-
-        blog.archive();
-        Blog archivedBlog = blogRepository.save(blog);
-        log.info("Blog archived successfully: {}", blogId);
-
-        return new BlogDetailDTO(archivedBlog);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<BlogListItemDTO> getAllBlogs(Pageable pageable) {
-        Page<Blog> blogs = blogRepository.findAll(pageable);
-        return blogs.map(BlogListItemDTO::new);
-    }
-
-    @Override
     @Transactional(readOnly = true)
     public Page<BlogListItemDTO> getPublishedBlogs(Pageable pageable) {
         LocalDateTime now = LocalDateTime.now();
@@ -324,45 +272,6 @@ public class BlogServiceImpl implements BlogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<BlogListItemDTO> advancedSearchBlogs(BlogSearchRequestDTO searchRequest) {
-        // Build sort
-        Sort sort = Sort.by(
-                searchRequest.getSortDirection().equalsIgnoreCase("ASC") ?
-                        Sort.Direction.ASC : Sort.Direction.DESC,
-                searchRequest.getSortBy()
-        );
-
-        // Build pageable
-        Pageable pageable = PageRequest.of(
-                searchRequest.getPage(),
-                searchRequest.getSize(),
-                sort
-        );
-
-        // Convert status string to enum
-        Blog.Status status = null;
-        if (searchRequest.getStatus() != null && !searchRequest.getStatus().isEmpty()) {
-            try {
-                status = Blog.Status.valueOf(searchRequest.getStatus().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid status: {}", searchRequest.getStatus());
-            }
-        }
-
-        // Execute advanced search
-        Page<Blog> blogs = blogRepository.advancedSearch(
-                searchRequest.getCategoryId(),
-                status,
-                searchRequest.getAuthorId(),
-                searchRequest.getKeyword(),
-                pageable
-        );
-
-        return blogs.map(BlogListItemDTO::new);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<BlogListItemDTO> getTopViewedBlogs(int limit) {
         List<Blog> blogs = blogRepository.findTopViewedBlogs(
                 PageRequest.of(0, limit)
@@ -372,65 +281,8 @@ public class BlogServiceImpl implements BlogService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<BlogListItemDTO> getRelatedBlogs(Long blogId, int limit) {
-        Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new RuntimeException("Blog not found"));
-
-        if (blog.getCategory() == null) {
-            return List.of();
-        }
-
-        List<Blog> relatedBlogs = blogRepository.findRelatedBlogs(
-                blog.getCategory().getCategoryId(),
-                blogId,
-                PageRequest.of(0, limit)
-        );
-
-        return relatedBlogs.stream()
-                .map(BlogListItemDTO::new)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public void incrementViewCount(Long blogId) {
-        Blog blog = blogRepository.findById(blogId)
-                .orElseThrow(() -> new RuntimeException("Blog not found"));
-        blog.incrementViewCount();
-        blogRepository.save(blog);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long countBlogsByStatus(Blog.Status status) {
-        return blogRepository.countByStatus(status);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long countBlogsByCategory(Long categoryId) {
-        BlogCategory category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-        return blogRepository.countByCategory(category);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long countBlogsByAuthor(Long authorId) {
-        return blogRepository.countByAuthorAccountId(authorId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isSlugExists(String slug) {
-        return blogRepository.existsBySlug(slug);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public String generateUniqueSlug(String title) {
+    // Private helper method for generating unique slug
+    private String generateUniqueSlug(String title) {
         String baseSlug = Blog.toSlug(title);
         String slug = baseSlug;
         int counter = 1;

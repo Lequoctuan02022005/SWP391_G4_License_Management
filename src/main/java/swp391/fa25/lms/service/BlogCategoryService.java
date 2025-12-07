@@ -30,7 +30,7 @@ public interface BlogCategoryService {
     BlogCategoryDTO getCategoryById(Long categoryId);
 
     /**
-     * Lấy category theo slug
+     * Lấy category theo slug (SEO-friendly URL)
      */
     BlogCategoryDTO getCategoryBySlug(String slug);
 
@@ -45,21 +45,6 @@ public interface BlogCategoryService {
     List<BlogCategoryDTO> getActiveCategories();
 
     /**
-     * Lấy categories kèm số lượng blog
-     */
-    List<BlogCategoryDTO> getCategoriesWithBlogCount();
-
-    /**
-     * Reorder categories (swap displayOrder)
-     */
-    void reorderCategories(Long categoryId1, Long categoryId2);
-
-    /**
-     * Update displayOrder của category
-     */
-    void updateDisplayOrder(Long categoryId, Integer newDisplayOrder);
-
-    /**
      * Activate category
      */
     BlogCategoryDTO activateCategory(Long categoryId);
@@ -68,14 +53,4 @@ public interface BlogCategoryService {
      * Deactivate category
      */
     BlogCategoryDTO deactivateCategory(Long categoryId);
-
-    /**
-     * Kiểm tra category name đã tồn tại chưa
-     */
-    boolean isCategoryNameExists(String categoryName);
-
-    /**
-     * Đếm số category theo status
-     */
-    long countByStatus(BlogCategory.Status status);
 }

@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Blog Controller - Traditional MVC Pattern
- * Sử dụng HttpSession để lấy loggedInAccount
  * Public pages: /blog/**
  * Manager pages: /manager/blogs/**
  */
@@ -53,14 +51,17 @@ public class BlogController {
     public String blogList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "9") int size,
-            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) String keyword,
             Model model) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         
         Page<BlogListItemDTO> blogs;
-        if (categoryId != null) {
+        Long categoryId = null;
+        if (category != null && !category.trim().isEmpty()) {
+            BlogCategoryDTO categoryDTO = categoryService.getCategoryBySlug(category);
+            categoryId = categoryDTO.getCategoryId();
             blogs = blogService.getBlogsByCategory(categoryId, pageable);
         } else if (keyword != null && !keyword.trim().isEmpty()) {
             blogs = blogService.searchBlogs(keyword, pageable);
@@ -74,7 +75,7 @@ public class BlogController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", blogs.getTotalPages());
         model.addAttribute("totalBlogs", blogs.getTotalElements());
-        model.addAttribute("selectedCategory", categoryId);
+        model.addAttribute("selectedCategorySlug", category);
         model.addAttribute("keyword", keyword);
 
         return "blog/blog-list";
@@ -134,21 +135,12 @@ public class BlogController {
             return "redirect:/login";
         }
 
-        // Normalize empty strings to null
-        if (keyword != null && keyword.trim().isEmpty()) {
-            keyword = null;
-        }
-        if (status != null && status.trim().isEmpty()) {
-            status = null;
-        }
-        
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         
-        // Chỉ hiển thị blogs của manager hiện tại
         Page<BlogListItemDTO> blogs = blogService.getBlogsByAuthor(manager.getAccountId(), pageable);
         
         // Check if any filter is applied
-        boolean hasFilter = (categoryId != null) || (keyword != null) || (status != null);
+        boolean hasFilter = (categoryId != null) || (keyword != null && !keyword.trim().isEmpty()) || (status != null && !status.trim().isEmpty());
         
         if (hasFilter) {
             // If filtering, get ALL blogs from author first to calculate correct total
@@ -214,7 +206,7 @@ public class BlogController {
         }
 
         CreateBlogDTO dto = new CreateBlogDTO();
-        dto.setStatus("DRAFT"); // Giá trị mặc định
+        dto.setStatus("DRAFT");
         
         model.addAttribute("blog", dto);
         model.addAttribute("categories", categoryService.getActiveCategories());
@@ -304,7 +296,7 @@ public class BlogController {
             updateDTO.setCategoryId(blog.getCategoryId());
             updateDTO.setThumbnailImage(blog.getThumbnailImage());
             updateDTO.setBannerImage(blog.getBannerImage());
-            updateDTO.setStatus(blog.getStatus().name()); // Convert enum to String
+            updateDTO.setStatus(blog.getStatus().name());
             updateDTO.setScheduledPublishAt(blog.getScheduledPublishAt());
 
             model.addAttribute("blog", updateDTO);

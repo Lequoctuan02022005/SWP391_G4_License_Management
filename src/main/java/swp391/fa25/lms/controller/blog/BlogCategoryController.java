@@ -3,6 +3,7 @@ package swp391.fa25.lms.controller.blog;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,18 +17,19 @@ import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.service.BlogCategoryService;
 
 /**
- * Blog Category Controller - Traditional MVC Pattern
- * Quản lý danh mục blog - /manager/blog-categories/**
+ * Blog Category Controller - Manager Only
+ * Quản lý danh mục blog: /manager/blog-categories/**
  */
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/manager/blog-categories")
+@Slf4j
 public class BlogCategoryController {
 
     private final BlogCategoryService categoryService;
 
     /**
-     * Danh sách quản lý category
+     * Danh sách category
      * GET /manager/blog-categories
      */
     @PreAuthorize("hasRole('MANAGER')")
@@ -39,10 +41,15 @@ public class BlogCategoryController {
             return "redirect:/login";
         }
 
-        model.addAttribute("categories", categoryService.getAllCategories());
-        model.addAttribute("manager", manager);
-
-        return "manager/blog-categories";
+        try {
+            model.addAttribute("categories", categoryService.getAllCategories());
+            model.addAttribute("manager", manager);
+            return "manager/blog-categories";
+        } catch (Exception e) {
+            log.error("Error loading categories", e);
+            ra.addFlashAttribute("error", "Lỗi tải danh sách danh mục");
+            return "redirect:/home";
+        }
     }
 
     /**
@@ -51,7 +58,7 @@ public class BlogCategoryController {
      */
     @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/create")
-    public String createCategoryForm(HttpSession session, Model model, RedirectAttributes ra) {
+    public String createForm(HttpSession session, Model model, RedirectAttributes ra) {
         Account manager = (Account) session.getAttribute("loggedInAccount");
         if (manager == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
@@ -59,12 +66,11 @@ public class BlogCategoryController {
         }
 
         CreateBlogCategoryDTO dto = new CreateBlogCategoryDTO();
-        dto.setStatus("ACTIVE"); // Giá trị mặc định
-        dto.setDisplayOrder(0); // Giá trị mặc định
-        
+        dto.setStatus("ACTIVE");
+        dto.setDisplayOrder(0);
+
         model.addAttribute("category", dto);
         model.addAttribute("manager", manager);
-        model.addAttribute("isEdit", false);
 
         return "manager/category-form";
     }
@@ -75,7 +81,7 @@ public class BlogCategoryController {
      */
     @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/create")
-    public String createCategory(
+    public String create(
             @Valid @ModelAttribute("category") CreateBlogCategoryDTO dto,
             BindingResult result,
             HttpSession session,
@@ -89,7 +95,7 @@ public class BlogCategoryController {
         }
 
         if (result.hasErrors()) {
-            model.addAttribute("isEdit", false);
+            model.addAttribute("manager", manager);
             return "manager/category-form";
         }
 
@@ -97,20 +103,21 @@ public class BlogCategoryController {
             categoryService.createCategory(dto);
             ra.addFlashAttribute("success", "Tạo danh mục thành công!");
             return "redirect:/manager/blog-categories";
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Error creating category", e);
             model.addAttribute("error", "Lỗi: " + e.getMessage());
-            model.addAttribute("isEdit", false);
+            model.addAttribute("manager", manager);
             return "manager/category-form";
         }
     }
 
     /**
-     * Form chỉnh sửa category
+     * Form sửa category
      * GET /manager/blog-categories/edit/{id}
      */
     @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/edit/{id}")
-    public String editCategoryForm(
+    public String editForm(
             @PathVariable Long id,
             HttpSession session,
             Model model,
@@ -124,7 +131,7 @@ public class BlogCategoryController {
 
         try {
             BlogCategoryDTO category = categoryService.getCategoryById(id);
-            
+
             UpdateBlogCategoryDTO updateDTO = new UpdateBlogCategoryDTO();
             updateDTO.setCategoryId(category.getCategoryId());
             updateDTO.setCategoryName(category.getCategoryName());
@@ -138,19 +145,20 @@ public class BlogCategoryController {
             model.addAttribute("manager", manager);
 
             return "manager/category-form";
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Error loading category for edit: {}", id, e);
             ra.addFlashAttribute("error", "Không tìm thấy danh mục");
             return "redirect:/manager/blog-categories";
         }
     }
 
     /**
-     * Xử lý cập nhật category
+     * Xử lý update category
      * POST /manager/blog-categories/edit/{id}
      */
     @PreAuthorize("hasRole('MANAGER')")
     @PostMapping("/edit/{id}")
-    public String updateCategory(
+    public String update(
             @PathVariable Long id,
             @Valid @ModelAttribute("category") UpdateBlogCategoryDTO dto,
             BindingResult result,
@@ -166,17 +174,25 @@ public class BlogCategoryController {
 
         if (result.hasErrors()) {
             model.addAttribute("isEdit", true);
+            model.addAttribute("manager", manager);
             return "manager/category-form";
         }
 
         try {
-            dto.setCategoryId(id);
+            // Security: Đảm bảo ID từ path khớp với DTO
+            if (dto.getCategoryId() == null || !dto.getCategoryId().equals(id)) {
+                dto.setCategoryId(id);
+            }
+
             categoryService.updateCategory(dto);
             ra.addFlashAttribute("success", "Cập nhật danh mục thành công!");
             return "redirect:/manager/blog-categories";
-        } catch (Exception e) {
-            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Error updating category: {}", id, e);
+            dto.setCategoryId(id);
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
             model.addAttribute("isEdit", true);
+            model.addAttribute("manager", manager);
             return "manager/category-form";
         }
     }
@@ -187,7 +203,7 @@ public class BlogCategoryController {
      */
     @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/delete/{id}")
-    public String deleteCategory(
+    public String delete(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes ra) {
@@ -201,7 +217,8 @@ public class BlogCategoryController {
         try {
             categoryService.deleteCategory(id);
             ra.addFlashAttribute("success", "Xóa danh mục thành công!");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Error deleting category: {}", id, e);
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
 
@@ -214,7 +231,7 @@ public class BlogCategoryController {
      */
     @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/activate/{id}")
-    public String activateCategory(
+    public String activate(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes ra) {
@@ -228,7 +245,8 @@ public class BlogCategoryController {
         try {
             categoryService.activateCategory(id);
             ra.addFlashAttribute("success", "Kích hoạt danh mục thành công!");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Error activating category: {}", id, e);
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
 
@@ -241,7 +259,7 @@ public class BlogCategoryController {
      */
     @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/deactivate/{id}")
-    public String deactivateCategory(
+    public String deactivate(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes ra) {
@@ -255,7 +273,8 @@ public class BlogCategoryController {
         try {
             categoryService.deactivateCategory(id);
             ra.addFlashAttribute("success", "Vô hiệu hóa danh mục thành công!");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            log.error("Error deactivating category: {}", id, e);
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
 

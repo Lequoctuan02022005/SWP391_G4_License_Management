@@ -12,6 +12,7 @@ import swp391.fa25.lms.repository.BlogCategoryRepository;
 import swp391.fa25.lms.repository.BlogRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,6 +83,43 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
         category.setCategoryName(dto.getCategoryName());
         category.setDescription(dto.getDescription());
 
+        // Update slug: if provided use it, otherwise regenerate from new name
+        if (dto.getSlug() != null && !dto.getSlug().trim().isEmpty()) {
+            String newSlug = dto.getSlug().trim();
+            // Chỉ check unique nếu slug thay đổi
+            if (!newSlug.equals(category.getSlug())) {
+                // Validate slug unique (loại trừ chính nó)
+                Optional<BlogCategory> existingSlug = categoryRepository.findBySlug(newSlug);
+                if (existingSlug.isPresent() && !existingSlug.get().getCategoryId().equals(category.getCategoryId())) {
+                    throw new RuntimeException("Slug already exists: " + newSlug);
+                }
+                category.setSlug(newSlug);
+            }
+        } else {
+            // Regenerate slug from new category name
+            String newSlug = dto.getCategoryName().toLowerCase()
+                    .replaceAll("[^a-z0-9\\s-]", "")
+                    .replaceAll("\\s+", "-")
+                    .replaceAll("-+", "-")
+                    .trim();
+            // Check unique cho auto-generated slug
+            if (!newSlug.equals(category.getSlug())) {
+                Optional<BlogCategory> existingSlug = categoryRepository.findBySlug(newSlug);
+                if (existingSlug.isPresent() && !existingSlug.get().getCategoryId().equals(category.getCategoryId())) {
+                    // Slug bị trùng, thêm số vào cuối
+                    int counter = 1;
+                    String uniqueSlug = newSlug;
+                    while (categoryRepository.findBySlug(uniqueSlug).isPresent()) {
+                        uniqueSlug = newSlug + "-" + counter;
+                        counter++;
+                    }
+                    category.setSlug(uniqueSlug);
+                } else {
+                    category.setSlug(newSlug);
+                }
+            }
+        }
+
         if (dto.getDisplayOrder() != null) {
             category.setDisplayOrder(dto.getDisplayOrder());
         }
@@ -131,8 +169,9 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
     @Transactional(readOnly = true)
     public BlogCategoryDTO getCategoryBySlug(String slug) {
         BlogCategory category = categoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy category với slug: " + slug));
 
+        // Get blog count
         long blogCount = blogRepository.countByCategory(category);
         return new BlogCategoryDTO(category, blogCount);
     }
@@ -163,91 +202,6 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<BlogCategoryDTO> getCategoriesWithBlogCount() {
-        List<Object[]> results = categoryRepository.findCategoriesWithBlogCount();
-        return results.stream()
-                .map(result -> {
-                    if (result == null || result.length < 2) {
-                        log.warn("Invalid result from findCategoriesWithBlogCount: {}", result);
-                        return null;
-                    }
-                    try {
-                        BlogCategory category = (BlogCategory) result[0];
-                        Long blogCount = result[1] instanceof Long ? (Long) result[1] : 
-                                        result[1] instanceof Number ? ((Number) result[1]).longValue() : 0L;
-                        return new BlogCategoryDTO(category, blogCount);
-                    } catch (ClassCastException e) {
-                        log.error("Error casting result from findCategoriesWithBlogCount", e);
-                        return null;
-                    }
-                })
-                .filter(dto -> dto != null) // Filter out null DTOs
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public void reorderCategories(Long categoryId1, Long categoryId2) {
-        log.info("Swapping display order between categories: {} and {}", categoryId1, categoryId2);
-
-        BlogCategory category1 = categoryRepository.findById(categoryId1)
-                .orElseThrow(() -> new RuntimeException("Category 1 not found"));
-        BlogCategory category2 = categoryRepository.findById(categoryId2)
-                .orElseThrow(() -> new RuntimeException("Category 2 not found"));
-
-        // Swap display orders
-        Integer tempOrder = category1.getDisplayOrder();
-        category1.setDisplayOrder(category2.getDisplayOrder());
-        category2.setDisplayOrder(tempOrder);
-
-        categoryRepository.save(category1);
-        categoryRepository.save(category2);
-
-        log.info("Display orders swapped successfully");
-    }
-
-    @Override
-    @Transactional
-    public void updateDisplayOrder(Long categoryId, Integer newDisplayOrder) {
-        log.info("Updating display order of category {} to {}", categoryId, newDisplayOrder);
-
-        BlogCategory category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-
-        if (newDisplayOrder == null) {
-            throw new RuntimeException("Display order cannot be null");
-        }
-
-        Integer oldDisplayOrder = category.getDisplayOrder() != null ? category.getDisplayOrder() : 0;
-        
-        if (oldDisplayOrder.equals(newDisplayOrder)) {
-            return; // No change needed
-        }
-
-        // Get affected categories
-        List<BlogCategory> affectedCategories;
-        if (newDisplayOrder > oldDisplayOrder) {
-            // Moving down: shift others up
-            affectedCategories = categoryRepository.findByDisplayOrderBetween(
-                    oldDisplayOrder + 1, newDisplayOrder);
-            affectedCategories.forEach(cat -> cat.setDisplayOrder(cat.getDisplayOrder() - 1));
-        } else {
-            // Moving up: shift others down
-            affectedCategories = categoryRepository.findByDisplayOrderBetween(
-                    newDisplayOrder, oldDisplayOrder - 1);
-            affectedCategories.forEach(cat -> cat.setDisplayOrder(cat.getDisplayOrder() + 1));
-        }
-
-        category.setDisplayOrder(newDisplayOrder);
-        
-        categoryRepository.saveAll(affectedCategories);
-        categoryRepository.save(category);
-
-        log.info("Display order updated successfully");
-    }
-
-    @Override
     @Transactional
     public BlogCategoryDTO activateCategory(Long categoryId) {
         log.info("Activating category ID: {}", categoryId);
@@ -275,17 +229,5 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
 
         log.info("Category deactivated successfully: {}", categoryId);
         return new BlogCategoryDTO(savedCategory);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isCategoryNameExists(String categoryName) {
-        return categoryRepository.existsByCategoryNameIgnoreCase(categoryName);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public long countByStatus(BlogCategory.Status status) {
-        return categoryRepository.countByStatus(status);
     }
 }

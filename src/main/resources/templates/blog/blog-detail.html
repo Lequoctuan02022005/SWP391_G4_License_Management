@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title th:text="${blog.title} + ' - License Management System'">Blog Detail</title>
@@ -80,11 +80,12 @@
                         </div>
                         <div class="me-4">
                             <i class="bi bi-calendar"></i>
-                            <span th:text="${#temporals.format(blog.publishedAt != null ? blog.publishedAt : blog.createdAt, 'dd/MM/yyyy')}"></span>
+                            <span th:with="displayDate=${blog.publishedAt != null ? blog.publishedAt : blog.createdAt}"
+                                  th:text="${#temporals.format(displayDate, 'dd/MM/yyyy')}"></span>
                         </div>
                         <div class="me-4">
                             <i class="bi bi-eye"></i>
-                            <span th:text="${blog.viewCount}">0</span> lượt xem
+                            <span th:text="${blog.viewCount}">0</span> views
                         </div>
                     </div>
                 </div>
@@ -105,7 +106,7 @@
 
                 <!-- Related Posts -->
                 <div class="mt-5" th:if="${!#lists.isEmpty(relatedBlogs)}">
-                    <h4 class="fw-bold mb-4">Bài viết liên quan</h4>
+                    <h4 class="fw-bold mb-4">Related Articles</h4>
                     <div class="row g-3">
                         <div class="col-md-6" th:each="relatedBlog : ${relatedBlogs}">
                             <div class="card related-post-card h-100">
@@ -161,7 +162,7 @@
                     <div class="card" th:if="${!#lists.isEmpty(popularBlogs)}">
                         <div class="card-body">
                             <h6 class="fw-bold mb-3">
-                                <i class="bi bi-fire"></i> Bài viết xem nhiều
+                                <i class="bi bi-fire"></i> Popular Articles
                             </h6>
                             <div class="list-group list-group-flush">
                                 <a th:each="popularBlog : ${popularBlogs}" 
@@ -169,7 +170,7 @@
                                    class="list-group-item list-group-item-action p-2">
                                     <h6 class="mb-1 small" th:text="${popularBlog.title}"></h6>
                                     <small class="text-muted">
-                                        <i class="bi bi-eye"></i> <span th:text="${popularBlog.viewCount}"></span> lượt xem
+                                        <i class="bi bi-eye"></i> <span th:text="${popularBlog.viewCount}"></span> views
                                     </small>
                                 </a>
                             </div>

@@ -27,5 +27,6 @@ public class UpdateBlogCategoryDTO {
     private Integer displayOrder;
 
     @NotNull(message = "Trạng thái không được để trống")
+    @Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "Trạng thái phải là ACTIVE hoặc INACTIVE")
     private String status; // ACTIVE, INACTIVE
 }
