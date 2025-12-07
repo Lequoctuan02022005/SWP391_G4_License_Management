@@ -9,6 +9,8 @@ import swp391.fa25.lms.model.Role;
 import swp391.fa25.lms.repository.AccountRepository;
 import swp391.fa25.lms.repository.RoleRepository;
 
+import java.time.LocalDateTime;
+
 @Component
 @RequiredArgsConstructor
 public class RoleDataInitializer implements CommandLineRunner {
@@ -87,9 +89,27 @@ public class RoleDataInitializer implements CommandLineRunner {
             accountRepo.save(mod);
             System.out.println("⭐ Moderator created");
         }
+        if (!accountRepo.existsByEmail("expiredseller@gmail.com")) {
 
+            Account expired = new Account();
+            expired.setEmail("expiredseller@gmail.com");
+            expired.setFullName("Seller Hết Hạn");
+            expired.setPassword(passwordEncoder.encode("123456"));
+            expired.setStatus(Account.AccountStatus.ACTIVE);
+            expired.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());
+
+            // 🔥 Đánh dấu seller nhưng đã hết hạn
+            expired.setSellerActive(false);
+            expired.setSellerExpiryDate(LocalDateTime.now().minusDays(10));
+            expired.setSellerPackage(null);
+
+            accountRepo.save(expired);
+
+            System.out.println("⭐ Expired seller created");
+        }
         System.out.println("✅ Initialization completed!");
     }
+
 
     private void createRoleIfMissing(Integer id, Role.RoleName name, String note) {
         if (!roleRepo.existsById(id)) {

@@ -52,14 +52,16 @@ public class ToolListController {
         if (loginMethod != null && !loginMethod.isBlank()) {
             try {
                 loginMethodEnum = Tool.LoginMethod.valueOf(loginMethod);
-            } catch (Exception ignore) {}
+            } catch (Exception ignore) {
+            }
         }
 
         Tool.Status statusEnum = null;
         if (status != null && !status.isBlank()) {
             try {
                 statusEnum = Tool.Status.valueOf(status);
-            } catch (Exception ignore) {}
+            } catch (Exception ignore) {
+            }
         }
 
         List<Tool> tools;
@@ -131,56 +133,5 @@ public class ToolListController {
 
         toolListService.toggleStatus(toolId, acc.getAccountId());
         return "redirect:/toollist";
-    }
-
-    // =============== ADD TOOL ===============
-    @GetMapping("/new")
-    public String showCreateForm(Model model) {
-        model.addAttribute("tool", new Tool());
-        return "tool/toollist-add";
-    }
-
-    @PostMapping("/new")
-    public String createTool(@ModelAttribute Tool tool,
-                             Authentication auth) {
-
-        if (auth == null) return "redirect:/login";
-
-        Account acc = accountService.findByEmail(auth.getName());
-        if (acc == null || acc.getRole().getRoleId() != 2) {
-            return "redirect:/toollist";
-        }
-
-        toolListService.addTool(tool, acc.getAccountId());
-        return "redirect:/toollist";
-    }
-
-    // =============== EDIT TOOL (VIEW FORM) ===============
-    @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable("id") Long toolId,
-                               Model model,
-                               Authentication auth) {
-
-        if (auth == null) return "redirect:/login";
-
-        Account acc = accountService.findByEmail(auth.getName());
-        if (acc == null || acc.getRole().getRoleId() != 2) {
-            return "redirect:/toollist";
-        }
-
-        // Lấy tool thuộc chính seller
-        Tool tool = toolListService.getToolsForSeller(
-                        acc.getAccountId(),
-                        null, null,
-                        null, null,
-                        null, null,
-                        null)
-                .stream()
-                .filter(t -> Objects.equals(t.getToolId(), toolId))
-                .findFirst()
-                .orElse(null);
-
-        model.addAttribute("tool", tool);
-        return "tool/toollist-edit";
     }
 }

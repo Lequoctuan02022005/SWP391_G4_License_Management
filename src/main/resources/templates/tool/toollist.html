@@ -132,7 +132,9 @@
 
                 <!-- Nút ADD cho SELLER -->
                 <div class="tl-top-right" sec:authorize="hasRole('SELLER')">
-                    <a th:href="@{/toollist/new}" class="tl-btn tl-btn-primary">+ Thêm Tool</a>
+                    <a th:href="@{/tools/seller/add}" class="tl-btn tl-btn-primary">
+                        + Thêm Tool
+                    </a>
                 </div>
             </div>
 
@@ -142,8 +144,7 @@
 
                     <!-- ẢNH + BADGE -->
                     <div class="tl-card-image-wrapper">
-                        <!-- Lấy tên file từ path C:\...\uploads\images\xxx.jpg và map ra /uploads/images/xxx.jpg -->
-                        <img th:src="@{ ${tool.image}}"
+                        <img th:src="@{ ${tool.image}}">
                              alt="Tool image"
                              class="tl-card-image" />
                         <span class="tl-badge" th:switch="${tool.status}">

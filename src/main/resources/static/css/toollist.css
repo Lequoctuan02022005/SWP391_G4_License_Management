@@ -174,14 +174,19 @@ body {
 }
 
 .tl-card-image-wrapper {
-    position: relative;
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .tl-card-image {
     width: 100%;
     height: 170px;
     object-fit: cover;
-    border-radius: 12px;
+    object-position: center;
+
 }
 
 /* =======================================
