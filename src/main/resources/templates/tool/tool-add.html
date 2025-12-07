@@ -1,92 +1,162 @@
-<link rel="stylesheet" href="/css/tool-form.css">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Tool | Tool Market</title>
 
-<div class="tool-container">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tool-form.css">
+    <link th:href="@{/css/home.css}" rel="stylesheet">
+</head>
 
-    <!-- LEFT PANEL (IMAGE PREVIEW) -->
-    <div class="tool-left">
-        <div class="tool-image-placeholder" id="previewBox">
-            Preview Image
-        </div>
-    </div>
+<body>
 
-    <!-- RIGHT PANEL (FORM) -->
-    <div class="tool-right">
+<!-- HEADER -->
+<div th:insert="common/header :: header"></div>
 
-        <h3>Add New Tool</h3>
-        <hr>
+<!-- MAIN CONTENT -->
+<div class="container mt-4">
 
-        <form class="tool-form" method="post" enctype="multipart/form-data">
+    <h2 class="fw-bold mb-4">Add New Tool</h2>
 
-            <label>Tool Name</label>
-            <input type="text" name="toolName" required>
+    <form method="post" enctype="multipart/form-data" class="bg-white p-4 shadow-sm rounded">
 
-            <label>Upload Image</label>
-            <input type="file" name="imageFile" accept="image/*" onchange="loadImage(event)" required>
+        <div class="row g-4 align-items-stretch tool-wrapper">
 
-            <label>Upload Tool File (.exe, .zip)</label>
-            <input type="file" name="toolFile" required>
-
-            <label>Category</label>
-            <select name="categoryId" required>
-                <option value="">-- Select category --</option>
-                <th:block th:each="c : ${categories}">
-                    <option th:value="${c.categoryId}" th:text="${c.name}"></option>
-                </th:block>
-            </select>
-
-            <label>Description</label>
-            <textarea name="description"></textarea>
-
-            <label>Login Method</label>
-            <select name="loginMethod" required>
-                <option value="">-- Select method --</option>
-                <option value="USER_PASSWORD">Username + Password</option>
-                <option value="TOKEN">Token</option>
-            </select>
-
-            <label>Quantity</label>
-            <input type="number" name="quantity" min="1" value="1" required>
-
-            <label>License Packages</label>
-            <div id="licenseList">
-                <div class="license-row">
-                    <input name="licenseDays" type="number" placeholder="Days">
-                    <input name="licensePrices" type="number" placeholder="Price (VND)">
-                    <button type="button" class="remove-license-btn" onclick="removeLicense(this)">X</button>
+            <!-- LEFT PREVIEW -->
+            <div class="col-md-5 d-flex full-height">
+                <div id="previewBox" class="preview-box">
+                    Preview Image
                 </div>
             </div>
 
-            <button type="button" class="btn-secondary-custom" onclick="addLicense()">+ Add another</button>
-            <br><br>
 
-            <button class="btn-primary-custom" type="submit">Save Tool</button>
-            <a href="/tools/seller" class="btn-secondary-custom">Cancel</a>
+            <!-- RIGHT FORM -->
+            <div class="col-md-7 full-height">
 
-        </form>
-    </div>
+                <!-- Tool Name -->
+                <div class="mb-3">
+                    <label class="fw-bold">Tool Name</label>
+                    <input type="text" class="form-control" name="toolName" required>
+                </div>
+
+                <!-- Upload Image -->
+                <div class="mb-3">
+                    <label class="fw-bold">Upload Image</label>
+                    <input type="file" class="form-control"
+                           name="imageFile" accept="image/*"
+                           onchange="loadImage(event)" required>
+                </div>
+
+                <!-- Upload Tool -->
+                <div class="mb-3">
+                    <label class="fw-bold">Upload Tool File (.exe, .zip, .rar)</label>
+                    <input type="file" class="form-control" name="toolFile" required>
+                </div>
+
+                <!-- Category -->
+                <div class="mb-3">
+                    <label class="fw-bold">Category</label>
+                    <select name="categoryId" class="form-select" required>
+                        <option value="">-- Select category --</option>
+                        <th:block th:each="c : ${categories}">
+                            <option th:value="${c.categoryId}" th:text="${c.categoryName}"></option>
+                        </th:block>
+                    </select>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label class="fw-bold">Description</label>
+                    <textarea class="form-control" name="description" rows="3" required></textarea>
+                </div>
+
+                <!-- Login Method -->
+                <div class="mb-3">
+                    <label class="fw-bold">Login Method</label>
+                    <select name="loginMethod" class="form-select" required>
+                        <option value="">-- Select method --</option>
+                        <option value="USER_PASSWORD">Username + Password</option>
+                        <option value="TOKEN">Token</option>
+                    </select>
+                </div>
+
+                <!-- Quantity -->
+                <div class="mb-3">
+                    <label class="fw-bold">Quantity</label>
+                    <input type="number" class="form-control" name="quantity" min="1" required>
+                </div>
+
+                <!-- LICENSE PACKAGES -->
+                <div class="mb-3">
+                    <label class="fw-bold">License Packages</label>
+
+                    <div id="licenseGroup">
+                        <div class="row mb-2 license-row">
+                            <div class="col-5">
+                                <input type="number" name="licenseDays" class="form-control" placeholder="Days" required>
+                            </div>
+                            <div class="col-5">
+                                <input type="number" name="licensePrices" class="form-control" placeholder="Price (VND)" required>
+                            </div>
+                            <div class="col-2 d-flex align-items-center">
+                                <span class="remove-license" onclick="removeLicense(this)">×</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="addLicense()"
+                            class="btn btn-outline-primary btn-sm">
+                        + Add Package
+                    </button>
+                </div>
+
+                <!-- BUTTONS -->
+                <div class="mt-4">
+                    <button class="btn btn-success px-4">Save Tool</button>
+                    <a href="/tools/seller" class="btn btn-outline-secondary px-4">Cancel</a>
+                </div>
+
+            </div>
+        </div>
+    </form>
 </div>
 
+<!-- JS -->
 <script>
     function loadImage(event) {
-        let imgBox = document.getElementById("previewBox");
-        imgBox.innerHTML = "";
+        let preview = document.getElementById("previewBox");
+        preview.innerHTML = "";
+
         let img = document.createElement("img");
         img.src = URL.createObjectURL(event.target.files[0]);
-        imgBox.appendChild(img);
+        preview.appendChild(img);
     }
 
     function addLicense() {
+        let group = document.getElementById("licenseGroup");
+
         let div = document.createElement("div");
-        div.classList.add("license-row");
+        div.classList.add("row", "mb-2", "license-row");
+
         div.innerHTML = `
-        <input name="licenseDays" type="number" placeholder="Days">
-        <input name="licensePrices" type="number" placeholder="Price (VND)">
-        <button type="button" class="remove-license-btn" onclick="removeLicense(this)">X</button>
-    `;
-        document.getElementById("licenseList").appendChild(div);
+            <div class="col-5">
+                <input type="number" name="licenseDays" class="form-control" placeholder="Days" required>
+            </div>
+            <div class="col-5">
+                <input type="number" name="licensePrices" class="form-control" placeholder="Price (VND)" required>
+            </div>
+            <div class="col-2 d-flex align-items-center">
+                <span class="remove-license" onclick="removeLicense(this)">×</span>
+            </div>
+        `;
+        group.appendChild(div);
     }
 
-    function removeLicense(btn) {
-        btn.parentElement.remove();
+    function removeLicense(el) {
+        el.parentElement.parentElement.remove();
     }
 </script>
+
+</body>
+</html>

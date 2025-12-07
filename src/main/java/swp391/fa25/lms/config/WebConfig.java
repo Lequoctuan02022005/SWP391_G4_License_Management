@@ -4,6 +4,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import org.springframework.core.Ordered;
+
+/**
+ * Configuration để serve static files từ thư mục uploads
+ */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
@@ -11,7 +16,9 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:uploads/");
-        // Nếu chạy Windows cần đường dẫn tuyệt đối:
-        // .addResourceLocations("file:C:/YourProject/uploads/");
+    }
+}
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:uploads/");
     }
 }
