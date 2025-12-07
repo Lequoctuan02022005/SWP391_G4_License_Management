@@ -1,0 +1,378 @@
+/* Layout tổng */
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f7;
+    color: #222;
+}
+
+
+
+.tl-logo {
+    font-weight: 700;
+    font-size: 20px;
+    text-decoration: none;
+    color: #2c3e50;
+}
+
+.tl-nav {
+    display: flex;
+    gap: 16px;
+}
+
+.tl-nav-link {
+    text-decoration: none;
+    font-size: 14px;
+    color: #555;
+    padding-bottom: 2px;
+    border-bottom: 2px solid transparent;
+}
+
+.tl-nav-link-active {
+    color: #1a73e8;
+    border-color: #1a73e8;
+}
+
+
+
+.tl-user {
+    font-size: 14px;
+}
+
+.tl-btn {
+    border: none;
+    outline: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.tl-btn-primary {
+    background: #1a73e8;
+    color: #fff;
+}
+
+.tl-btn-outline {
+    border: 1px solid #1a73e8;
+    color: #1a73e8;
+    background: transparent;
+}
+
+.tl-btn-secondary {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.tl-btn-warning {
+    background: #f59e0b;
+    color: #fff;
+}
+
+.tl-btn-success {
+    background: #10b981;
+    color: #fff;
+}
+
+.tl-btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.tl-btn-full {
+    width: 100%;
+}
+
+.tl-mt-8 {
+    margin-top: 8px;
+}
+
+/* PAGE */
+.tl-page {
+    padding: 24px 32px 40px;
+}
+
+/* PAGE HEADER */
+.tl-page-header h1 {
+    margin: 0 0 4px;
+    font-size: 24px;
+}
+
+.tl-page-header p {
+    margin: 0 0 16px;
+    color: #666;
+}
+
+/* LAYOUT CHÍNH */
+.tl-layout {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 24px;
+}
+
+/* FILTER SIDEBAR */
+.tl-filter-sidebar {
+    background: #fff;
+    padding: 16px 16px 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.tl-filter-title {
+    margin: 0 0 12px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tl-filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tl-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tl-filter-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.tl-filter-group input,
+.tl-filter-group select {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+/* TOP BAR */
+.tl-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tl-result {
+    font-size: 14px;
+    color: #4b5563;
+}
+
+/* GRID */
+.tl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+/* CARD */
+.tl-card {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.tl-card-image-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 60%;
+    overflow: hidden;
+}
+
+.tl-card-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* BADGE */
+.tl-badge {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    background: #6b7280;
+}
+
+.tl-badge-published {
+    background: #10b981;
+}
+
+.tl-badge-pending {
+    background: #f59e0b;
+}
+
+.tl-badge-rejected {
+    background: #ef4444;
+}
+
+.tl-badge-default {
+    background: #6b7280;
+}
+
+/* BODY */
+.tl-card-body {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tl-card-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.tl-card-seller {
+    margin: 0;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.tl-card-seller-name {
+    font-weight: 500;
+    color: #374151;
+}
+
+.tl-card-rating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #f59e0b;
+}
+
+.tl-stars {
+    font-size: 14px;
+}
+
+.tl-rating-value {
+    font-weight: 600;
+}
+
+.tl-rating-count {
+    color: #6b7280;
+}
+
+.tl-card-desc {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #4b5563;
+    max-height: 3.4em;
+    overflow: hidden;
+}
+
+/* STOCK */
+.tl-card-stock {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #374151;
+}
+
+/* FOOTER */
+.tl-card-footer {
+    padding: 8px 12px 10px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.tl-card-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.tl-inline-form {
+    display: inline-block;
+}
+
+/* EMPTY */
+.tl-empty {
+    margin-top: 16px;
+    padding: 20px;
+    text-align: center;
+    background: #fff;
+    border-radius: 12px;
+    color: #6b7280;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .tl-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .tl-filter-sidebar {
+        order: 2;
+    }
+
+    .tl-content {
+        order: 1;
+    }
+}
+/* CSS trạng thái tool */
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-published {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-suspect {
+    background-color: #ffe5b4;
+    color: #8a4b00;
+}
+
+.status-deactivated {
+    background-color: #e2e3e5;
+    color: #6c757d;
+}
+
+.status-violated {
+    background-color: #e6d7ff;
+    color: #4b0082;
+}
+
+/* Nút nhỏ và căn chỉnh */
+.tl-btn-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    border: none;
+}

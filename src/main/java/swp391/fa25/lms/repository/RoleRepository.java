@@ -26,4 +26,7 @@ public interface RoleRepository extends JpaRepository<Role, Integer> {
            OR LOWER(r.roleName) LIKE LOWER(CONCAT('%', :keyword, '%'))
     """)
     Page<Role> searchAll(@Param("keyword") String keyword, Pageable pageable);
+
+    Optional<Role> findTopByOrderByRoleIdDesc();
+
 }

@@ -32,9 +32,9 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService)
 
                 .authorizeHttpRequests(auth -> auth
-                        // Public resources
-                        .requestMatchers("/", "/home", "/home/**",
-                                "/css/**", "/js/**", "/images/**", "/uploads/**",
+                        .requestMatchers( "/home", "/home/**","/verify",
+                                "/css/**", "/js/**", "/images/**","/uploads/**",
+                                "/toollist", "/toollist/**",
                                 "/login", "/register", "/error").permitAll()
 
                         // Blog public pages
@@ -43,9 +43,10 @@ public class SecurityConfig {
                         // Role-based pages
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/manager/**").hasRole("MANAGER")
-                        .requestMatchers("/mod/**").hasRole("MODERATOR")
 
                         // Everything else requires authentication
+                        .requestMatchers("/moderator/**").hasRole("MOD")
+                        .requestMatchers("/tools/moderator/**").hasRole("MOD")
                         .anyRequest().authenticated()
                 )
 
@@ -60,6 +61,8 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl("/perform_logout")
                         .logoutSuccessUrl("/login?logout=true")
+                        .deleteCookies("JSESSIONID")
+                        .invalidateHttpSession(true)
                         .permitAll()
                 );
 
