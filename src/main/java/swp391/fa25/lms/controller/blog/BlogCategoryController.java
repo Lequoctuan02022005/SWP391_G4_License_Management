@@ -1,0 +1,283 @@
+package swp391.fa25.lms.controller.blog;
+
+import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import swp391.fa25.lms.dto.blog.BlogCategoryDTO;
+import swp391.fa25.lms.dto.blog.CreateBlogCategoryDTO;
+import swp391.fa25.lms.dto.blog.UpdateBlogCategoryDTO;
+import swp391.fa25.lms.model.Account;
+import swp391.fa25.lms.service.BlogCategoryService;
+
+/**
+ * Blog Category Controller - Manager Only
+ * Quản lý danh mục blog: /manager/blog-categories/**
+ */
+@Controller
+@RequiredArgsConstructor
+@RequestMapping("/manager/blog-categories")
+@Slf4j
+public class BlogCategoryController {
+
+    private final BlogCategoryService categoryService;
+
+    /**
+     * Danh sách category
+     * GET /manager/blog-categories
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping
+    public String listCategories(HttpSession session, Model model, RedirectAttributes ra) {
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        try {
+            model.addAttribute("categories", categoryService.getAllCategories());
+            model.addAttribute("manager", manager);
+            return "manager/blog-categories";
+        } catch (Exception e) {
+            log.error("Error loading categories", e);
+            ra.addFlashAttribute("error", "Lỗi tải danh sách danh mục");
+            return "redirect:/home";
+        }
+    }
+
+    /**
+     * Form tạo category mới
+     * GET /manager/blog-categories/create
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/create")
+    public String createForm(HttpSession session, Model model, RedirectAttributes ra) {
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        CreateBlogCategoryDTO dto = new CreateBlogCategoryDTO();
+        dto.setStatus("ACTIVE");
+        dto.setDisplayOrder(0);
+
+        model.addAttribute("category", dto);
+        model.addAttribute("manager", manager);
+
+        return "manager/category-form";
+    }
+
+    /**
+     * Xử lý tạo category
+     * POST /manager/blog-categories/create
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @PostMapping("/create")
+    public String create(
+            @Valid @ModelAttribute("category") CreateBlogCategoryDTO dto,
+            BindingResult result,
+            HttpSession session,
+            Model model,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("manager", manager);
+            return "manager/category-form";
+        }
+
+        try {
+            categoryService.createCategory(dto);
+            ra.addFlashAttribute("success", "Tạo danh mục thành công!");
+            return "redirect:/manager/blog-categories";
+        } catch (RuntimeException e) {
+            log.error("Error creating category", e);
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("manager", manager);
+            return "manager/category-form";
+        }
+    }
+
+    /**
+     * Form sửa category
+     * GET /manager/blog-categories/edit/{id}
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/edit/{id}")
+    public String editForm(
+            @PathVariable Long id,
+            HttpSession session,
+            Model model,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        try {
+            BlogCategoryDTO category = categoryService.getCategoryById(id);
+
+            UpdateBlogCategoryDTO updateDTO = new UpdateBlogCategoryDTO();
+            updateDTO.setCategoryId(category.getCategoryId());
+            updateDTO.setCategoryName(category.getCategoryName());
+            updateDTO.setDescription(category.getDescription());
+            updateDTO.setSlug(category.getSlug());
+            updateDTO.setDisplayOrder(category.getDisplayOrder());
+            updateDTO.setStatus(category.getStatus());
+
+            model.addAttribute("category", updateDTO);
+            model.addAttribute("isEdit", true);
+            model.addAttribute("manager", manager);
+
+            return "manager/category-form";
+        } catch (RuntimeException e) {
+            log.error("Error loading category for edit: {}", id, e);
+            ra.addFlashAttribute("error", "Không tìm thấy danh mục");
+            return "redirect:/manager/blog-categories";
+        }
+    }
+
+    /**
+     * Xử lý update category
+     * POST /manager/blog-categories/edit/{id}
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @PostMapping("/edit/{id}")
+    public String update(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("category") UpdateBlogCategoryDTO dto,
+            BindingResult result,
+            HttpSession session,
+            Model model,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("isEdit", true);
+            model.addAttribute("manager", manager);
+            return "manager/category-form";
+        }
+
+        try {
+            // Security: Đảm bảo ID từ path khớp với DTO
+            if (dto.getCategoryId() == null || !dto.getCategoryId().equals(id)) {
+                dto.setCategoryId(id);
+            }
+
+            categoryService.updateCategory(dto);
+            ra.addFlashAttribute("success", "Cập nhật danh mục thành công!");
+            return "redirect:/manager/blog-categories";
+        } catch (RuntimeException e) {
+            log.error("Error updating category: {}", id, e);
+            dto.setCategoryId(id);
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("isEdit", true);
+            model.addAttribute("manager", manager);
+            return "manager/category-form";
+        }
+    }
+
+    /**
+     * Xóa category
+     * GET /manager/blog-categories/delete/{id}
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/delete/{id}")
+    public String delete(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        try {
+            categoryService.deleteCategory(id);
+            ra.addFlashAttribute("success", "Xóa danh mục thành công!");
+        } catch (RuntimeException e) {
+            log.error("Error deleting category: {}", id, e);
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/manager/blog-categories";
+    }
+
+    /**
+     * Kích hoạt category
+     * GET /manager/blog-categories/activate/{id}
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/activate/{id}")
+    public String activate(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        try {
+            categoryService.activateCategory(id);
+            ra.addFlashAttribute("success", "Kích hoạt danh mục thành công!");
+        } catch (RuntimeException e) {
+            log.error("Error activating category: {}", id, e);
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/manager/blog-categories";
+    }
+
+    /**
+     * Vô hiệu hóa category
+     * GET /manager/blog-categories/deactivate/{id}
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/deactivate/{id}")
+    public String deactivate(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        try {
+            categoryService.deactivateCategory(id);
+            ra.addFlashAttribute("success", "Vô hiệu hóa danh mục thành công!");
+        } catch (RuntimeException e) {
+            log.error("Error deactivating category: {}", id, e);
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/manager/blog-categories";
+    }
+}
