@@ -46,6 +46,9 @@ public class CustomAuthenticationSuccessHandler
         Account account = optionalAccount.get();
         Role.RoleName role = account.getRole().getRoleName();
 
+        // LƯU ACCOUNT VÀO SESSION
+        request.getSession().setAttribute("loggedInAccount", account);
+
         if (role != Role.RoleName.SELLER) {
             redirectByRole(role, response);
             return;
@@ -69,7 +72,7 @@ public class CustomAuthenticationSuccessHandler
     private void redirectByRole(Role.RoleName role, HttpServletResponse response) throws IOException {
         switch (role) {
             case ADMIN -> response.sendRedirect("/admin/dashboard");
-            case MANAGER -> response.sendRedirect("/manager/dashboard");
+            case MANAGER -> response.sendRedirect("/manager/blogs");
             case MOD -> response.sendRedirect("/moderator/dashboard");
             case CUSTOMER -> response.sendRedirect("/home");
             default -> response.sendRedirect("/");

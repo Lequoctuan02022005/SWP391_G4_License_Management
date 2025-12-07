@@ -18,7 +18,7 @@ public class Blog {
     private Long blogId;
 
     @NotBlank(message = "Title cannot be blank")
-    @Size(min = 5, max = 200, message = "Title must be between 5 and 200 characters")
+    @Size(min = 10, max = 200, message = "Title must be between 10 and 200 characters")
     @Column(nullable = false, columnDefinition = "NVARCHAR(200)")
     private String title;
 
@@ -62,12 +62,6 @@ public class Blog {
     @Column(name = "view_count", nullable = false)
     private Integer viewCount = 0;
 
-    @Column(name = "featured")
-    private Boolean featured = false; // Blog nổi bật
-
-    @Column(name = "allow_comments")
-    private Boolean allowComments = true;
-
     // Timestamps
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -91,8 +85,6 @@ public class Blog {
         this.author = author;
         this.status = Status.DRAFT;
         this.viewCount = 0;
-        this.featured = false;
-        this.allowComments = true;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -116,9 +108,8 @@ public class Blog {
     private String generateSlug(String title) {
         if (title == null) return "";
         
-        String baseSlug = toSlug(title);
-        // Add timestamp to ensure uniqueness
-        return baseSlug + "-" + System.currentTimeMillis();
+        // Chỉ generate base slug, unique sẽ được xử lý ở service layer
+        return toSlug(title);
     }
 
     /**
@@ -275,22 +266,6 @@ public class Blog {
 
     public void setViewCount(Integer viewCount) {
         this.viewCount = viewCount;
-    }
-
-    public Boolean getFeatured() {
-        return featured;
-    }
-
-    public void setFeatured(Boolean featured) {
-        this.featured = featured;
-    }
-
-    public Boolean getAllowComments() {
-        return allowComments;
-    }
-
-    public void setAllowComments(Boolean allowComments) {
-        this.allowComments = allowComments;
     }
 
     public LocalDateTime getCreatedAt() {

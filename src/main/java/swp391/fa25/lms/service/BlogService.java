@@ -80,11 +80,6 @@ public interface BlogService {
     Page<BlogListItemDTO> getBlogsByAuthor(Long authorId, Pageable pageable);
 
     /**
-     * Lấy danh sách blog featured
-     */
-    Page<BlogListItemDTO> getFeaturedBlogs(Pageable pageable);
-
-    /**
      * Search blog theo keyword
      */
     Page<BlogListItemDTO> searchBlogs(String keyword, Pageable pageable);

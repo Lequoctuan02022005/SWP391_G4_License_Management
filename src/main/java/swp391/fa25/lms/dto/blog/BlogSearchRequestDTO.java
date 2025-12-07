@@ -15,7 +15,6 @@ public class BlogSearchRequestDTO {
     private String keyword; // Search trong title, content, summary
     private Long categoryId; // Filter theo category
     private String status; // DRAFT, PUBLISHED, ARCHIVED
-    private Boolean featured; // Chỉ lấy featured blogs
     private Long authorId; // Filter theo author
 
     // Pagination

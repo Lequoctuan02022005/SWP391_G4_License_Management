@@ -5,57 +5,102 @@
     <title>Blog - License Management System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link th:href="@{/css/home.css}" rel="stylesheet">
     <link th:href="@{/css/blog.css}" rel="stylesheet">
+    <style>
+        .blog-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+        .blog-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 100%;
+        }
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .sidebar-widget {
+            margin-bottom: 1.5rem;
+        }
+        .list-group-item {
+            transition: background-color 0.2s;
+        }
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
 </head>
 <body>
 <!--Header-->
-<div th:replace="home/header :: header"></div>
+<div th:replace="common/header :: header"></div>
 
 <!-- Blog Header -->
 <section class="blog-header">
-    <div class="container">
-        <h1>Blog & Tin tức</h1>
-        <p>Cập nhật các bài viết hữu ích về phần mềm và công nghệ</p>
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold">Blog & Tin tức</h1>
+        <p class="lead">Cập nhật các bài viết hữu ích về phần mềm và công nghệ</p>
     </div>
 </section>
 
 <!-- Blog Content -->
-<section class="blog-section py-5">
+<section class="py-5">
     <div class="container">
         <div class="row">
             <!-- Sidebar -->
             <div class="col-lg-3">
-                <div class="blog-sidebar">
-                    <!-- Search -->
-                    <div class="sidebar-widget">
-                        <h5>Tìm kiếm</h5>
-                        <div class="input-group">
-                            <input type="text" id="searchInput" class="form-control" placeholder="Tìm bài viết...">
-                            <button class="btn btn-primary" onclick="searchBlogs()">
-                                <i class="bi bi-search"></i>
-                            </button>
+                <!-- Search -->
+                <div class="sidebar-widget card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-search"></i> Tìm kiếm</h5>
+                        <form th:action="@{/blog}" method="get">
+                            <input type="hidden" th:if="${param.categoryId}" name="categoryId" th:value="${param.categoryId}">
+                            <div class="input-group">
+                                <input type="text" name="keyword" class="form-control" placeholder="Tìm bài viết..." th:value="${param.keyword}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="sidebar-widget card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-folder"></i> Danh mục</h5>
+                        <div class="list-group list-group-flush">
+                            <a th:href="@{/blog}" 
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" 
+                               th:classappend="${param.categoryId == null} ? 'active'">
+                                <span><i class="bi bi-folder-fill"></i> Tất cả</span>
+                                <span class="badge bg-primary rounded-pill" th:text="${totalBlogs}">0</span>
+                            </a>
+                            <a th:each="category : ${categories}" 
+                               th:href="@{/blog(categoryId=${category.categoryId})}" 
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                               th:classappend="${param.categoryId != null && param.categoryId[0] == category.categoryId.toString()} ? 'active'">
+                                <span><i class="bi bi-folder"></i> <span th:text="${category.categoryName}"></span></span>
+                                <span class="badge bg-secondary rounded-pill" th:text="${category.blogCount}">0</span>
+                            </a>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Categories -->
-                    <div class="sidebar-widget">
-                        <h5>Danh mục</h5>
-                        <div id="categoriesList" class="categories-list">
-                            <div class="text-center">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Popular Posts -->
-                    <div class="sidebar-widget">
-                        <h5>Bài viết xem nhiều</h5>
-                        <div id="popularPosts" class="popular-posts">
-                            <div class="text-center">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
+                <!-- Popular Posts -->
+                <div class="sidebar-widget card" th:if="${!#lists.isEmpty(popularBlogs)}">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="bi bi-fire"></i> Xem nhiều nhất</h5>
+                        <div class="list-group list-group-flush">
+                            <a th:each="blog : ${popularBlogs}" 
+                               th:href="@{/blog/{slug}(slug=${blog.slug})}" 
+                               class="list-group-item list-group-item-action p-2">
+                                <h6 class="mb-1 small fw-bold" th:text="${blog.title}"></h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-eye"></i> <span th:text="${blog.viewCount}"></span> lượt xem
+                                </small>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -63,38 +108,127 @@
 
             <!-- Blog List -->
             <div class="col-lg-9">
-                <!-- Filter Bar -->
-                <div class="filter-bar mb-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <p class="mb-0" id="resultsCount">Đang tải...</p>
-                        </div>
-                        <div class="col-md-6 text-end">
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-outline-primary active" data-view="grid" onclick="changeView('grid')">
-                                    <i class="bi bi-grid-3x3-gap"></i> Lưới
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-view="list" onclick="changeView('list')">
-                                    <i class="bi bi-list"></i> Danh sách
-                                </button>
+                <!-- Results Info -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <p class="mb-0 text-muted">
+                            Tìm thấy <strong th:text="${totalBlogs}">0</strong> bài viết
+                            <span th:if="${param.keyword}" class="text-primary">
+                                cho "<span th:text="${param.keyword}"></span>"
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Blog Grid -->
+                <div class="row g-4" th:if="${!#lists.isEmpty(blogs)}">
+                    <div class="col-md-6" th:each="blog : ${blogs}">
+                        <div class="card blog-card">
+                            <!-- Featured Image -->
+                            <div class="position-relative" style="height: 200px; overflow: hidden;">
+                                <img th:if="${blog.thumbnailImage}" 
+                                     th:src="@{${blog.thumbnailImage}}" 
+                                     class="card-img-top" 
+                                     th:alt="${blog.title}"
+                                     style="height: 100%; width: 100%; object-fit: cover;">
+                                <div th:unless="${blog.thumbnailImage}"
+                                     class="bg-secondary d-flex align-items-center justify-content-center h-100">
+                                    <i class="bi bi-image text-white" style="font-size: 3rem;"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Card Body -->
+                            <div class="card-body">
+                                <!-- Meta -->
+                                <div class="mb-2">
+                                    <span class="badge bg-primary me-2" th:text="${blog.categoryName}"></span>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i> 
+                                        <span th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy')}"></span>
+                                    </small>
+                                </div>
+                                
+                                <!-- Title -->
+                                <h5 class="card-title">
+                                    <a th:href="@{/blog/{slug}(slug=${blog.slug})}" 
+                                       th:text="${blog.title}" 
+                                       class="text-decoration-none text-dark"></a>
+                                </h5>
+                                
+                                <!-- Excerpt -->
+                                <p class="card-text text-muted" th:text="${blog.shortSummary}"></p>
+                                
+                                <!-- Footer -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="bi bi-eye"></i> <span th:text="${blog.viewCount}">0</span>
+                                    </small>
+                                    <a th:href="@{/blog/{slug}(slug=${blog.slug})}" class="btn btn-sm btn-outline-primary">
+                                        Đọc thêm <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Blog Grid -->
-                <div id="blogGrid" class="blog-grid row">
-                    <!-- Loading spinner -->
-                    <div class="col-12 text-center py-5">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
-                        </div>
-                    </div>
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(blogs)}" class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                    <h4 class="mt-3 text-muted">Không tìm thấy bài viết nào</h4>
+                    <p class="text-muted" th:if="${param.keyword}">Thử tìm kiếm với từ khóa khác</p>
+                    <a th:href="@{/blog}" class="btn btn-primary mt-3">
+                        <i class="bi bi-arrow-left"></i> Xem tất cả bài viết
+                    </a>
+                </div>
+
+                <!-- Blog Count Info -->
+                <div class="text-center text-muted mt-4">
+                    <small>
+                        Hiển thị <strong th:text="${#lists.size(blogs)}">0</strong> trong tổng số 
+                        <strong th:text="${totalBlogs}">0</strong> bài viết
+                    </small>
                 </div>
 
                 <!-- Pagination -->
-                <nav id="paginationNav" class="mt-4" style="display: none;">
-                    <ul class="pagination justify-content-center" id="pagination">
+                <nav th:if="${totalPages > 1}" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous Button -->
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/blog(page=${currentPage - 1}, keyword=${keyword}, categoryId=${selectedCategory})}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        
+                        <!-- First Page -->
+                        <li th:if="${currentPage > 2}" class="page-item">
+                            <a class="page-link" th:href="@{/blog(page=0, keyword=${keyword}, categoryId=${selectedCategory})}">1</a>
+                        </li>
+                        <li th:if="${currentPage > 3}" class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        
+                        <!-- Page Numbers (show 5 pages max) -->
+                        <li th:each="i : ${#numbers.sequence(currentPage - 2 < 0 ? 0 : currentPage - 2, currentPage + 2 >= totalPages ? totalPages - 1 : currentPage + 2)}" 
+                            class="page-item" 
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/blog(page=${i}, keyword=${keyword}, categoryId=${selectedCategory})}" th:text="${i + 1}">1</a>
+                        </li>
+                        
+                        <!-- Last Page -->
+                        <li th:if="${currentPage < totalPages - 4}" class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        <li th:if="${currentPage < totalPages - 3}" class="page-item">
+                            <a class="page-link" th:href="@{/blog(page=${totalPages - 1}, keyword=${keyword}, categoryId=${selectedCategory})}" th:text="${totalPages}">Last</a>
+                        </li>
+                        
+                        <!-- Next Button -->
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                            <a class="page-link" th:href="@{/blog(page=${currentPage + 1}, keyword=${keyword}, categoryId=${selectedCategory})}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </div>
@@ -103,243 +237,8 @@
 </section>
 
 <!--Footer-->
-<div th:replace="home/footer :: footer"></div>
+<div th:replace="common/footer :: footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script th:src="@{/js/blog.js}"></script>
-<script>
-    let currentPage = 0;
-    let currentCategory = null;
-    let currentView = 'grid';
-    
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        loadCategories();
-        loadBlogs();
-        loadPopularPosts();
-    });
-    
-    function loadCategories() {
-        fetch('/api/public/blog-categories')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('categoriesList');
-                if (data.success && data.data && data.data.length > 0) {
-                    let html = '<ul class="list-unstyled">';
-                    html += '<li><a href="#" onclick="filterByCategory(null); return false;" class="category-link active">Tất cả</a></li>';
-                    data.data.forEach(cat => {
-                        html += `<li><a href="#" onclick="filterByCategory(${cat.categoryId}); return false;" class="category-link">${cat.name} (${cat.blogCount || 0})</a></li>`;
-                    });
-                    html += '</ul>';
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<p class="text-muted">Không có danh mục</p>';
-                }
-            })
-            .catch(error => {
-                console.error('Error loading categories:', error);
-                document.getElementById('categoriesList').innerHTML = '<p class="text-danger">Lỗi tải danh mục</p>';
-            });
-    }
-    
-    function loadBlogs(page = 0) {
-        currentPage = page;
-        let url = `/api/public/blogs?page=${page}&size=9`;
-        if (currentCategory) {
-            url = `/api/public/blogs/category/${currentCategory}?page=${page}&size=9`;
-        }
-        
-        const searchQuery = document.getElementById('searchInput').value.trim();
-        if (searchQuery) {
-            url = `/api/public/blogs/search?keyword=${encodeURIComponent(searchQuery)}&page=${page}&size=9`;
-        }
-        
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.data) {
-                    displayBlogs(data.data.content);
-                    displayPagination(data.data);
-                    document.getElementById('resultsCount').textContent = `Tìm thấy ${data.data.totalElements} bài viết`;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading blogs:', error);
-                document.getElementById('blogGrid').innerHTML = '<div class="col-12"><div class="alert alert-danger">Lỗi tải bài viết</div></div>';
-            });
-    }
-    
-    function displayBlogs(blogs) {
-        const container = document.getElementById('blogGrid');
-        if (!blogs || blogs.length === 0) {
-            container.innerHTML = '<div class="col-12"><div class="alert alert-info">Không có bài viết nào</div></div>';
-            return;
-        }
-        
-        let html = '';
-        blogs.forEach(blog => {
-            if (currentView === 'grid') {
-                html += `
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="blog-card">
-                            ${blog.thumbnailUrl ? `<img src="${blog.thumbnailUrl}" alt="${blog.title}">` : '<div class="blog-card-no-image"><i class="bi bi-image"></i></div>'}
-                            <div class="blog-card-body">
-                                <div class="blog-card-meta">
-                                    <span><i class="bi bi-calendar"></i> ${blog.publishedDate || blog.createdDate}</span>
-                                    <span><i class="bi bi-eye"></i> ${blog.viewCount || 0}</span>
-                                </div>
-                                <h5>${blog.title}</h5>
-                                <p>${blog.shortSummary || blog.summary || ''}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="badge bg-primary">${blog.categoryName}</span>
-                                    <a href="/blog/${blog.slug}" class="btn btn-sm btn-outline-primary">Đọc thêm <i class="bi bi-arrow-right"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="col-12 mb-3">
-                        <div class="blog-card blog-card-list">
-                            <div class="row g-0">
-                                <div class="col-md-3">
-                                    ${blog.thumbnailUrl ? `<img src="${blog.thumbnailUrl}" alt="${blog.title}">` : '<div class="blog-card-no-image"><i class="bi bi-image"></i></div>'}
-                                </div>
-                                <div class="col-md-9">
-                                    <div class="blog-card-body">
-                                        <div class="blog-card-meta">
-                                            <span><i class="bi bi-calendar"></i> ${blog.publishedDate || blog.createdDate}</span>
-                                            <span><i class="bi bi-eye"></i> ${blog.viewCount || 0}</span>
-                                            <span class="badge bg-primary">${blog.categoryName}</span>
-                                        </div>
-                                        <h5>${blog.title}</h5>
-                                        <p>${blog.shortSummary || blog.summary || ''}</p>
-                                        <a href="/blog/${blog.slug}" class="btn btn-sm btn-outline-primary">Đọc thêm <i class="bi bi-arrow-right"></i></a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        });
-        
-        container.innerHTML = html;
-    }
-    
-    function displayPagination(pageData) {
-        const nav = document.getElementById('paginationNav');
-        const pagination = document.getElementById('pagination');
-        
-        if (pageData.totalPages <= 1) {
-            nav.style.display = 'none';
-            return;
-        }
-        
-        nav.style.display = 'block';
-        let html = '';
-        
-        // Previous
-        html += `<li class="page-item ${pageData.first ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="loadBlogs(${currentPage - 1}); return false;">Trước</a>
-        </li>`;
-        
-        // Pages
-        for (let i = 0; i < pageData.totalPages; i++) {
-            if (i === 0 || i === pageData.totalPages - 1 || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="loadBlogs(${i}); return false;">${i + 1}</a>
-                </li>`;
-            } else if (i === currentPage - 3 || i === currentPage + 3) {
-                html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-            }
-        }
-        
-        // Next
-        html += `<li class="page-item ${pageData.last ? 'disabled' : ''}">
-            <a class="page-link" href="#" onclick="loadBlogs(${currentPage + 1}); return false;">Sau</a>
-        </li>`;
-        
-        pagination.innerHTML = html;
-    }
-    
-    function loadPopularPosts() {
-        fetch('/api/public/blogs/top-viewed?size=5')
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('popularPosts');
-                if (data.success && data.data && data.data.length > 0) {
-                    let html = '<ul class="list-unstyled">';
-                    data.data.forEach(blog => {
-                        html += `
-                            <li class="popular-post-item">
-                                <a href="/blog/${blog.slug}">
-                                    <h6>${blog.title}</h6>
-                                    <small><i class="bi bi-eye"></i> ${blog.viewCount || 0} lượt xem</small>
-                                </a>
-                            </li>
-                        `;
-                    });
-                    html += '</ul>';
-                    container.innerHTML = html;
-                } else {
-                    container.innerHTML = '<p class="text-muted">Chưa có bài viết</p>';
-                }
-            })
-            .catch(error => {
-                console.error('Error loading popular posts:', error);
-            });
-    }
-    
-    function filterByCategory(categoryId) {
-        currentCategory = categoryId;
-        currentPage = 0;
-        loadBlogs(0);
-        
-        // Update active state
-        document.querySelectorAll('.category-link').forEach(link => {
-            link.classList.remove('active');
-        });
-        event.target.classList.add('active');
-    }
-    
-    function searchBlogs() {
-        currentPage = 0;
-        currentCategory = null;
-        loadBlogs(0);
-    }
-    
-    function changeView(view) {
-        currentView = view;
-        document.querySelectorAll('[data-view]').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-view="${view}"]`).classList.add('active');
-        
-        const container = document.getElementById('blogGrid');
-        if (view === 'list') {
-            container.classList.remove('row');
-        } else {
-            container.classList.add('row');
-        }
-        
-        // Reload to apply new view
-        fetch('/api/public/blogs?page=' + currentPage + '&size=9')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.data) {
-                    displayBlogs(data.data.content);
-                }
-            });
-    }
-    
-    // Search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchBlogs();
-        }
-    });
-</script>
 </body>
 </html>

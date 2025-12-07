@@ -1,394 +1,498 @@
 package swp391.fa25.lms.controller.blog;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.dto.blog.*;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Blog;
-import swp391.fa25.lms.repository.AccountRepository;
+import swp391.fa25.lms.service.BlogCategoryService;
 import swp391.fa25.lms.service.BlogService;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 /**
- * Controller cho Manager quản lý Blog
- * Chỉ MANAGER mới có quyền truy cập
+ * Blog Controller - Traditional MVC Pattern
+ * Sử dụng HttpSession để lấy loggedInAccount
+ * Public pages: /blog/**
+ * Manager pages: /manager/blogs/**
  */
-@RestController
-@RequestMapping("/api/manager/blogs")
+@Controller
 @RequiredArgsConstructor
-@Slf4j
-@PreAuthorize("hasRole('MANAGER')")
 public class BlogController {
 
     private final BlogService blogService;
-    private final AccountRepository accountRepository;
+    private final BlogCategoryService categoryService;
+
+    // ========================================
+    // PUBLIC PAGES - /blog/**
+    // ========================================
 
     /**
-     * Tạo blog mới
-     * POST /api/manager/blogs
+     * Trang danh sách blog công khai
+     * GET /blog
      */
-    @PostMapping
-    public ResponseEntity<?> createBlog(
-            @Valid @RequestBody CreateBlogDTO dto,
-            Principal principal) {
+    @GetMapping("/blog")
+    public String blogList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String keyword,
+            Model model) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        
+        Page<BlogListItemDTO> blogs;
+        if (categoryId != null) {
+            blogs = blogService.getBlogsByCategory(categoryId, pageable);
+        } else if (keyword != null && !keyword.trim().isEmpty()) {
+            blogs = blogService.searchBlogs(keyword, pageable);
+        } else {
+            blogs = blogService.getPublishedBlogs(pageable);
+        }
+
+        model.addAttribute("blogs", blogs.getContent());
+        model.addAttribute("categories", categoryService.getActiveCategories());
+        model.addAttribute("popularBlogs", blogService.getTopViewedBlogs(5));
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", blogs.getTotalPages());
+        model.addAttribute("totalBlogs", blogs.getTotalElements());
+        model.addAttribute("selectedCategory", categoryId);
+        model.addAttribute("keyword", keyword);
+
+        return "blog/blog-list";
+    }
+
+    /**
+     * Trang chi tiết blog
+     * GET /blog/{slug}
+     */
+    @GetMapping("/blog/{slug}")
+    public String blogDetail(@PathVariable String slug, Model model, RedirectAttributes ra) {
         try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
+            BlogDetailDTO blog = blogService.getBlogBySlugAndIncrementView(slug);
+            
+            // Check if blog is published (compare enum)
+            if (blog.getStatus() != Blog.Status.PUBLISHED) {
+                ra.addFlashAttribute("error", "Blog không tồn tại hoặc chưa được xuất bản");
+                return "redirect:/blog";
+            }
 
-            BlogDetailDTO blog = blogService.createBlog(dto, account.getAccountId());
+            model.addAttribute("blog", blog);
+            // Related blogs already loaded in BlogDetailDTO.relatedBlogs by service
+            model.addAttribute("relatedBlogs", blog.getRelatedBlogs());
+            model.addAttribute("popularBlogs", blogService.getTopViewedBlogs(5));
+            model.addAttribute("categories", categoryService.getActiveCategories());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Blog created successfully");
-            response.put("data", blog);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return "blog/blog-detail";
         } catch (Exception e) {
-            log.error("Error creating blog", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            ra.addFlashAttribute("error", "Không tìm thấy blog");
+            return "redirect:/blog";
+        }
+    }
+
+    // ========================================
+    // MANAGER PAGES - /manager/blogs/**
+    // ========================================
+
+    /**
+     * Trang quản lý blog (danh sách)
+     * GET /manager/blogs
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/manager/blogs")
+    public String blogManager(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String keyword,
+            HttpSession session,
+            Model model,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        // Normalize empty strings to null
+        if (keyword != null && keyword.trim().isEmpty()) {
+            keyword = null;
+        }
+        if (status != null && status.trim().isEmpty()) {
+            status = null;
+        }
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        
+        // Chỉ hiển thị blogs của manager hiện tại
+        Page<BlogListItemDTO> blogs = blogService.getBlogsByAuthor(manager.getAccountId(), pageable);
+        
+        // Check if any filter is applied
+        boolean hasFilter = (categoryId != null) || (keyword != null) || (status != null);
+        
+        if (hasFilter) {
+            // If filtering, get ALL blogs from author first to calculate correct total
+            List<BlogListItemDTO> allBlogs = blogService.getBlogsByAuthor(manager.getAccountId(), 
+                    PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent();
+            
+            // Apply filters
+            if (categoryId != null) {
+                allBlogs = allBlogs.stream()
+                        .filter(blog -> blog.getCategoryId() != null && blog.getCategoryId().equals(categoryId))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String searchLower = keyword.toLowerCase();
+                allBlogs = allBlogs.stream()
+                        .filter(blog -> (blog.getTitle() != null && blog.getTitle().toLowerCase().contains(searchLower)) ||
+                                       (blog.getShortSummary() != null && blog.getShortSummary().toLowerCase().contains(searchLower)))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            
+            if (status != null && !status.trim().isEmpty()) {
+                String statusUpper = status.toUpperCase();
+                allBlogs = allBlogs.stream()
+                        .filter(blog -> blog.getStatus() != null && blog.getStatus().equals(statusUpper))
+                        .collect(java.util.stream.Collectors.toList());
+            }
+            
+            // Manual pagination on filtered list
+            int start = page * size;
+            int end = Math.min(start + size, allBlogs.size());
+            List<BlogListItemDTO> pageContent = (start < allBlogs.size()) ? allBlogs.subList(start, end) : new java.util.ArrayList<>();
+            
+            blogs = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, allBlogs.size());
+        }
+        // else: use original Page from service (already paginated correctly)
+
+        model.addAttribute("blogs", blogs.getContent());
+        model.addAttribute("selectedStatus", status);
+        model.addAttribute("selectedCategory", categoryId);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", blogs.getTotalPages());
+        model.addAttribute("totalBlogs", blogs.getTotalElements());
+        model.addAttribute("pageSize", size);
+        model.addAttribute("manager", manager);
+
+        return "manager/blog-list";
+    }
+
+    /**
+     * Form tạo blog mới
+     * GET /manager/blogs/create
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/manager/blogs/create")
+    public String createBlogForm(HttpSession session, Model model, RedirectAttributes ra) {
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        CreateBlogDTO dto = new CreateBlogDTO();
+        dto.setStatus("DRAFT"); // Giá trị mặc định
+        
+        model.addAttribute("blog", dto);
+        model.addAttribute("categories", categoryService.getActiveCategories());
+        model.addAttribute("manager", manager);
+
+        return "manager/blog-form";
+    }
+
+    /**
+     * Xử lý tạo blog mới
+     * POST /manager/blogs/create
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @PostMapping("/manager/blogs/create")
+    public String createBlog(
+            @Valid @ModelAttribute("blog") CreateBlogDTO dto,
+            BindingResult result,
+            @RequestParam(required = false) MultipartFile thumbnailFile,
+            @RequestParam(required = false) MultipartFile bannerFile,
+            HttpSession session,
+            Model model,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("categories", categoryService.getActiveCategories());
+            model.addAttribute("manager", manager);
+            return "manager/blog-form";
+        }
+
+        try {
+            // Handle thumbnail upload
+            if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+                String thumbnailPath = saveUploadedFile(thumbnailFile, "images");
+                dto.setThumbnailImage(thumbnailPath);
+            }
+            
+            // Handle banner upload
+            if (bannerFile != null && !bannerFile.isEmpty()) {
+                String bannerPath = saveUploadedFile(bannerFile, "images");
+                dto.setBannerImage(bannerPath);
+            }
+            
+            blogService.createBlog(dto, manager.getAccountId());
+            ra.addFlashAttribute("success", "Tạo blog thành công!");
+            return "redirect:/manager/blogs";
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("categories", categoryService.getActiveCategories());
+            model.addAttribute("manager", manager);
+            return "manager/blog-form";
         }
     }
 
     /**
-     * Cập nhật blog
-     * PUT /api/manager/blogs/{id}
+     * Form chỉnh sửa blog
+     * GET /manager/blogs/edit/{id}
      */
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateBlog(
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/manager/blogs/edit/{id}")
+    public String editBlogForm(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateBlogDTO dto,
-            Principal principal) {
-        try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
+            HttpSession session,
+            Model model,
+            RedirectAttributes ra) {
 
-            dto.setBlogId(id);
-            BlogDetailDTO blog = blogService.updateBlog(dto, account.getAccountId());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Blog updated successfully");
-            response.put("data", blog);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error updating blog", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
         }
-    }
 
-    /**
-     * Xóa blog (soft delete - archive)
-     * DELETE /api/manager/blogs/{id}
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteBlog(
-            @PathVariable Long id,
-            Principal principal) {
-        try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
-
-            blogService.deleteBlog(id, account.getAccountId());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Blog deleted successfully");
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error deleting blog", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Xóa vĩnh viễn blog (hard delete) - ADMIN only
-     * DELETE /api/manager/blogs/{id}/permanent
-     */
-    @DeleteMapping("/{id}/permanent")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> permanentlyDeleteBlog(
-            @PathVariable Long id,
-            Principal principal) {
-        try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
-
-            blogService.permanentlyDeleteBlog(id, account.getAccountId());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Blog permanently deleted");
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error permanently deleting blog", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Lấy chi tiết blog theo ID
-     * GET /api/manager/blogs/{id}
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getBlogById(@PathVariable Long id) {
         try {
             BlogDetailDTO blog = blogService.getBlogById(id);
+            
+            UpdateBlogDTO updateDTO = new UpdateBlogDTO();
+            updateDTO.setBlogId(blog.getBlogId());
+            updateDTO.setTitle(blog.getTitle());
+            updateDTO.setSlug(blog.getSlug());
+            updateDTO.setExcerpt(blog.getSummary());
+            updateDTO.setContent(blog.getContent());
+            updateDTO.setCategoryId(blog.getCategoryId());
+            updateDTO.setThumbnailImage(blog.getThumbnailImage());
+            updateDTO.setBannerImage(blog.getBannerImage());
+            updateDTO.setStatus(blog.getStatus().name()); // Convert enum to String
+            updateDTO.setScheduledPublishAt(blog.getScheduledPublishAt());
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", blog);
+            model.addAttribute("blog", updateDTO);
+            model.addAttribute("categories", categoryService.getActiveCategories());
+            model.addAttribute("isEdit", true);
+            model.addAttribute("manager", manager);
 
-            return ResponseEntity.ok(response);
+            return "manager/blog-form";
         } catch (Exception e) {
-            log.error("Error getting blog", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            ra.addFlashAttribute("error", "Không tìm thấy blog: " + e.getMessage());
+            return "redirect:/manager/blogs";
         }
     }
 
     /**
-     * Lấy danh sách blog với pagination
-     * GET /api/manager/blogs?page=0&size=10&sort=createdAt,desc
+     * Xử lý cập nhật blog
+     * POST /manager/blogs/edit/{id}
      */
-    @GetMapping
-    public ResponseEntity<?> getAllBlogs(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String sortDirection) {
-        try {
-            Sort sort = Sort.by(
-                    sortDirection.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC,
-                    sortBy
-            );
-            Pageable pageable = PageRequest.of(page, size, sort);
-
-            Page<BlogListItemDTO> blogs = blogService.getAllBlogs(pageable);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", blogs.getContent());
-            response.put("currentPage", blogs.getNumber());
-            response.put("totalPages", blogs.getTotalPages());
-            response.put("totalElements", blogs.getTotalElements());
-            response.put("pageSize", blogs.getSize());
-            response.put("hasNext", blogs.hasNext());
-            response.put("hasPrevious", blogs.hasPrevious());
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error getting blogs", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Lấy blog của author hiện tại
-     * GET /api/manager/blogs/my-blogs
-     */
-    @GetMapping("/my-blogs")
-    public ResponseEntity<?> getMyBlogs(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Principal principal) {
-        try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
-
-            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-            Page<BlogListItemDTO> blogs = blogService.getBlogsByAuthor(account.getAccountId(), pageable);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", blogs.getContent());
-            response.put("currentPage", blogs.getNumber());
-            response.put("totalPages", blogs.getTotalPages());
-            response.put("totalElements", blogs.getTotalElements());
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error getting my blogs", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Advanced search blogs
-     * POST /api/manager/blogs/search
-     */
-    @PostMapping("/search")
-    public ResponseEntity<?> searchBlogs(@RequestBody BlogSearchRequestDTO searchRequest) {
-        try {
-            Page<BlogListItemDTO> blogs = blogService.advancedSearchBlogs(searchRequest);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", blogs.getContent());
-            response.put("currentPage", blogs.getNumber());
-            response.put("totalPages", blogs.getTotalPages());
-            response.put("totalElements", blogs.getTotalElements());
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error searching blogs", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    /**
-     * Publish blog
-     * PUT /api/manager/blogs/{id}/publish
-     */
-    @PutMapping("/{id}/publish")
-    public ResponseEntity<?> publishBlog(
+    @PreAuthorize("hasRole('MANAGER')")
+    @PostMapping("/manager/blogs/edit/{id}")
+    public String updateBlog(
             @PathVariable Long id,
-            Principal principal) {
+            @Valid @ModelAttribute("blog") UpdateBlogDTO dto,
+            BindingResult result,
+            @RequestParam(required = false) MultipartFile thumbnailFile,
+            @RequestParam(required = false) MultipartFile bannerFile,
+            HttpSession session,
+            Model model,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("categories", categoryService.getActiveCategories());
+            model.addAttribute("isEdit", true);
+            model.addAttribute("manager", manager);
+            return "manager/blog-form";
+        }
+
         try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
-
-            BlogDetailDTO blog = blogService.publishBlog(id, account.getAccountId());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Blog published successfully");
-            response.put("data", blog);
-
-            return ResponseEntity.ok(response);
+            // Validate blogId matches URL path
+            if (dto.getBlogId() != null && !dto.getBlogId().equals(id)) {
+                throw new IllegalArgumentException("Blog ID mismatch");
+            }
+            dto.setBlogId(id);
+            
+            // Handle thumbnail upload
+            if (thumbnailFile != null && !thumbnailFile.isEmpty()) {
+                String thumbnailPath = saveUploadedFile(thumbnailFile, "images");
+                dto.setThumbnailImage(thumbnailPath);
+            }
+            
+            // Handle banner upload
+            if (bannerFile != null && !bannerFile.isEmpty()) {
+                String bannerPath = saveUploadedFile(bannerFile, "images");
+                dto.setBannerImage(bannerPath);
+            }
+            
+            blogService.updateBlog(dto, manager.getAccountId());
+            ra.addFlashAttribute("success", "Cập nhật blog thành công!");
+            return "redirect:/manager/blogs";
         } catch (Exception e) {
-            log.error("Error publishing blog", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("categories", categoryService.getActiveCategories());
+            model.addAttribute("isEdit", true);
+            model.addAttribute("manager", manager);
+            return "manager/blog-form";
         }
     }
 
     /**
-     * Unpublish blog (chuyển về DRAFT)
-     * PUT /api/manager/blogs/{id}/unpublish
+     * Xóa blog
+     * GET /manager/blogs/delete/{id}
      */
-    @PutMapping("/{id}/unpublish")
-    public ResponseEntity<?> unpublishBlog(
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/manager/blogs/delete/{id}")
+    public String deleteBlog(
             @PathVariable Long id,
-            Principal principal) {
-        try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
+            HttpSession session,
+            RedirectAttributes ra) {
 
-            BlogDetailDTO blog = blogService.unpublishBlog(id, account.getAccountId());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Blog unpublished successfully");
-            response.put("data", blog);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error unpublishing blog", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
         }
+
+        try {
+            blogService.deleteBlog(id, manager.getAccountId());
+            ra.addFlashAttribute("success", "Xóa blog thành công!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/manager/blogs";
     }
 
     /**
-     * Archive blog
-     * PUT /api/manager/blogs/{id}/archive
+     * Xuất bản blog
+     * GET /manager/blogs/publish/{id}
      */
-    @PutMapping("/{id}/archive")
-    public ResponseEntity<?> archiveBlog(
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/manager/blogs/publish/{id}")
+    public String publishBlog(
             @PathVariable Long id,
-            Principal principal) {
-        try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
+            HttpSession session,
+            RedirectAttributes ra) {
 
-            BlogDetailDTO blog = blogService.archiveBlog(id, account.getAccountId());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Blog archived successfully");
-            response.put("data", blog);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error archiving blog", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
         }
+
+        try {
+            blogService.publishBlog(id, manager.getAccountId());
+            ra.addFlashAttribute("success", "Xuất bản blog thành công!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/manager/blogs";
     }
 
     /**
-     * Lấy thống kê blog
-     * GET /api/manager/blogs/stats
+     * Helper method để lưu file upload
      */
-    @GetMapping("/stats")
-    public ResponseEntity<?> getBlogStats(Principal principal) {
-        try {
-            Account account = accountRepository.findByEmail(principal.getName())
-                    .orElseThrow(() -> new RuntimeException("Account not found"));
-
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalBlogs", blogService.countBlogsByAuthor(account.getAccountId()));
-            stats.put("publishedBlogs", blogService.countBlogsByStatus(Blog.Status.PUBLISHED));
-            stats.put("draftBlogs", blogService.countBlogsByStatus(Blog.Status.DRAFT));
-            stats.put("archivedBlogs", blogService.countBlogsByStatus(Blog.Status.ARCHIVED));
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", stats);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Error getting blog stats", e);
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+    private String saveUploadedFile(MultipartFile file, String folderName) throws IOException {
+        // Validate file
+        if (file.getSize() > 5 * 1024 * 1024) { // 5MB
+            throw new IOException("File size exceeds maximum limit of 5MB");
         }
+        
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IOException("Only image files are allowed");
+        }
+        
+        // Generate unique filename
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String uniqueFilename = System.currentTimeMillis() + "_" + UUID.randomUUID().toString() + extension;
+        
+        // Create directory if not exists
+        Path uploadPath = Paths.get("uploads", folderName);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        
+        // Save file
+        Path filePath = uploadPath.resolve(uniqueFilename);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        
+        // Return web-accessible path
+        return "/uploads/" + folderName + "/" + uniqueFilename;
+    }
+
+    /**
+     * Hủy xuất bản blog
+     * GET /manager/blogs/unpublish/{id}
+     */
+    @PreAuthorize("hasRole('MANAGER')")
+    @GetMapping("/manager/blogs/unpublish/{id}")
+    public String unpublishBlog(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes ra) {
+
+        Account manager = (Account) session.getAttribute("loggedInAccount");
+        if (manager == null) {
+            ra.addFlashAttribute("error", "Vui lòng đăng nhập");
+            return "redirect:/login";
+        }
+
+        try {
+            blogService.unpublishBlog(id, manager.getAccountId());
+            ra.addFlashAttribute("success", "Hủy xuất bản blog thành công!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+
+        return "redirect:/manager/blogs";
     }
 }

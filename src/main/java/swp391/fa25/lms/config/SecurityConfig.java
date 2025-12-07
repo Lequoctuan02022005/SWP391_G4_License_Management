@@ -32,12 +32,20 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService)
 
                 .authorizeHttpRequests(auth -> auth
+                        // Public resources
                         .requestMatchers("/", "/home", "/home/**",
-                                "/css/**", "/js/**", "/images/**",
+                                "/css/**", "/js/**", "/images/**", "/uploads/**",
                                 "/login", "/register", "/error").permitAll()
 
+                        // Blog public pages
+                        .requestMatchers("/blog", "/blog/**").permitAll()
+
+                        // Role-based pages
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/manager/**").hasRole("MANAGER")
                         .requestMatchers("/mod/**").hasRole("MODERATOR")
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
 

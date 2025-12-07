@@ -254,12 +254,15 @@
         if (!badge) return;
         try {
             const res = await fetch("/favorite/count", { credentials: "include" });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) {
+                // Endpoint chưa implement - set default 0
+                badge.textContent = "0";
+                return;
+            }
             const count = await res.json();
             badge.textContent = count;
-            console.log("Favorite count từ API:", count);
         } catch (error) {
-            console.error("Lỗi khi load favorite count:", error);
+            // Silently fail - favorite feature chưa có
             badge.textContent = "0";
         }
     };

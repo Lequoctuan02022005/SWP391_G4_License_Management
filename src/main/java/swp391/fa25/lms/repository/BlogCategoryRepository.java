@@ -1,6 +1,5 @@
 package swp391.fa25.lms.repository;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,29 +18,9 @@ public interface BlogCategoryRepository extends JpaRepository<BlogCategory, Long
     Optional<BlogCategory> findBySlug(String slug);
 
     /**
-     * Kiểm tra xem slug đã tồn tại chưa
-     */
-    boolean existsBySlug(String slug);
-
-    /**
      * Kiểm tra xem category name đã tồn tại chưa (case-insensitive)
      */
     boolean existsByCategoryNameIgnoreCase(String categoryName);
-
-    /**
-     * Tìm category theo tên (case-insensitive)
-     */
-    Optional<BlogCategory> findByCategoryNameIgnoreCase(String categoryName);
-
-    /**
-     * Tìm tất cả category theo status
-     */
-    List<BlogCategory> findByStatus(BlogCategory.Status status);
-
-    /**
-     * Tìm tất cả category theo status với sort
-     */
-    List<BlogCategory> findByStatus(BlogCategory.Status status, Sort sort);
 
     /**
      * Lấy tất cả category ACTIVE và sắp xếp theo displayOrder
@@ -56,17 +35,12 @@ public interface BlogCategoryRepository extends JpaRepository<BlogCategory, Long
     List<BlogCategory> findAllOrderByDisplayOrder();
 
     /**
-     * Lấy category có số blog nhiều nhất
+     * Tìm category với số lượng blog PUBLISHED (dùng cho public view)
+     * Sửa query để đảm bảo tất cả category ACTIVE đều được hiển thị, kể cả không có blog PUBLISHED
      */
-    @Query("SELECT c FROM BlogCategory c LEFT JOIN c.blogs b WHERE b.status = 'PUBLISHED' " +
-            "GROUP BY c ORDER BY COUNT(b) DESC")
-    List<BlogCategory> findCategoriesOrderByBlogCount();
-
-    /**
-     * Tìm category với số lượng blog
-     */
-    @Query("SELECT c, COUNT(b) FROM BlogCategory c LEFT JOIN c.blogs b " +
-            "WHERE c.status = 'ACTIVE' AND (b.status = 'PUBLISHED' OR b IS NULL) " +
+    @Query("SELECT c, COUNT(CASE WHEN b.status = 'PUBLISHED' THEN 1 END) " +
+            "FROM BlogCategory c LEFT JOIN c.blogs b " +
+            "WHERE c.status = 'ACTIVE' " +
             "GROUP BY c ORDER BY c.displayOrder ASC")
     List<Object[]> findCategoriesWithBlogCount();
 
@@ -80,11 +54,6 @@ public interface BlogCategoryRepository extends JpaRepository<BlogCategory, Long
      */
     @Query("SELECT MAX(c.displayOrder) FROM BlogCategory c")
     Integer findMaxDisplayOrder();
-
-    /**
-     * Tìm category theo display order
-     */
-    Optional<BlogCategory> findByDisplayOrder(Integer displayOrder);
 
     /**
      * Tìm categories có displayOrder trong khoảng (để swap order)

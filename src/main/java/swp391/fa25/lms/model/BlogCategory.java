@@ -52,9 +52,6 @@ public class BlogCategory {
         INACTIVE
     }
 
-    @Column(length = 255)
-    private String icon; // Icon class hoặc URL
-
     @Column(name = "display_order")
     private Integer displayOrder = 0; // Thứ tự hiển thị
 
@@ -158,14 +155,6 @@ public class BlogCategory {
 
     public void setStatus(Status status) {
         this.status = status;
-    }
-
-    public String getIcon() {
-        return icon;
-    }
-
-    public void setIcon(String icon) {
-        this.icon = icon;
     }
 
     public Integer getDisplayOrder() {

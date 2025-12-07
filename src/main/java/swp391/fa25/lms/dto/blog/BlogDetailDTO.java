@@ -3,6 +3,7 @@ package swp391.fa25.lms.dto.blog;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import swp391.fa25.lms.model.Blog;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,19 +24,17 @@ public class BlogDetailDTO {
     private String content;
     private String thumbnailImage;
     private String bannerImage;
-    private String status;
-    private Boolean featured;
-    private Boolean allowComments;
+    private Blog.Status status; // Dùng enum thay vì String
     private Integer viewCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime publishedAt;
     private LocalDateTime scheduledPublishAt;
 
     // Category info
     private Long categoryId;
     private String categoryName;
     private String categorySlug;
-    private String categoryIcon;
 
     // Author info
     private Long authorId;
@@ -61,26 +60,24 @@ public class BlogDetailDTO {
         this.content = blog.getContent();
         this.thumbnailImage = blog.getThumbnailImage();
         this.bannerImage = blog.getBannerImage();
-        this.status = blog.getStatus() != null ? blog.getStatus().name() : null;
-        this.featured = blog.getFeatured();
-        this.allowComments = blog.getAllowComments();
+        this.status = blog.getStatus(); // Lưu enum trực tiếp
         this.viewCount = blog.getViewCount();
         this.createdAt = blog.getCreatedAt();
         this.updatedAt = blog.getUpdatedAt();
+        this.publishedAt = blog.getPublishedAt();
         this.scheduledPublishAt = blog.getScheduledPublishAt();
 
         if (blog.getCategory() != null) {
             this.categoryId = blog.getCategory().getCategoryId();
             this.categoryName = blog.getCategory().getCategoryName();
             this.categorySlug = blog.getCategory().getSlug();
-            this.categoryIcon = blog.getCategory().getIcon();
         }
 
         if (blog.getAuthor() != null) {
             this.authorId = blog.getAuthor().getAccountId();
             this.authorName = blog.getAuthor().getFullName();
             this.authorEmail = blog.getAuthor().getEmail();
-            // authorAvatar có thể lấy từ Account nếu có field
+            this.authorAvatar = null; // Account model không có avatar field
         }
 
         // Estimate reading time

@@ -19,7 +19,8 @@ public class CreateBlogCategoryDTO {
     @Size(max = 500, message = "Mô tả không được quá 500 ký tự")
     private String description;
 
-    private String icon; // Font Awesome icon class hoặc URL icon
+    @Size(max = 100, message = "Slug không được quá 100 ký tự")
+    private String slug; // URL-friendly name, sẽ auto-generate nếu để trống
 
     private Integer displayOrder;
 

@@ -37,6 +37,9 @@
                         <a class="nav-link" href="#category">Dịch vụ</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" th:href="@{/blog}">Blog</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#">Support</a>
                     </li>
                     <li class="nav-item">
@@ -107,12 +110,15 @@
                 window.loadFavoriteCount = async function() {
                     try {
                         const res = await fetch("/favorite/count", { credentials: "include" });
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        if (!res.ok) {
+                            // Endpoint chưa implement - set default 0
+                            badge.textContent = "0";
+                            return;
+                        }
                         const count = await res.json();
                         badge.textContent = count;
-                        console.log("Favorite count từ API:", count);
                     } catch (error) {
-                        console.error("Lỗi khi load favorite count:", error);
+                        // Silently fail - favorite feature chưa có
                         badge.textContent = "0";
                     }
                 };
@@ -121,17 +127,11 @@
             // Listen event từ bất kỳ đâu
             document.addEventListener("favorite-changed", window.loadFavoriteCount);
 
-            // Click wishlist: Nếu count >0 đi list, else login
+            // Click wishlist: redirect to favorite list (hoặc login nếu chưa đăng nhập)
             wishlistLink.addEventListener("click", async function (e) {
                 e.preventDefault();
-                await window.loadFavoriteCount();
-                const count = parseInt(badge.textContent) || 0;
-                console.log("Favorite count khi click:", count);
-                if (count > 0) {
-                    window.location.href = "/favorite/list";
-                } else {
-                    window.location.href = "/login";
-                }
+                // Check if logged in via session
+                window.location.href = "/favorite/list";
             });
 
             // Load ban đầu (trên mọi trang có header)

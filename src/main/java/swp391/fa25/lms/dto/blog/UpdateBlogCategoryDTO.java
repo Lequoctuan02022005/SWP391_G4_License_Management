@@ -22,7 +22,7 @@ public class UpdateBlogCategoryDTO {
     @Size(max = 500, message = "Mô tả không được quá 500 ký tự")
     private String description;
 
-    private String icon;
+    private String slug;
 
     private Integer displayOrder;
 

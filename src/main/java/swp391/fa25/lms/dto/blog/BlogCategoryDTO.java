@@ -18,7 +18,6 @@ public class BlogCategoryDTO {
     private String categoryName;
     private String slug;
     private String description;
-    private String icon;
     private Integer displayOrder;
     private String status;
     private LocalDateTime createdAt;
@@ -29,26 +28,21 @@ public class BlogCategoryDTO {
 
     /**
      * Constructor từ entity BlogCategory
+     * Không đếm blog từ lazy-loaded collection (có thể null hoặc không load đầy đủ)
+     * Sử dụng constructor với blogCount từ query thay thế
      */
     public BlogCategoryDTO(swp391.fa25.lms.model.BlogCategory category) {
         this.categoryId = category.getCategoryId();
         this.categoryName = category.getCategoryName();
         this.slug = category.getSlug();
         this.description = category.getDescription();
-        this.icon = category.getIcon();
         this.displayOrder = category.getDisplayOrder();
         this.status = category.getStatus() != null ? category.getStatus().name() : null;
         this.createdAt = category.getCreatedAt();
         this.updatedAt = category.getUpdatedAt();
-
-        // Count blogs if available
-        if (category.getBlogs() != null) {
-            this.blogCount = category.getBlogs().stream()
-                    .filter(blog -> blog.getStatus() == swp391.fa25.lms.model.Blog.Status.PUBLISHED)
-                    .count();
-        } else {
-            this.blogCount = 0L;
-        }
+        
+        // Không đếm blog từ lazy collection - để service layer xử lý bằng query
+        this.blogCount = 0L;
     }
 
     /**

@@ -21,7 +21,6 @@ public class BlogListItemDTO {
     private String summary;
     private String thumbnailImage;
     private String status;
-    private Boolean featured;
     private Integer viewCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -51,22 +50,36 @@ public class BlogListItemDTO {
         this.summary = blog.getSummary();
         this.thumbnailImage = blog.getThumbnailImage();
         this.status = blog.getStatus() != null ? blog.getStatus().name() : null;
-        this.featured = blog.getFeatured();
         this.viewCount = blog.getViewCount();
         this.createdAt = blog.getCreatedAt();
         this.updatedAt = blog.getUpdatedAt();
         this.scheduledPublishAt = blog.getScheduledPublishAt();
 
-        if (blog.getCategory() != null) {
-            this.categoryId = blog.getCategory().getCategoryId();
-            this.categoryName = blog.getCategory().getCategoryName();
-            this.categorySlug = blog.getCategory().getSlug();
+        // Safely access lazy-loaded relationships within transaction
+        try {
+            if (blog.getCategory() != null) {
+                this.categoryId = blog.getCategory().getCategoryId();
+                this.categoryName = blog.getCategory().getCategoryName();
+                this.categorySlug = blog.getCategory().getSlug();
+            }
+        } catch (Exception e) {
+            // Category not loaded - leave null
+            this.categoryId = null;
+            this.categoryName = null;
+            this.categorySlug = null;
         }
 
-        if (blog.getAuthor() != null) {
-            this.authorId = blog.getAuthor().getAccountId();
-            this.authorName = blog.getAuthor().getFullName();
-            this.authorEmail = blog.getAuthor().getEmail();
+        try {
+            if (blog.getAuthor() != null) {
+                this.authorId = blog.getAuthor().getAccountId();
+                this.authorName = blog.getAuthor().getFullName();
+                this.authorEmail = blog.getAuthor().getEmail();
+            }
+        } catch (Exception e) {
+            // Author not loaded - leave null
+            this.authorId = null;
+            this.authorName = null;
+            this.authorEmail = null;
         }
 
         // Generate short summary (100 chars)
@@ -76,12 +89,7 @@ public class BlogListItemDTO {
             this.shortSummary = this.summary;
         }
 
-        // Estimate reading time (assuming 200 words per minute)
-        if (blog.getContent() != null) {
-            int wordCount = blog.getContent().split("\\s+").length;
-            this.readingTime = Math.max(1, wordCount / 200);
-        } else {
-            this.readingTime = 1;
-        }
+        // Set default reading time (avoid loading content for list view)
+        this.readingTime = 5; // Default 5 minutes
     }
 }
