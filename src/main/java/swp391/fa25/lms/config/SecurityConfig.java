@@ -33,11 +33,18 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers( "/home", "/home/**","/verify",
-                                "/css/**", "/js/**", "/images/**",
+                                "/css/**", "/js/**", "/images/**","/uploads/**",
                                 "/toollist", "/toollist/**",
                                 "/login", "/register", "/error").permitAll()
 
+                        // Blog public pages
+                        .requestMatchers("/blog", "/blog/**").permitAll()
+
+                        // Role-based pages
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/manager/**").hasRole("MANAGER")
+
+                        // Everything else requires authentication
                         .requestMatchers("/moderator/**").hasRole("MOD")
                         .requestMatchers("/tools/moderator/**").hasRole("MOD")
                         .anyRequest().authenticated()

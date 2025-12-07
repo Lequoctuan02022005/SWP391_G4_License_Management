@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${isEdit != null and isEdit ? 'Edit Category' : 'Create New Category'}">Category Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        }
+        .sidebar .nav-link {
+            color: #333;
+            padding: 0.75rem 1rem;
+        }
+        .sidebar .nav-link:hover {
+            background-color: #f8f9fa;
+        }
+        .sidebar .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <h5 class="px-3 mb-3">Blog Management</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/manager/blogs}">
+                            <i class="bi bi-list-ul"></i> Blog List
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/manager/blog-categories}">
+                            <i class="bi bi-folder"></i> Blog Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/home}">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <!-- Header -->
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h2 th:text="${isEdit != null and isEdit ? 'Edit Category' : 'Create New Category'}">Category Management</h2>
+                <a th:href="@{/manager/blog-categories}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
+
+            <!-- Flash Messages -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Category Form -->
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="post"
+                                  th:object="${category}"
+                                  th:action="@{${isEdit != null and isEdit ? '/manager/blog-categories/edit/' + category.categoryId : '/manager/blog-categories/create'}}">
+
+                                <!-- Hidden fields to preserve data in edit mode -->
+                                <input type="hidden" name="categoryId" th:value="${category.categoryId}" th:if="${isEdit != null and isEdit}" />
+
+                                <!-- Category Name -->
+                                <div class="mb-3">
+                                    <label class="form-label">Category Name <span class="text-danger">*</span></label>
+                                    <input type="text"
+                                           class="form-control"
+                                           th:field="*{categoryName}"
+                                           th:classappend="${#fields.hasErrors('categoryName')} ? 'is-invalid'"
+                                           required
+                                           minlength="2"
+                                           maxlength="100"
+                                           placeholder="Enter category name...">
+                                    <div class="invalid-feedback" th:errors="*{categoryName}">Please enter category name (2-100 characters)</div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control"
+                                              th:field="*{description}"
+                                              th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
+                                              rows="3"
+                                              maxlength="500"
+                                              placeholder="Category description..."></textarea>
+                                    <div class="invalid-feedback" th:errors="*{description}"></div>
+                                    <small class="text-muted">Maximum 500 characters</small>
+                                </div>
+
+                                <!-- Slug -->
+                                <div class="mb-3">
+                                    <label class="form-label">Slug (SEO-friendly URL)</label>
+                                    <input type="text"
+                                           class="form-control"
+                                           th:field="*{slug}"
+                                           maxlength="100"
+                                           placeholder="auto-generated-from-category-name">
+                                    <small class="text-muted">Leave empty to auto-generate from category name</small>
+                                </div>
+
+                                <div class="row">
+                                    <!-- Display Order -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Display Order</label>
+                                        <input type="number"
+                                               class="form-control"
+                                               th:field="*{displayOrder}"
+                                               min="0"
+                                               placeholder="0">
+                                        <small class="text-muted">Lower numbers display first</small>
+                                    </div>
+
+                                    <!-- Status -->
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Status <span class="text-danger">*</span></label>
+                                        <select class="form-select"
+                                                th:field="*{status}"
+                                                th:classappend="${#fields.hasErrors('status')} ? 'is-invalid'"
+                                                required>
+                                            <option value="ACTIVE">Active</option>
+                                            <option value="INACTIVE">Inactive</option>
+                                        </select>
+                                        <div class="invalid-feedback" th:errors="*{status}"></div>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a th:href="@{/manager/blog-categories}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-save"></i>
+                                        <span th:text="${isEdit != null and isEdit ? 'Update' : 'Create'}">Save</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

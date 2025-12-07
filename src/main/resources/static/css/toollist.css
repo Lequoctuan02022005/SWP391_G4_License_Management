@@ -1,188 +1,176 @@
-/* Layout tổng */
-body {
+/* RESET */
+* {
     margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f5f5f7;
-    color: #222;
+    padding: 0;
+    box-sizing: border-box;
 }
 
+body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f5f7fa;
+    color: #333;
+}
 
+/* =======================================
+   PAGE LAYOUT
+======================================= */
+.tl-page {
+    padding: 30px 0;
+}
 
-.tl-logo {
+.tl-page-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.tl-page-header h1 {
+    font-size: 32px;
     font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.tl-page-header p {
+    font-size: 15px;
+    color: #666;
+}
+
+/* =======================================
+   LAYOUT 2 CỘT
+======================================= */
+.tl-layout {
+    display: grid;
+    grid-template-columns: 270px 1fr;
+    gap: 30px;
+    padding: 0 25px;
+}
+
+/* =======================================
+   SIDEBAR FILTER
+======================================= */
+.tl-filter-sidebar {
+    background: #fff;
+    padding: 22px;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+    height: fit-content;
+}
+
+.tl-filter-title {
     font-size: 20px;
-    text-decoration: none;
-    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 15px;
 }
 
-.tl-nav {
+.tl-filter-group {
+    margin-bottom: 16px;
+}
+
+.tl-filter-group label {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: inline-block;
+}
+
+.tl-filter-group input,
+.tl-filter-group select {
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid #d6dbe2;
+    font-size: 14px;
+    transition: .2s;
+}
+
+.tl-filter-group input:focus,
+.tl-filter-group select:focus {
+    border-color: #4a8bff;
+    box-shadow: 0 0 0 2px rgba(74,139,255,0.15);
+}
+
+.tl-price-range {
     display: flex;
-    gap: 16px;
-}
-
-.tl-nav-link {
-    text-decoration: none;
-    font-size: 14px;
-    color: #555;
-    padding-bottom: 2px;
-    border-bottom: 2px solid transparent;
-}
-
-.tl-nav-link-active {
-    color: #1a73e8;
-    border-color: #1a73e8;
-}
-
-
-
-.tl-user {
-    font-size: 14px;
+    align-items: center;
+    gap: 10px;
 }
 
 .tl-btn {
-    border: none;
-    outline: none;
+    padding: 10px 16px;
+    border-radius: 10px;
     cursor: pointer;
+    text-align: center;
+    display: inline-block;
     font-size: 14px;
-    padding: 8px 16px;
-    border-radius: 999px;
+    font-weight: 600;
     text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-
-.tl-btn-primary {
-    background: #1a73e8;
-    color: #fff;
-}
-
-.tl-btn-outline {
-    border: 1px solid #1a73e8;
-    color: #1a73e8;
-    background: transparent;
-}
-
-.tl-btn-secondary {
-    background: #e5e7eb;
-    color: #111827;
-}
-
-.tl-btn-warning {
-    background: #f59e0b;
-    color: #fff;
-}
-
-.tl-btn-success {
-    background: #10b981;
-    color: #fff;
-}
-
-.tl-btn-sm {
-    padding: 4px 10px;
-    font-size: 12px;
 }
 
 .tl-btn-full {
     width: 100%;
 }
 
+.tl-btn-primary {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+}
+
+.tl-btn-primary:hover {
+    background: #1e4ec7;
+}
+
+.tl-btn-secondary {
+    background: #e5e7eb;
+    color: #333;
+    border: none;
+}
+
+.tl-btn-secondary:hover {
+    background: #d6d8db;
+}
+
 .tl-mt-8 {
     margin-top: 8px;
 }
 
-/* PAGE */
-.tl-page {
-    padding: 24px 32px 40px;
-}
-
-/* PAGE HEADER */
-.tl-page-header h1 {
-    margin: 0 0 4px;
-    font-size: 24px;
-}
-
-.tl-page-header p {
-    margin: 0 0 16px;
-    color: #666;
-}
-
-/* LAYOUT CHÍNH */
-.tl-layout {
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
-    gap: 24px;
-}
-
-/* FILTER SIDEBAR */
-.tl-filter-sidebar {
-    background: #fff;
-    padding: 16px 16px 20px;
-    border-radius: 12px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-
-.tl-filter-title {
-    margin: 0 0 12px;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.tl-filter-form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.tl-filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.tl-filter-group label {
-    font-size: 13px;
-    font-weight: 500;
-    color: #374151;
-}
-
-.tl-filter-group input,
-.tl-filter-group select {
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    padding: 8px 10px;
-    font-size: 13px;
-}
-
-/* TOP BAR */
+/* =======================================
+   CONTENT AREA
+======================================= */
 .tl-top-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 18px;
 }
 
-.tl-result {
-    font-size: 14px;
-    color: #4b5563;
+.tl-top-right a {
+    padding: 8px 14px;
+    border-radius: 12px;
 }
 
-/* GRID */
+/* =======================================
+   GRID TOOL
+======================================= */
 .tl-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 25px;
 }
 
-/* CARD */
 .tl-card {
     background: #fff;
-    border-radius: 14px;
-    overflow: hidden;
+    border-radius: 18px;
+    box-shadow: 0px 3px 10px rgba(0,0,0,0.07);
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    transition: 0.25s;
+    height: 100%;
+}
+
+.tl-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0px 7px 16px rgba(0,0,0,0.12);
 }
 
 .tl-card-image-wrapper {
@@ -195,185 +183,220 @@ body {
 
 .tl-card-image {
     width: 100%;
-    height: 100%;
+    height: 170px;
     object-fit: cover;
     object-position: center;
 
 }
 
-/* BADGE */
+/* =======================================
+   BADGE TRẠNG THÁI
+======================================= */
 .tl-badge {
     position: absolute;
-    left: 10px;
     top: 10px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #fff;
-    background: #6b7280;
+    left: 10px;
+    padding: 5px 14px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .tl-badge-published {
-    background: #10b981;
+    background: #e0fbe7;
+    color: #0e7a28;
 }
 
 .tl-badge-pending {
-    background: #f59e0b;
+    background: #fff7d4;
+    color: #b18100;
 }
 
 .tl-badge-rejected {
-    background: #ef4444;
+    background: #ffe5e5;
+    color: #d92525;
 }
 
-.tl-badge-default {
-    background: #6b7280;
-}
-
-/* BODY */
-.tl-card-body {
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.tl-card-title {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    color: #111827;
-}
-
-.tl-card-seller {
-    margin: 0;
-    font-size: 12px;
-    color: #6b7280;
-}
-
-.tl-card-seller-name {
-    font-weight: 500;
+.tl-badge-deactivated {
+    background: #d1d5db;
     color: #374151;
 }
 
-.tl-card-rating {
+/* =======================================
+   CARD BODY
+======================================= */
+.tl-card-body {
+    flex: 1;
     display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    color: #f59e0b;
+    flex-direction: column;
+    margin-top: 12px;
 }
 
-.tl-stars {
+.tl-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.tl-card-category,
+.tl-card-seller {
     font-size: 14px;
+    color: #666;
+}
+
+.tl-card-seller-name {
+    font-weight: 600;
+}
+
+.tl-card-price {
+    margin: 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.tl-card-license-title {
+    font-weight: 600;
+}
+
+.tl-license-list {
+    padding-left: 18px;
+}
+
+.tl-license-list li {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+/* Rating */
+.tl-card-rating {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #f7b500;
+}
+
+.tl-card-rating .tl-stars {
+    font-size: 16px;
 }
 
 .tl-rating-value {
+    margin-left: 6px;
     font-weight: 600;
 }
 
 .tl-rating-count {
-    color: #6b7280;
+    color: #777;
+    margin-left: 4px;
 }
 
+/* Mô tả */
 .tl-card-desc {
-    margin: 4px 0 0;
-    font-size: 13px;
-    color: #4b5563;
-    max-height: 3.4em;
-    overflow: hidden;
+    font-size: 14px;
+    color: #555;
+    margin-top: 8px;
 }
 
-/* STOCK */
+/* Stock */
 .tl-card-stock {
-    margin-top: 4px;
-    font-size: 12px;
-    color: #374151;
+    margin-top: 10px;
+    font-size: 14px;
 }
 
-/* FOOTER */
+/* =======================================
+   FOOTER CARD
+======================================= */
 .tl-card-footer {
-    padding: 8px 12px 10px;
-    border-top: 1px solid #e5e7eb;
+    margin-top: auto;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
 }
 
+.tl-btn-outline {
+    border: 1px solid #cdd3dd;
+    background: #fff;
+    color: #333;
+    border-radius: 50px;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.tl-btn-outline:hover {
+    border-color: #2563eb;
+    background: #eef4ff;
+}
+
+.tl-btn-sm {
+    padding: 6px 12px;
+}
+
+/* SELLER ACTIONS */
 .tl-card-actions {
     display: flex;
-    gap: 6px;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.tl-inline-form {
-    display: inline-block;
+.tl-btn-success {
+    background: #16a34a;
+    color: #fff;
 }
 
-/* EMPTY */
+.tl-btn-success:hover {
+    background: #138a3f;
+}
+
+/* STATUS BUTTON SELLER */
+.tl-btn-status {
+    border: none;
+    padding: 6px 14px;
+    border-radius: 40px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-pending {
+    background: #b18100;
+}
+
+.status-approved {
+    background: #2764cc;
+}
+
+.status-rejected {
+    background: #d92525;
+}
+
+.status-published {
+    background: #0e7a28;
+}
+
+.status-deactivated {
+    background: #374151;
+}
+
+.status-suspect {
+    background: #b30052;
+}
+
+/* =======================================
+   EMPTY STATE
+======================================= */
 .tl-empty {
-    margin-top: 16px;
     padding: 20px;
-    text-align: center;
     background: #fff;
-    border-radius: 12px;
-    color: #6b7280;
+    border-radius: 10px;
+    text-align: center;
+    color: #777;
 }
 
-/* RESPONSIVE */
+/* =======================================
+   RESPONSIVE
+======================================= */
 @media (max-width: 900px) {
     .tl-layout {
         grid-template-columns: 1fr;
     }
-
-    .tl-filter-sidebar {
-        order: 2;
-    }
-
-    .tl-content {
-        order: 1;
-    }
-}
-/* CSS trạng thái tool */
-.status-pending {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.status-approved {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.status-rejected {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.status-published {
-    background-color: #cce5ff;
-    color: #004085;
-}
-
-.status-suspect {
-    background-color: #ffe5b4;
-    color: #8a4b00;
-}
-
-.status-deactivated {
-    background-color: #e2e3e5;
-    color: #6c757d;
-}
-
-.status-violated {
-    background-color: #e6d7ff;
-    color: #4b0082;
-}
-
-/* Nút nhỏ và căn chỉnh */
-.tl-btn-status {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-    border: none;
 }
