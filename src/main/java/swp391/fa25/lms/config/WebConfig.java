@@ -1,0 +1,17 @@
+package swp391.fa25.lms.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:uploads/");
+        // Nếu chạy Windows cần đường dẫn tuyệt đối:
+        // .addResourceLocations("file:C:/YourProject/uploads/");
+    }
+}
