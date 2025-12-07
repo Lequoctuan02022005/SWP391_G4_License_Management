@@ -53,14 +53,8 @@
                                 0
                         </span>
                     </a>
-                    <a th:href="@{/cart/view}" class="position-relative me-4">
-                        <i class="fas fa-shopping-cart fs-4"></i>
-                        <span id="cartBadge"
-                              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                              style="font-size: 0.7rem;">
-        0
-    </span>
-                    </a>
+
+
                     <!--Đăng ký seller-->
                     <form th:if="${account == null}">
                     <a th:href="@{/register-guest-seller}"
@@ -126,10 +120,7 @@
 
             // Listen event từ bất kỳ đâu
             document.addEventListener("favorite-changed", window.loadFavoriteCount);
-            document.addEventListener("DOMContentLoaded", async () => {
-                window.updateCartCount?.();
-                document.addEventListener("cart-updated", window.updateCartCount);
-            });
+
             // Click wishlist: Nếu count >0 đi list, else login
             wishlistLink.addEventListener("click", async function (e) {
                 e.preventDefault();

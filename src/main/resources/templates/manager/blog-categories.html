@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog Category Management - Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        }
+        .sidebar .nav-link {
+            color: #333;
+            padding: 0.75rem 1rem;
+        }
+        .sidebar .nav-link:hover {
+            background-color: #f8f9fa;
+        }
+        .sidebar .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .action-buttons .btn {
+            margin-right: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <h5 class="px-3 mb-3">Blog Management</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/manager/blogs}">
+                            <i class="bi bi-list-ul"></i> Blog List
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/manager/blog-categories}">
+                            <i class="bi bi-folder"></i> Category Management
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/home}">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h2>Blog Category Management</h2>
+                <div>
+                    <a th:href="@{/manager/blog-categories/create}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Category
+                    </a>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i> <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Category Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 60px;">Order</th>
+                                    <th>Category Name</th>
+                                    <th>Description</th>
+                                    <th style="width: 200px;">Slug</th>
+                                    <th style="width: 100px;">Posts</th>
+                                    <th style="width: 120px;">Status</th>
+                                    <th style="width: 150px;">Created Date</th>
+                                    <th style="width: 200px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(categories)}">
+                                    <td colspan="8" class="text-center text-muted py-4">
+                                        <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                        <p class="mb-0 mt-2">No categories yet</p>
+                                    </td>
+                                </tr>
+                                <tr th:each="category : ${categories}">
+                                    <td>
+                                        <span class="badge bg-secondary" th:text="${category.displayOrder}"></span>
+                                    </td>
+                                    <td>
+                                        <strong th:text="${category.categoryName}"></strong>
+                                    </td>
+                                    <td>
+                                        <small th:text="${category.description}"></small>
+                                    </td>
+                                    <td>
+                                        <code th:text="${category.slug}"></code>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info" th:text="${category.blogCount}">0</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${category.status == 'ACTIVE'}" class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Active
+                                        </span>
+                                        <span th:if="${category.status == 'INACTIVE'}" class="badge bg-secondary">
+                                            <i class="bi bi-x-circle"></i> Inactive
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small th:text="${#temporals.format(category.createdAt, 'dd/MM/yyyy HH:mm')}"></small>
+                                    </td>
+                                    <td class="action-buttons">
+                                        <a th:href="@{/manager/blog-categories/edit/{id}(id=${category.categoryId})}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        
+                                        <a th:if="${category.status == 'INACTIVE'}" 
+                                           th:href="@{/manager/blog-categories/activate/{id}(id=${category.categoryId})}" 
+                                           class="btn btn-sm btn-outline-success" 
+                                           title="Activate">
+                                            <i class="bi bi-check-circle"></i>
+                                        </a>
+                                        
+                                        <a th:if="${category.status == 'ACTIVE'}" 
+                                           th:href="@{/manager/blog-categories/deactivate/{id}(id=${category.categoryId})}" 
+                                           class="btn btn-sm btn-outline-warning" 
+                                           title="Deactivate">
+                                            <i class="bi bi-x-circle"></i>
+                                        </a>
+                                        
+                                        <a th:href="@{/manager/blog-categories/delete/{id}(id=${category.categoryId})}" 
+                                           class="btn btn-sm btn-outline-danger" 
+                                           title="Delete"
+                                           th:if="${category.blogCount == 0}"
+                                           onclick="return confirm('Are you sure you want to delete this category?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                        
+                                        <button th:if="${category.blogCount > 0}" 
+                                                class="btn btn-sm btn-outline-secondary" 
+                                                disabled
+                                                title="Cannot delete category with posts">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

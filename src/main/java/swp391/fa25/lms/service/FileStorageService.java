@@ -34,7 +34,7 @@ public class FileStorageService {
 
     /**  Upload file tool (.zip, .rar, .exe) */
     public String uploadToolFile(MultipartFile toolFile) throws IOException {
-        if (toolFile.getSize() > MAX_IMAGE_SIZE)
+        if (toolFile.getSize() > MAX_TOOL_SIZE)
             throw new IllegalArgumentException("Image exceeds maximum allowed size (5MB).");
         validateExtension(toolFile, ALLOWED_TOOL_EXTENSIONS, "tool file");
         return saveFile(toolFile, TOOL_DIR);
