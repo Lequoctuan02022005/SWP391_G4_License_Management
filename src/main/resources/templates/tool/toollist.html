@@ -236,11 +236,13 @@
                         </a>
 
                         <!-- Chỉ user đăng nhập mới thấy "Thêm vào giỏ hàng" -->
-                        <a th:href="@{'/toollist/cart/' + ${tool.toolId}}"
+                        <a th:if="${tool.seller.accountId != currentUserId}"
+                           th:href="@{'/toollist/cart/' + ${tool.toolId}}"
                            class="tl-btn tl-btn-outline tl-btn-sm"
-                           sec:authorize="isAuthenticated()">
+                           sec:authorize="hasRole('CUSTOMER')">
                             Thêm vào giỏ hàng
                         </a>
+
 
                         <!-- SELLER ACTIONS -->
                         <div class="tl-card-actions" sec:authorize="hasRole('SELLER')">
