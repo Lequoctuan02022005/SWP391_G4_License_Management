@@ -10,13 +10,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link th:href="@{/css/home.css}" rel="stylesheet">
 
-    <!-- CSRF cho AJAX -->
+    <!-- CSRF Meta Tags (chỉ có khi đã login) -->
     <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}"/>
 </head>
 <body>
 
-<!-- Header có giỏ hàng badge -->
+<!-- Header -->
 <div th:replace="~{common/header :: header}"></div>
 
 <main class="container my-5">
@@ -28,8 +28,7 @@
                  class="img-fluid rounded shadow"
                  alt="Ảnh tool"
                  style="max-height: 520px; object-fit: cover;">
-            <div th:if="${tool.availableQuantity == 0}"
-                 class="mt-3">
+            <div th:if="${tool.availableQuantity == 0}" class="mt-3">
                 <span class="badge bg-danger fs-4 px-4 py-2">HẾT HÀNG</span>
             </div>
         </div>
@@ -48,11 +47,11 @@
             <!-- Giá -->
             <div class="bg-light p-4 rounded mb-4">
                 <h2 class="text-danger fw-bold">
-                   <span id="price-display">
-    <span th:if="${#lists.isEmpty(tool.licenses)}">Miễn phí</span>
-    <span th:unless="${#lists.isEmpty(tool.licenses)}"
-          th:text="${#numbers.formatInteger(tool.licenses[0].price, 0, 'COMMA')} + ' VND'"></span>
-</span>
+                    <span id="price-display">
+                        <span th:if="${#lists.isEmpty(tool.licenses)}">Miễn phí</span>
+                        <span th:unless="${#lists.isEmpty(tool.licenses)}"
+                              th:text="${#numbers.formatInteger(tool.licenses[0].price, 0, 'COMMA')} + ' VND'"></span>
+                    </span>
                 </h2>
             </div>
 
@@ -138,69 +137,91 @@
         document.getElementById('licenseIdInput').value = el.dataset.licenseId;
     }
 
+    // Hàm thêm vào giỏ hàng - ĐÃ FIX 100% LỖI CSRF
     async function addToCart() {
-        if (available <= 0) return alert('Hết hàng rồi bro!');
+        if (available <= 0) {
+            return alert('Sản phẩm đã hết hàng!');
+        }
 
         if (!isLoggedIn) {
             new bootstrap.Modal(document.getElementById('loginModal')).show();
             return;
         }
 
-        const lic = document.querySelector('.license-item.active');
-        if (!lic) return alert('Chọn license đi ku!');
+        const activeLicense = document.querySelector('.license-item.active');
+        if (!activeLicense) {
+            return alert('Vui lòng chọn một gói license!');
+        }
 
-        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+        // Lấy CSRF an toàn - không crash khi chưa login
+        const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+
+        const headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+
+        // Chỉ thêm header CSRF nếu tồn tại (người dùng đã login)
+        if (csrfTokenMeta && csrfHeaderMeta) {
+            headers[csrfHeaderMeta.content] = csrfTokenMeta.content;
+        }
 
         try {
-            const res = await fetch('/cart/add', {
+            const response = await fetch('/cart/add', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    [csrfHeader]: csrfToken
-                },
+                headers: headers,
                 body: new URLSearchParams({
                     toolId: toolId,
-                    licenseId: lic.dataset.licenseId,
+                    licenseId: activeLicense.dataset.licenseId,
                     quantity: 1
                 })
             });
 
-            const json = await res.json();
-            if (res.ok) {
-                alert('Thêm vào giỏ thành công!');
-                if (window.updateCartBadge) window.updateCartBadge();
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert('Thêm vào giỏ hàng thành công!');
+                // Cập nhật badge giỏ hàng nếu có hàm
+                if (typeof window.updateCartBadge === 'function') {
+                    window.updateCartBadge();
+                }
             } else {
-                alert(json.message || 'Lỗi rồi');
+                alert(result.message || 'Không thể thêm vào giỏ hàng');
             }
-        } catch (e) {
-            // fallback
-            document.getElementById('licenseIdInput').value = lic.dataset.licenseId;
+        } catch (error) {
+            console.error('Lỗi mạng:', error);
+            // Fallback: submit form ẩn
+            document.getElementById('licenseIdInput').value = activeLicense.dataset.licenseId;
             document.getElementById('addToCartForm').submit();
         }
     }
 
-    // Chọn license đầu tiên khi load
+    // Tự động chọn license đầu tiên khi trang load
     document.addEventListener('DOMContentLoaded', () => {
-        const first = document.querySelector('.license-item');
-        if (first) selectLicense(first);
+        const firstLicense = document.querySelector('.license-item');
+        if (firstLicense) {
+            selectLicense(firstLicense);
+        }
     });
     /*]]>*/
 </script>
 
 <style>
+    .license-item {
+        transition: all 0.3s ease;
+        min-width: 120px;
+    }
     .license-item.active {
-        background: #0d6efd;
-        color: white;
+        background: #0d6efd !important;
+        color: white !important;
         font-weight: bold;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
     }
-
-    .license-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    .license-item:hover:not(.active) {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20, 0 8px 20px rgba(0,0,0,0.15);
     }
-
     .cursor-pointer {
         cursor: pointer;
     }

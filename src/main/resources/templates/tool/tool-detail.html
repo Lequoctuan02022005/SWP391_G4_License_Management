@@ -1,52 +1,74 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${tool.toolName}">Tool Detail</title>
+    <title th:text="${tool.toolName}">Chi tiết sản phẩm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link th:href="@{/css/home.css}" rel="stylesheet">
+
+    <!-- CSRF Meta Tags (chỉ có khi đã login) -->
+    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}"/>
 
     <style>
         .tool-image {
             width: 100%;
-            border-radius: 12px;
+            max-height: 480px;
             object-fit: contain;
-            background: #f5f5f5;
-            padding: 12px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .price-box {
-            font-size: 22px;
+            font-size: 28px;
             font-weight: bold;
-            color: #0a8f3c;
+            color: #d32f2f;
+            background: #fff3cd;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: inline-block;
         }
         .license-btn {
-            border: 1px solid #ccc;
-            padding: 6px 14px;
-            border-radius: 6px;
+            border: 2px solid #ddd;
+            padding: 10px 18px;
+            border-radius: 8px;
             background: white;
             cursor: pointer;
+            transition: all 0.3s;
+            min-width: 130px;
+            font-weight: 500;
+        }
+        .license-btn:hover {
+            border-color: #198754;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
         }
         .license-btn.active {
             border-color: #198754;
-            background: #e8fff1;
+            background: #d4edda;
+            color: #155724;
             font-weight: bold;
         }
         .tab-content-box {
             background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 10px;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 15px;
         }
     </style>
-
 </head>
-
 <body>
 
-<div th:insert="common/header :: header"></div>
+<!-- Header -->
+<div th:replace="~{common/header :: header}"></div>
 
-<div class="container mt-4">
+<div class="container mt-5">
 
     <h2 class="fw-bold mb-4" th:text="${tool.toolName}">Tool Name</h2>
 
@@ -54,110 +76,212 @@
 
         <!-- LEFT: IMAGE -->
         <div class="col-md-6">
-            <img th:src="@{'/' + ${tool.image}}" alt="Product" class="tool-image">
+            <img th:src="@{${tool.image != null ? '/' + tool.image : '/img/placeholder-tool.jpg'}}"
+                 alt="Product" class="tool-image img-fluid">
+            <div th:if="${tool.availableQuantity == 0}" class="text-center mt-3">
+                <span class="badge bg-danger fs-3 px-5 py-3">HẾT HÀNG</span>
+            </div>
         </div>
 
         <!-- RIGHT: INFO -->
         <div class="col-md-6">
 
-            <p>
+            <p class="fs-5 mb-2">
                 <strong>Người bán:</strong>
-                <span th:text="${tool.seller.fullName}"></span>
+                <span th:text="${tool.seller.fullName}">Seller</span>
             </p>
 
-            <p>
-                <strong>Kho:</strong>
-                <span th:text="${tool.quantity}"></span>
+            <p class="fs-5 mb-4">
+                <strong>Kho còn:</strong>
+                <strong class="text-success" th:text="${tool.availableQuantity}">0</strong> sản phẩm
             </p>
 
             <!-- PRICE -->
-            <div class="price-box mb-2">
-                <span id="priceDisplay">– VND</span>
+            <div class="price-box mb-4">
+                <span id="priceDisplay">Chọn gói để xem giá</span>
             </div>
 
             <!-- LICENSE -->
-            <p><strong>License</strong></p>
-
-            <div class="d-flex gap-2 mb-3">
-                <button class="license-btn"
-                        th:each="lic : ${tool.licenses}"
-                        th:data-price="${lic.price}"
-                        th:data-id="${lic.licenseId}"
-                        th:text="'Gói ' + ${lic.durationDays} + ' ngày'"
-                        onclick="chooseLicense(this)">
-                </button>
+            <div class="mb-4">
+                <p class="fw-bold fs-5 mb-3">Chọn gói License:</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <button type="button" class="license-btn text-center"
+                            th:each="lic : ${tool.licenses}"
+                            th:text="'Gói ' + ${lic.durationDays} + ' ngày'"
+                            th:data-price="${lic.price}"
+                            th:data-id="${lic.licenseId}"
+                            onclick="chooseLicense(this)">
+                        Gói 30 ngày
+                    </button>
+                </div>
             </div>
 
-            <!-- ACTION BUTTONS (only for CUSTOMER) -->
-            <div th:if="${#authorization.expression('hasRole(''CUSTOMER'')')}">
-                <button class="btn btn-success me-2">Mua hàng</button>
-                <button class="btn btn-outline-primary">Thêm vào giỏ</button>
+            <!-- ACTION BUTTONS (chỉ cho CUSTOMER) -->
+            <div th:if="${#authorization.expression('hasRole(''CUSTOMER'')')}" class="d-flex gap-3">
+                <button type="button"
+                        class="btn btn-success btn-lg px-5 fw-bold shadow"
+                        th:disabled="${tool.availableQuantity == 0}"
+                        onclick="addToCart()">
+                    <i class="fas fa-cart-plus me-2"></i>
+                    <span th:text="${tool.availableQuantity == 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}"></span>
+                </button>
+
+                <a th:href="@{/cart/view}" class="btn btn-outline-dark btn-lg px-5">
+                    <i class="fas fa-shopping-cart me-2"></i> Xem giỏ hàng
+                </a>
+            </div>
+
+            <!-- Không phải CUSTOMER -->
+            <div th:unless="${#authorization.expression('hasRole(''CUSTOMER'')')}" class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> Bạn không thể mua sản phẩm này.
             </div>
         </div>
     </div>
 
-
-    <!-- TABS: Description + Reviews -->
-    <ul class="nav nav-tabs mt-4" id="detailTab">
+    <!-- TABS: Mô tả + Đánh giá -->
+    <ul class="nav nav-tabs mt-5" id="detailTab">
         <li class="nav-item">
             <a class="nav-link active" data-bs-toggle="tab" href="#desc">Mô tả</a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" data-bs-toggle="tab" href="#review">Đánh giá</a>
+            <a class="nav-link" data-bs-toggle="tab" href="#review">Đánh giá (<span th:text="${#lists.size(tool.feedbacks)}">0</span>)</a>
         </li>
     </ul>
 
     <div class="tab-content tab-content-box">
-
-        <!-- DESCRIPTION TAB -->
         <div id="desc" class="tab-pane fade show active">
-            <p th:text="${tool.description}"></p>
+            <div th:utext="${tool.description}">Mô tả sản phẩm sẽ hiện ở đây...</div>
         </div>
 
-        <!-- REVIEWS TAB -->
         <div id="review" class="tab-pane fade">
-
-            <div th:if="${#lists.isEmpty(tool.feedbacks)}">
+            <div th:if="${#lists.isEmpty(tool.feedbacks)}" class="text-center py-5 text-muted">
+                <i class="fas fa-comment-slash fa-3x mb-3"></i>
                 <p>Chưa có đánh giá nào.</p>
             </div>
 
-            <div th:each="fb : ${tool.feedbacks}" class="mb-3">
-                <strong th:text="${fb.customer.fullName}"></strong>
-                <span th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
-                <br>
-                <span>
-                    ⭐ <span th:text="${fb.rating}"></span> / 5
-                </span>
-                <p th:text="${fb.comment}"></p>
+            <div th:each="fb : ${tool.feedbacks}" class="border-bottom pb-3 mb-3">
+                <div class="d-flex justify-content-between">
+                    <strong th:text="${fb.customer.fullName}">Khách hàng</strong>
+                    <small class="text-muted" th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"></small>
+                </div>
+                <div class="mt-1">
+                    <span class="text-warning">
+                        <i class="fas fa-star" th:each="i : ${#numbers.sequence(1, fb.rating)}"></i>
+                    </span>
+                    <span th:text="${fb.rating} + '/5'"></span>
+                </div>
+                <p class="mt-2" th:text="${fb.comment}"></p>
             </div>
-
         </div>
-
     </div>
-
 </div>
 
+<!-- Modal yêu cầu đăng nhập -->
+<div class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Yêu cầu đăng nhập</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <i class="fas fa-user-lock fa-3x text-primary mb-3"></i>
+                <p>Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <a href="/login" class="btn btn-primary">Đăng nhập ngay</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Form ẩn fallback khi AJAX lỗi -->
+<form id="addToCartForm" th:action="@{/cart/add}" method="post" class="d-none">
+    <input type="hidden" name="toolId" th:value="${tool.toolId}">
+    <input type="hidden" id="licenseIdInput" name="licenseId">
+    <input type="hidden" name="quantity" value="1">
+    <input type="hidden" name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}">
+</form>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const isLoggedIn = /*[[${account != null}]]*/ false;
+    const toolId = /*[[${tool.toolId}]]*/ 0;
+    const available = /*[[${tool.availableQuantity}]]*/ 0;
 
-<script>
+    // Chọn license
     function chooseLicense(btn) {
         document.querySelectorAll('.license-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const price = btn.dataset.price;
-        document.getElementById("priceDisplay").innerText = Number(price).toLocaleString() + " VND";
+        const price = btn.dataset.price || 0;
+        document.getElementById('priceDisplay').innerHTML =
+            price > 0
+                ? new Intl.NumberFormat('vi-VN').format(price) + ' VND'
+                : '<span class="text-success fw-bold">MIỄN PHÍ</span>';
+        document.getElementById('licenseIdInput').value = btn.dataset.id;
     }
 
-    // 🔥 Auto chọn license đầu tiên ngay khi load trang
-    window.addEventListener("DOMContentLoaded", function () {
-        const first = document.querySelector(".license-btn");
-        if (first) {
-            first.classList.add("active");
-            document.getElementById("priceDisplay").innerText =
-                Number(first.dataset.price).toLocaleString() + " VND";
-        }
+    // Tự động chọn gói đầu tiên
+    document.addEventListener('DOMContentLoaded', () => {
+        const first = document.querySelector('.license-btn');
+        if (first) chooseLicense(first);
     });
-</script>
 
+    // Thêm vào giỏ hàng - ĐÃ FIX 100% CSRF + fallback + badge
+    async function addToCart() {
+        if (available <= 0) return alert('Sản phẩm đã hết hàng!');
+
+        if (!isLoggedIn) {
+            new bootstrap.Modal(document.getElementById('loginModal')).show();
+            return;
+        }
+
+        const activeBtn = document.querySelector('.license-btn.active');
+        if (!activeBtn) return alert('Vui lòng chọn gói license!');
+
+        const licenseId = activeBtn.dataset.id;
+
+        const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+
+        const headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (csrfTokenMeta && csrfHeaderMeta) {
+            headers[csrfHeaderMeta.content] = csrfTokenMeta.content;
+        }
+
+        try {
+            const res = await fetch('/cart/add', {
+                method: 'POST',
+                headers: headers,
+                body: new URLSearchParams({
+                    toolId: toolId,
+                    licenseId: licenseId,
+                    quantity: 1
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                alert('Thêm vào giỏ hàng thành công!');
+                if (typeof window.updateCartBadge === 'function') {
+                    window.updateCartBadge();
+                }
+            } else {
+                alert(data.message || 'Không thể thêm vào giỏ');
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById('licenseIdInput').value = licenseId;
+            document.getElementById('addToCartForm').submit();
+        }
+    }
+    /*]]>*/
+</script>
 </body>
 </html>

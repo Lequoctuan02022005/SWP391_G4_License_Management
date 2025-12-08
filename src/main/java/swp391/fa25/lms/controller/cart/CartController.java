@@ -88,6 +88,7 @@ public class CartController {
         var cart = cartService.getOrCreateCart(account);
         model.addAttribute("cart", cart);
         model.addAttribute("items", cart.getItems() != null ? cart.getItems() : java.util.Collections.emptyList());
+        model.addAttribute("account", account);
         return "cart/view";
     }
 
