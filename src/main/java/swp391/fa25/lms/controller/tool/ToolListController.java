@@ -12,7 +12,6 @@ import swp391.fa25.lms.service.AccountService;
 import swp391.fa25.lms.service.ToolListService;
 
 import java.util.List;
-import java.util.Objects;
 
 @Controller
 @RequestMapping("/toollist")
@@ -24,101 +23,121 @@ public class ToolListController {
     @Autowired
     private AccountService accountService;
 
-    // =============== VIEW LIST ===============
     @GetMapping
-    public String viewToolList(@RequestParam(required = false) String keyword,
-                               @RequestParam(required = false) Long categoryId,
-                               @RequestParam(required = false) String loginMethod,
-                               @RequestParam(required = false) String status,
-                               @RequestParam(required = false) Long author,
-                               @RequestParam(required = false) Integer priceMin,
-                               @RequestParam(required = false) Integer priceMax,
-                               @RequestParam(required = false) String sort,
-                               Model model,
-                               Authentication auth) {
+    public String viewToolList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String categoryId,
+            @RequestParam(required = false) String loginMethod,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String priceMin,
+            @RequestParam(required = false) String priceMax,
+            @RequestParam(required = false) String sort,
+
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "6") int size,
+
+            Model model,
+            Authentication auth) {
+
+        // ====== FIX 1: CHUYỂN PARAM "null" THÀNH null THẬT ======
+
+        Long categoryIdVal = parseLongOrNull(categoryId);
+        Long authorVal = parseLongOrNull(author);
+        Integer priceMinVal = parseIntOrNull(priceMin);
+        Integer priceMaxVal = parseIntOrNull(priceMax);
+
+        // Khi user chọn "Tất cả"
+        if (categoryIdVal != null && categoryIdVal == 0) categoryIdVal = null;
+        if (authorVal != null && authorVal == 0) authorVal = null;
 
         boolean isSeller = false;
         Long sellerId = null;
 
         if (auth != null) {
             Account acc = accountService.findByEmail(auth.getName());
-            if (acc != null && acc.getRole().getRoleId() == 2) { // role 2 = seller
+            if (acc != null && acc.getRole().getRoleId() == 2) {
                 isSeller = true;
                 sellerId = acc.getAccountId();
             }
         }
 
+        // ====== FIX 2: PARSE ENUM AN TOÀN ======
         Tool.LoginMethod loginMethodEnum = null;
-        if (loginMethod != null && !loginMethod.isBlank()) {
-            try {
-                loginMethodEnum = Tool.LoginMethod.valueOf(loginMethod);
-            } catch (Exception ignore) {
-            }
+        if (loginMethod != null && !loginMethod.isBlank() && !"null".equals(loginMethod)) {
+            try { loginMethodEnum = Tool.LoginMethod.valueOf(loginMethod); } catch (Exception ignored) {}
         }
 
         Tool.Status statusEnum = null;
-        if (status != null && !status.isBlank()) {
-            try {
-                statusEnum = Tool.Status.valueOf(status);
-            } catch (Exception ignore) {
-            }
+        if (status != null && !status.isBlank() && !"null".equals(status)) {
+            try { statusEnum = Tool.Status.valueOf(status); } catch (Exception ignored) {}
         }
 
+        // ====== LOAD DATA PHÂN TRANG ======
         List<Tool> tools;
+        int totalTools;
 
         if (isSeller) {
-            // seller: lọc theo status, KHÔNG lọc theo author (vì đã gắn sellerId)
-            tools = toolListService.getToolsForSeller(
-                    sellerId,
-                    keyword,
-                    categoryId,
-                    loginMethodEnum,
-                    statusEnum,
-                    priceMin,
-                    priceMax,
-                    sort
+            tools = toolListService.getToolsForSellerPaginated(
+                    sellerId, keyword, categoryIdVal, loginMethodEnum, statusEnum,
+                    priceMinVal, priceMaxVal, sort, page, size
+            );
+            totalTools = toolListService.countToolsForSeller(
+                    sellerId, keyword, categoryIdVal, loginMethodEnum, statusEnum,
+                    priceMinVal, priceMaxVal
             );
         } else {
-            // user: không lọc status, nhưng lọc theo author
-            tools = toolListService.getToolsForUser(
-                    keyword,
-                    categoryId,
-                    author,
-                    loginMethodEnum,
-                    priceMin,
-                    priceMax,
-                    sort
+            tools = toolListService.getToolsForUserPaginated(
+                    keyword, categoryIdVal, authorVal, loginMethodEnum,
+                    priceMinVal, priceMaxVal, sort, page, size
+            );
+            totalTools = toolListService.countToolsForUser(
+                    keyword, categoryIdVal, authorVal, loginMethodEnum,
+                    priceMinVal, priceMaxVal
             );
         }
 
-        // Dynamic filter lists dựa trên list tool đang có
-        List<Category> categories = toolListService.getAvailableCategories(tools);
-        List<Account> sellers = toolListService.getAvailableSellers(tools);
-        List<Tool.Status> statuses = toolListService.getAvailableStatuses(tools);
-        List<Tool.LoginMethod> loginMethods = toolListService.getAvailableLoginMethods(tools);
+        int totalPages = (int) Math.ceil((double) totalTools / size);
 
+        // ====== FULL FILTER DATA ======
+        model.addAttribute("categories", toolListService.getAllCategoriesFromDB());
+        model.addAttribute("sellers", toolListService.getAllSellersFromDB());
+        model.addAttribute("statuses", toolListService.getAllStatuses());
+        model.addAttribute("loginMethods", toolListService.getAllLoginMethods());
+
+        // Data
         model.addAttribute("tools", tools);
         model.addAttribute("isSeller", isSeller);
 
-        model.addAttribute("categories", categories);
-        model.addAttribute("sellers", sellers);
-        model.addAttribute("statuses", statuses);
-        model.addAttribute("loginMethods", loginMethods);
-
-        // giữ lại giá trị filter trên UI
+        // Giữ lại filter khi reload
         model.addAttribute("keyword", keyword);
-        model.addAttribute("categoryId", categoryId);
+        model.addAttribute("categoryId", categoryIdVal);
         model.addAttribute("loginMethod", loginMethod);
         model.addAttribute("status", status);
-        model.addAttribute("author", author);
-        model.addAttribute("priceMin", priceMin);
-        model.addAttribute("priceMax", priceMax);
+        model.addAttribute("author", authorVal);
+        model.addAttribute("priceMin", priceMinVal);
+        model.addAttribute("priceMax", priceMaxVal);
         model.addAttribute("sort", sort);
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("pageSize", size);
+        model.addAttribute("totalPages", totalPages);
 
         return "tool/toollist";
     }
 
-    // =============== TOGGLE STATUS ===============
+    // ================== FIX 3: HÀM CHUYỂN "null" THÀNH null ================
+    private Long parseLongOrNull(String value) {
+        if (value == null || value.equals("null") || value.isBlank()) return null;
+        try { return Long.valueOf(value); } catch (Exception e) { return null; }
+    }
+
+    private Integer parseIntOrNull(String value) {
+        if (value == null || value.equals("null") || value.isBlank()) return null;
+        try { return Integer.valueOf(value); } catch (Exception e) { return null; }
+    }
+
+    // ===========================================================
     @PostMapping("/toggle/{id}")
     public String toggleToolStatus(@PathVariable("id") Long toolId,
                                    Authentication auth) {
@@ -127,7 +146,6 @@ public class ToolListController {
 
         Account acc = accountService.findByEmail(auth.getName());
         if (acc == null || acc.getRole().getRoleId() != 2) {
-            // Không phải seller thì không được toggle
             return "redirect:/toollist";
         }
 

@@ -125,11 +125,7 @@
 
             <!-- TOP BAR -->
             <div class="tl-top-bar">
-                <div class="tl-top-left">
-                    <span class="tl-result" th:if="${tools != null}">
-                        Tìm thấy <strong th:text="${#lists.size(tools)}">0</strong> tool.
-                    </span>
-                </div>
+
 
                 <!-- Nút ADD cho SELLER -->
                 <div class="tl-top-right" sec:authorize="hasRole('SELLER')">
@@ -144,26 +140,8 @@
                 <article class="tl-card"
                          th:each="tool : ${tools}"
                          th:if="${isSeller or tool.status.name() == 'PUBLISHED'}">
-                    <!-- PAGINATION -->
-                    <div class="tl-pagination" th:if="${totalPages > 1}">
-                        <ul>
-                            <!-- Previous -->
-                            <li th:classappend="${currentPage == 0} ? 'disabled'">
-                                <a th:href="@{|/toollist?page=${currentPage - 1}|}">«</a>
-                            </li>
 
-                            <!-- Page Numbers -->
-                            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                                th:classappend="${i == currentPage} ? 'active'">
-                                <a th:href="@{|/toollist?page=${i}|}" th:text="${i + 1}"></a>
-                            </li>
 
-                            <!-- Next -->
-                            <li th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                                <a th:href="@{|/toollist?page=${currentPage + 1}|}">»</a>
-                            </li>
-                        </ul>
-                    </div>
 
 
                     <!-- ẢNH + BADGE -->
@@ -330,11 +308,61 @@
 
                 </article>
             </div>
+            <!-- PAGINATION -->
+            <div class="pagination">
 
-            <!-- EMPTY STATE -->
-            <div class="tl-empty" th:if="${tools == null or #lists.isEmpty(tools)}">
-                Chưa có tool nào phù hợp với bộ lọc hiện tại.
+                    <a th:if="${currentPage > 1}"
+                       th:href="@{'/toollist'
+                        + '?page=' + (${currentPage - 1})
+                        + '&keyword=' + ${keyword}
+                        + '&categoryId=' + ${categoryId}
+                        + '&loginMethod=' + ${loginMethod}
+                        + '&status=' + ${status}
+                        + '&author=' + ${author}
+                        + '&priceMin=' + ${priceMin}
+                        + '&priceMax=' + ${priceMax}
+                        + '&sort=' + ${sort}
+                    }">
+                                Prev
+                    </a>
+
+                    <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+
+                    <a th:href="@{'/toollist'
+                            + '?page=' + ${i}
+                            + '&keyword=' + ${keyword}
+                            + '&categoryId=' + ${categoryId}
+                            + '&loginMethod=' + ${loginMethod}
+                            + '&status=' + ${status}
+                            + '&author=' + ${author}
+                            + '&priceMin=' + ${priceMin}
+                            + '&priceMax=' + ${priceMax}
+                            + '&sort=' + ${sort}
+                        }"
+                       th:text="${i}"
+                       th:classappend="${i == currentPage} ? 'active'">
+                    </a>
+
+                    </span>
+
+                    <a th:if="${currentPage < totalPages}"
+                       th:href="@{'/toollist'
+                            + '?page=' + (${currentPage + 1})
+                            + '&keyword=' + ${keyword}
+                            + '&categoryId=' + ${categoryId}
+                            + '&loginMethod=' + ${loginMethod}
+                            + '&status=' + ${status}
+                            + '&author=' + ${author}
+                            + '&priceMin=' + ${priceMin}
+                            + '&priceMax=' + ${priceMax}
+                            + '&sort=' + ${sort}
+                        }">
+                        Next
+                    </a>
+
             </div>
+
+
 
         </section>
     </section>

@@ -423,3 +423,94 @@ body {
     border-radius: 12px;
     pointer-events: none;
 }
+/* PAGINATION */
+.tl-pagination {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.tl-pagination ul {
+    list-style: none;
+    padding: 0;
+    display: inline-flex;
+    gap: 6px;
+}
+
+.tl-pagination li {
+    display: inline-block;
+}
+
+.tl-pagination a {
+    display: block;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    text-decoration: none;
+    color: #333;
+}
+
+.tl-pagination li.active a {
+    background-color: #007bff;
+    color: white !important;
+    border-color: #007bff;
+}
+
+.tl-pagination li.disabled a {
+    opacity: 0.4;
+    pointer-events: none;
+}
+/* PAGINATION WRAPPER */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+
+/* BASE STYLE */
+.pagination a,
+.pagination span a {
+    display: inline-block;
+    padding: 8px 14px;
+    border: 1px solid #dcdcdc;
+    background: #fff;
+    color: #333;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.25s ease;
+}
+
+/* HOVER */
+.pagination a:hover {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* ACTIVE PAGE */
+.pagination a.active {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+    cursor: default;
+}
+
+/* DISABLED (Prev/Next) */
+.pagination a[disabled],
+.pagination a.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 500px) {
+    .pagination a,
+    .pagination span a {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+}

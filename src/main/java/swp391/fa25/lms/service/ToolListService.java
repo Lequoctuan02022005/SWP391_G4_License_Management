@@ -2,12 +2,8 @@ package swp391.fa25.lms.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import swp391.fa25.lms.model.Account;
-import swp391.fa25.lms.model.Category;
-import swp391.fa25.lms.model.License;
-import swp391.fa25.lms.model.Tool;
-import swp391.fa25.lms.repository.AccountRepository;
-import swp391.fa25.lms.repository.ToolListRepository;
+import swp391.fa25.lms.model.*;
+import swp391.fa25.lms.repository.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,19 +19,21 @@ public class ToolListService {
     @Autowired
     private AccountRepository accountRepository;
 
-    // ======================= USER VIEW =======================
-    public List<Tool> getToolsForUser(String keyword,
-                                      Long categoryId,
-                                      Long authorId,
-                                      Tool.LoginMethod loginMethod,
-                                      Integer priceMin,
-                                      Integer priceMax,
-                                      String sort) {
+    @Autowired
+    private CategoryRepository categoryRepository;
 
-        // User chỉ xem tool PUBLISHED
+    // ======================= USER VIEW (PAGINATED) =======================
+    public List<Tool> getToolsForUserPaginated(String keyword,
+                                               Long categoryId,
+                                               Long authorId,
+                                               Tool.LoginMethod loginMethod,
+                                               Integer priceMin,
+                                               Integer priceMax,
+                                               String sort,
+                                               int page,
+                                               int size) {
+
         List<Tool> base = toolListRepository.findByStatus(Tool.Status.PUBLISHED);
-
-        // Tính minPrice, maxPrice theo license
         enrichToolPrices(base);
 
         List<Tool> filtered = filterTools(
@@ -44,48 +42,106 @@ public class ToolListService {
                 categoryId,
                 authorId,
                 loginMethod,
-                null,          // user không lọc theo status
+                null,
                 priceMin,
                 priceMax,
-                false          // isSellerView = false
+                false
         );
 
-        return sortTools(filtered, sort);
+        List<Tool> sorted = sortTools(filtered, sort);
+        return paginate(sorted, page, size);
     }
 
-    // ======================= SELLER VIEW =======================
-    public List<Tool> getToolsForSeller(Long sellerId,
-                                        String keyword,
-                                        Long categoryId,
-                                        Tool.LoginMethod loginMethod,
-                                        Tool.Status status,
-                                        Integer priceMin,
-                                        Integer priceMax,
-                                        String sort) {
+    public int countToolsForUser(String keyword,
+                                 Long categoryId,
+                                 Long authorId,
+                                 Tool.LoginMethod loginMethod,
+                                 Integer priceMin,
+                                 Integer priceMax) {
 
-        // Seller xem tool của chính mình (mọi trạng thái)
-        List<Tool> base = toolListRepository.findBySeller_AccountId(sellerId);
-
-        // Tính minPrice, maxPrice theo license
+        List<Tool> base = toolListRepository.findByStatus(Tool.Status.PUBLISHED);
         enrichToolPrices(base);
 
-        // seller đã bị cố định theo sellerId, không cần authorId filter
+        return filterTools(
+                base,
+                keyword,
+                categoryId,
+                authorId,
+                loginMethod,
+                null,
+                priceMin,
+                priceMax,
+                false
+        ).size();
+    }
+
+
+    // ======================= SELLER VIEW (PAGINATED) =======================
+    public List<Tool> getToolsForSellerPaginated(Long sellerId,
+                                                 String keyword,
+                                                 Long categoryId,
+                                                 Tool.LoginMethod loginMethod,
+                                                 Tool.Status status,
+                                                 Integer priceMin,
+                                                 Integer priceMax,
+                                                 String sort,
+                                                 int page,
+                                                 int size) {
+
+        List<Tool> base = toolListRepository.findBySeller_AccountId(sellerId);
+        enrichToolPrices(base);
+
         List<Tool> filtered = filterTools(
                 base,
                 keyword,
                 categoryId,
-                null,           // authorId = null
+                null,
                 loginMethod,
                 status,
                 priceMin,
                 priceMax,
-                true            // isSellerView = true
+                true
         );
 
-        return sortTools(filtered, sort);
+        List<Tool> sorted = sortTools(filtered, sort);
+        return paginate(sorted, page, size);
     }
 
-    // ======================= ENRICH PRICE FROM LICENSES =======================
+    public int countToolsForSeller(Long sellerId,
+                                   String keyword,
+                                   Long categoryId,
+                                   Tool.LoginMethod loginMethod,
+                                   Tool.Status status,
+                                   Integer priceMin,
+                                   Integer priceMax) {
+
+        List<Tool> base = toolListRepository.findBySeller_AccountId(sellerId);
+        enrichToolPrices(base);
+
+        return filterTools(
+                base,
+                keyword,
+                categoryId,
+                null,
+                loginMethod,
+                status,
+                priceMin,
+                priceMax,
+                true
+        ).size();
+    }
+
+
+    // ======================= PAGINATION =======================
+    private List<Tool> paginate(List<Tool> tools, int page, int size) {
+        int from = (page - 1) * size;
+        int to = Math.min(from + size, tools.size());
+        if (from >= tools.size()) return Collections.emptyList();
+        return tools.subList(from, to);
+    }
+
+
+    // ======================= ENRICH PRICE =======================
     private void enrichToolPrices(List<Tool> tools) {
         if (tools == null) return;
 
@@ -108,13 +164,8 @@ public class ToolListService {
                 if (max == null || p > max) max = p;
             }
 
-            if (min == null) {
-                t.setMinPrice(null);
-                t.setMaxPrice(null);
-            } else {
-                t.setMinPrice(BigDecimal.valueOf(min));
-                t.setMaxPrice(BigDecimal.valueOf(max));
-            }
+            t.setMinPrice(min == null ? null : BigDecimal.valueOf(min));
+            t.setMaxPrice(max == null ? null : BigDecimal.valueOf(max));
         }
     }
 
@@ -132,33 +183,28 @@ public class ToolListService {
         String kw = (keyword == null) ? null : keyword.toLowerCase(Locale.ROOT).trim();
 
         return tools.stream()
-                // keyword: name + description
-                .filter(t -> kw == null || kw.isBlank()
-                        || (t.getToolName() != null
-                        && t.getToolName().toLowerCase(Locale.ROOT).contains(kw))
-                        || (t.getDescription() != null
-                        && t.getDescription().toLowerCase(Locale.ROOT).contains(kw)))
-                // category
-                .filter(t -> categoryId == null
-                        || (t.getCategory() != null
-                        && Objects.equals(t.getCategory().getCategoryId(), categoryId)))
-                // author: chỉ dùng cho user view (isSellerView = false)
-                .filter(t -> isSellerView || authorId == null
-                        || (t.getSeller() != null
-                        && Objects.equals(t.getSeller().getAccountId(), authorId)))
-                // login method
+
+                .filter(t -> kw == null || kw.isBlank() ||
+                        (t.getToolName() != null && t.getToolName().toLowerCase().contains(kw)) ||
+                        (t.getDescription() != null && t.getDescription().toLowerCase().contains(kw)))
+
+                .filter(t -> categoryId == null ||
+                        (t.getCategory() != null && Objects.equals(t.getCategory().getCategoryId(), categoryId)))
+
+                .filter(t -> isSellerView || authorId == null ||
+                        (t.getSeller() != null && Objects.equals(t.getSeller().getAccountId(), authorId)))
+
                 .filter(t -> loginMethod == null || t.getLoginMethod() == loginMethod)
-                // status: chỉ dùng cho seller view
+
                 .filter(t -> status == null || t.getStatus() == status)
-                // price range: dùng minPrice (giá thấp nhất của license)
+
                 .filter(t -> {
                     if (priceMin == null && priceMax == null) return true;
                     BigDecimal minPrice = t.getMinPrice();
                     if (minPrice == null) return false;
-
                     double p = minPrice.doubleValue();
-                    return (priceMin == null || p >= priceMin)
-                            && (priceMax == null || p <= priceMax);
+                    return (priceMin == null || p >= priceMin) &&
+                            (priceMax == null || p <= priceMax);
                 })
                 .collect(Collectors.toList());
     }
@@ -172,47 +218,57 @@ public class ToolListService {
         switch (sort) {
             case "date_desc":
                 comparator = Comparator.comparing(
-                        Tool::getCreatedAt,
-                        Comparator.nullsLast(Comparator.naturalOrder())
+                        Tool::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())
                 ).reversed();
                 break;
 
             case "date_asc":
                 comparator = Comparator.comparing(
-                        Tool::getCreatedAt,
-                        Comparator.nullsLast(Comparator.naturalOrder())
+                        Tool::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())
                 );
                 break;
 
             case "price_asc":
                 comparator = Comparator.comparing(
-                        t -> {
-                            BigDecimal minPrice = t.getMinPrice();
-                            return (minPrice == null) ? 0.0 : minPrice.doubleValue();
-                        }
+                        t -> t.getMinPrice() == null ? 0.0 : t.getMinPrice().doubleValue()
                 );
                 break;
 
             case "price_desc":
                 comparator = Comparator.comparing(
-                        (Tool t) -> {
-                            BigDecimal minPrice = t.getMinPrice();
-                            return (minPrice == null) ? 0.0 : minPrice.doubleValue();
-                        }
+                        (Tool t) -> t.getMinPrice() == null ? 0.0 : t.getMinPrice().doubleValue()
                 ).reversed();
-                break;
-
-            default:
-                // giữ nguyên order
                 break;
         }
 
         if (comparator == null) return tools;
+        return tools.stream().sorted(comparator).collect(Collectors.toList());
+    }
 
-        return tools.stream()
-                .sorted(comparator)
+    // ======================= DYNAMIC FILTER (LẤY FULL DB) =======================
+    public List<Category> getAllCategoriesFromDB() {
+        return categoryRepository.findAll()
+                .stream()
+                .sorted(Comparator.comparing(Category::getCategoryName))
                 .collect(Collectors.toList());
     }
+
+    public List<Account> getAllSellersFromDB() {
+        return accountRepository.findAllSellers()
+                .stream()
+                .sorted(Comparator.comparing(Account::getFullName))
+                .collect(Collectors.toList());
+    }
+
+
+    public List<Tool.Status> getAllStatuses() {
+        return Arrays.asList(Tool.Status.values());
+    }
+
+    public List<Tool.LoginMethod> getAllLoginMethods() {
+        return Arrays.asList(Tool.LoginMethod.values());
+    }
+
 
     // ======================= SELLER ACTIONS =======================
     public Tool addTool(Tool tool, Long sellerId) {
@@ -220,15 +276,11 @@ public class ToolListService {
                 .orElseThrow(() -> new IllegalArgumentException("Seller không tồn tại"));
 
         tool.setSeller(seller);
-        tool.setStatus(Tool.Status.PENDING); // default: chờ duyệt
+        tool.setStatus(Tool.Status.PENDING);
         tool.setCreatedAt(LocalDateTime.now());
 
-        if (tool.getQuantity() == null) {
-            tool.setQuantity(0);
-        }
-        if (tool.getAvailableQuantity() == null) {
-            tool.setAvailableQuantity(tool.getQuantity());
-        }
+        if (tool.getQuantity() == null) tool.setQuantity(0);
+        if (tool.getAvailableQuantity() == null) tool.setAvailableQuantity(tool.getQuantity());
 
         return toolListRepository.save(tool);
     }
@@ -239,12 +291,8 @@ public class ToolListService {
 
         if (tool.getStatus() == Tool.Status.PUBLISHED) {
             tool.setStatus(Tool.Status.DEACTIVATED);
-        } else if (tool.getStatus() == Tool.Status.DEACTIVATED
-                || tool.getStatus() == Tool.Status.PENDING) {
+        } else if (tool.getStatus() == Tool.Status.DEACTIVATED || tool.getStatus() == Tool.Status.PENDING) {
             tool.setStatus(Tool.Status.PUBLISHED);
-        } else {
-            // các trạng thái khác bỏ qua
-            return tool;
         }
 
         tool.setUpdatedAt(LocalDateTime.now());
@@ -265,46 +313,9 @@ public class ToolListService {
         existing.setQuantity(updatedTool.getQuantity());
         existing.setAvailableQuantity(updatedTool.getAvailableQuantity());
 
-        existing.setStatus(Tool.Status.PENDING); // sau khi sửa quay về PENDING
+        existing.setStatus(Tool.Status.PENDING);
         existing.setUpdatedAt(LocalDateTime.now());
 
         return toolListRepository.save(existing);
-    }
-
-    // ======================= DYNAMIC FILTER VALUES =======================
-    public List<Category> getAvailableCategories(List<Tool> tools) {
-        return tools.stream()
-                .map(Tool::getCategory)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted(Comparator.comparing(Category::getCategoryName))
-                .collect(Collectors.toList());
-    }
-
-    public List<Account> getAvailableSellers(List<Tool> tools) {
-        return tools.stream()
-                .map(Tool::getSeller)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted(Comparator.comparing(Account::getFullName))
-                .collect(Collectors.toList());
-    }
-
-    public List<Tool.Status> getAvailableStatuses(List<Tool> tools) {
-        return tools.stream()
-                .map(Tool::getStatus)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-    }
-
-    public List<Tool.LoginMethod> getAvailableLoginMethods(List<Tool> tools) {
-        return tools.stream()
-                .map(Tool::getLoginMethod)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
     }
 }
