@@ -26,6 +26,7 @@ import java.util.List;
 @RequestMapping({"/", "/home"})
 public class HomeController {
 
+    @Autowired
     private final CategoryService categoryService;
     @Autowired
     private ToolService toolService;

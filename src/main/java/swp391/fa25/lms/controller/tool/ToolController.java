@@ -1,5 +1,6 @@
 package swp391.fa25.lms.controller.tool;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.model.Account;
+import swp391.fa25.lms.model.Role;
 import swp391.fa25.lms.model.Tool;
 import swp391.fa25.lms.service.FileStorageService;
 import swp391.fa25.lms.service.ToolFlowService;
@@ -61,14 +63,16 @@ public class ToolController {
     @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/seller/add")
     public String showAddToolForm(
+            @RequestParam(value = "cancel", required = false) Boolean cancel,
             Model model,
             HttpSession session,
             RedirectAttributes redirectAttrs
     ) {
-//        Account seller = requireActiveSeller(session, redirectAttrs);
-//        if (seller == null) {
-//            return "redirect:/login";
-//        }
+        if (cancel != null && cancel) {
+            toolFlowService.cancelToolCreation(session);
+            redirectAttrs.addFlashAttribute("info", "Creation canceled.");
+            return "redirect:/tools/seller/add";
+        }
 
         ToolFlowService.ToolSessionData pending =
                 (ToolFlowService.ToolSessionData) session.getAttribute("pendingTool");
@@ -124,12 +128,11 @@ public class ToolController {
 
             if (tool.getLoginMethod() == Tool.LoginMethod.TOKEN) {
                 redirectAttrs.addFlashAttribute("info", "Please add tokens to finalize your tool.");
-                // hiện tại bạn vẫn dùng TokenController riêng ở /seller/token-manage
-                return "redirect:/tool/token-manage";
+                return "redirect:/tools/token/manage";
             }
 
             redirectAttrs.addFlashAttribute("success", "Tool created successfully!");
-            return "redirect:/tools/seller";
+            return "redirect:/toollist";
 
         } catch (Exception e) {
             redirectAttrs.addFlashAttribute("error", e.getMessage());
@@ -156,8 +159,8 @@ public class ToolController {
 
         Tool tool = toolService.getToolByIdAndSeller(id, seller);
         if (tool == null) {
-            redirectAttrs.addFlashAttribute("error", "Tool not found or unauthorized.");
-            return "redirect:/tools/seller";
+            redirectAttrs.addFlashAttribute("success", "Tool created successfully!");
+            return "redirect:/toollist";
         }
 
         model.addAttribute("tool", tool);
@@ -216,8 +219,7 @@ public class ToolController {
                         session
                 );
                 redirectAttrs.addFlashAttribute("info", "Please review and update tokens for this tool.");
-                // hiện tại vẫn dùng TokenController ở /seller/token-manage/edit
-                return "redirect:/tool/token-manage/edit";
+                return "redirect:/tools/token/edit";
             }
 
             // USER_PASSWORD → cập nhật trực tiếp
@@ -238,6 +240,34 @@ public class ToolController {
             redirectAttrs.addFlashAttribute("error", e.getMessage());
             return "redirect:/tools/seller/edit/" + id;
         }
+    }
+    @GetMapping("/detail/{id}")
+    public String viewToolDetail(
+            @PathVariable Long id,
+            Model model,
+            HttpSession session , HttpServletRequest request
+    ) {
+        Tool tool = toolService.getToolById(id);
+        if (tool == null) {
+            return "redirect:/error";
+        }
+
+        Account account = (Account) request.getSession().getAttribute("loggedInAccount");
+
+        boolean isCustomer = (account != null && account.getRole().getRoleName() == Role.RoleName.CUSTOMER);
+
+        model.addAttribute("tool", tool);
+        model.addAttribute("licenses", tool.getLicenses());
+        model.addAttribute("isCustomer", isCustomer);
+        model.addAttribute("account", account);
+
+        return "tool/tool-detail";
+    }
+    @PostMapping("/seller/add/cancel")
+    public String cancelAddTool(HttpSession session, RedirectAttributes ra) {
+        toolFlowService.cancelToolCreation(session);
+        ra.addFlashAttribute("info", "Tool creation canceled.");
+        return "redirect:/toollist";
     }
 
     @Autowired

@@ -37,10 +37,7 @@
                         <a class="nav-link" href="#category">Dịch vụ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/blog}">Blog</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Contact Us</a>
+                            <a class="nav-link" href="#">Contact Us</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/support">Support</a>
@@ -56,7 +53,11 @@
                                 0
                         </span>
                     </a>
-
+                    <a th:href="@{/cart/view}" class="position-relative me-4" id="cartLink"> <i
+                            class="fas fa-shopping-cart fs-4 text-dark"></i> <span id="cartCountBadge"
+                                                                                   class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                                                                   style="font-size: 0.7rem; display: none;"> 0 </span>
+                    </a>
 
                     <!--Đăng ký seller-->
                     <form th:if="${account == null}">
@@ -110,15 +111,12 @@
                 window.loadFavoriteCount = async function() {
                     try {
                         const res = await fetch("/favorite/count", { credentials: "include" });
-                        if (!res.ok) {
-                            // Endpoint chưa implement - set default 0
-                            badge.textContent = "0";
-                            return;
-                        }
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         const count = await res.json();
                         badge.textContent = count;
+                        console.log("Favorite count từ API:", count);
                     } catch (error) {
-                        // Silently fail - favorite feature chưa có
+                        console.error("Lỗi khi load favorite count:", error);
                         badge.textContent = "0";
                     }
                 };
@@ -127,16 +125,37 @@
             // Listen event từ bất kỳ đâu
             document.addEventListener("favorite-changed", window.loadFavoriteCount);
 
-            // Click wishlist: redirect to favorite list (hoặc login nếu chưa đăng nhập)
+            // Click wishlist: Nếu count >0 đi list, else login
             wishlistLink.addEventListener("click", async function (e) {
                 e.preventDefault();
-                // Check if logged in via session
-                window.location.href = "/favorite/list";
+                await window.loadFavoriteCount();
+                const count = parseInt(badge.textContent) || 0;
+                console.log("Favorite count khi click:", count);
+                if (count > 0) {
+                    window.location.href = "/favorite/list";
+                } else {
+                    window.location.href = "/login";
+                }
             });
 
             // Load ban đầu (trên mọi trang có header)
             await window.loadFavoriteCount();
         });
+        window.updateCartBadge = async function() {
+            try {
+                const res = await fetch('/cart/count');
+                if (!res.ok) return;
+                const count = await res.json();
+                const badge = document.getElementById('cartCountBadge');
+                if (badge) {
+                    badge.textContent = count;
+                    badge.style.display = count > 0 ? 'block' : 'none';
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        // Load khi mở trang
+        document.addEventListener('DOMContentLoaded', window.updateCartBadge);
     </script>
 </div>
 </body>

@@ -70,7 +70,7 @@ public class CustomAuthenticationSuccessHandler
             return;
         }
 
-        response.sendRedirect("/seller/tools");
+        response.sendRedirect("/home");
     }
 
     private void redirectByRole(Role.RoleName role, HttpServletResponse response) throws IOException {

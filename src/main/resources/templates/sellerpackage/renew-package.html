@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Gia hạn tài khoản Seller</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link th:href="@{/css/home.css}" rel="stylesheet">
+
+    <style>
+        .renew-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 480px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .info-box {
+            background: #dff6ff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .renew-btn {
+            width: 100%;
+            background: #222;
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+        }
+        .back-btn {
+            width: 100%;
+            background: #333;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="common/header :: header"></div>
+
+<div class="renew-box">
+
+    <h3 class="text-center fw-bold mb-3">Gia hạn tài khoản Seller</h3>
+
+    <!-- Gói hiện tại -->
+    <div class="info-box" th:if="${currentExpiry != null}">
+        ⏳ Gói hiện tại còn hạn đến: <b th:text="${currentExpiry}"></b>
+    </div>
+
+    <!-- Nếu chưa từng mua -->
+    <div class="info-box" th:if="${currentExpiry == null}">
+        ⚠ Bạn chưa đăng ký gói Seller nào. Hãy đăng ký để kích hoạt tính năng bán tool.
+    </div>
+
+    <!-- DROPDOWN -->
+    <form method="post" th:action="@{/seller/renew}">
+        <label class="mt-2 mb-1">Chọn gói gia hạn:</label>
+        <select name="packageId" class="form-select mb-3" required>
+            <option value="">-- Chọn gói --</option>
+            <option th:each="p : ${packages}"
+                    th:value="${p.id}"
+                    th:text="${p.packageName + ' — ' + p.durationInMonths + ' tháng — ' + p.price + ' VND'}">
+            </option>
+        </select>
+
+        <button class="renew-btn">Gia hạn ngay</button>
+        <a href="/home" class="back-btn btn">Quay trở lại trang chủ</a>
+    </form>
+
+</div>
+
+</body>
+</html>

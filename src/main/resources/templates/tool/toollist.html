@@ -3,22 +3,21 @@
       xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <title>Danh sách Tool</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link th:href="@{/css/toollist.css}" rel="stylesheet">
     <link th:href="@{/css/home.css}" rel="stylesheet">
-
 </head>
 <body>
-<!--Header-->
-<div th:replace="common/header :: header"></div>
 
+<!-- HEADER -->
+<div th:replace="common/header :: header"></div>
 
 <main class="tl-page">
 
-    <!-- TIÊU ĐỀ -->
+    <!-- PAGE HEADER -->
     <section class="tl-page-header">
         <h1>Danh sách Tool</h1>
         <p>Khám phá các tool đã được đăng, hoặc quản lý tool của bạn (nếu là Seller).</p>
@@ -26,15 +25,14 @@
 
     <section class="tl-layout">
 
-        <!-- SIDEBAR FILTER -->
+        <!-- FILTER SIDEBAR -->
         <aside class="tl-filter-sidebar">
 
             <h2 class="tl-filter-title">Bộ lọc</h2>
 
-            <!-- Form filter GET /toollist -->
             <form th:action="@{/toollist}" method="get" class="tl-filter-form">
 
-                <!-- SEARCH -->
+                <!-- KEYWORDS -->
                 <div class="tl-filter-group">
                     <label for="keyword">Từ khóa</label>
                     <input id="keyword"
@@ -44,60 +42,79 @@
                            th:value="${keyword}">
                 </div>
 
+                <!-- CATEGORY -->
+                <div class="tl-filter-group">
+                    <label for="categoryId">Danh mục</label>
+                    <select id="categoryId" name="categoryId">
+                        <option value="">Tất cả</option>
+                        <option th:each="c : ${categories}"
+                                th:value="${c.categoryId}"
+                                th:text="${c.categoryName}"
+                                th:selected="${categoryId != null and categoryId == c.categoryId}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- SELLER ONLY STATUS -->
+                <div class="tl-filter-group" th:if="${isSeller}">
+                    <label for="status">Trạng thái</label>
+                    <select id="status" name="status">
+                        <option value="" th:selected="${status == null or status == ''}">Tất cả</option>
+                        <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
+                        <option value="APPROVED" th:selected="${status == 'APPROVED'}">APPROVED</option>
+                        <option value="REJECTED" th:selected="${status == 'REJECTED'}">REJECTED</option>
+                        <option value="PUBLISHED" th:selected="${status == 'PUBLISHED'}">PUBLISHED</option>
+                        <option value="DEACTIVATED" th:selected="${status == 'DEACTIVATED'}">DEACTIVATED</option>
+                    </select>
+                </div>
+
+                <!-- USER FILTER AUTHOR -->
+                <div class="tl-filter-group" th:if="${!isSeller}">
+                    <label for="author">Author</label>
+                    <select id="author" name="author">
+                        <option value="" th:selected="${author == null}">Tất cả</option>
+                        <option th:each="s : ${sellers}"
+                                th:value="${s.accountId}"
+                                th:text="${s.fullName}"
+                                th:selected="${author != null and author == s.accountId}">
+                        </option>
+                    </select>
+                </div>
+
                 <!-- LOGIN METHOD -->
                 <div class="tl-filter-group">
                     <label for="loginMethod">Hình thức đăng nhập</label>
                     <select id="loginMethod" name="loginMethod">
                         <option value="" th:selected="${loginMethod == null or loginMethod == ''}">Tất cả</option>
-                        <option value="USER_PASSWORD"
-                                th:selected="${loginMethod == 'USER_PASSWORD'}">
-                            USER_PASSWORD
-                        </option>
-                        <option value="TOKEN"
-                                th:selected="${loginMethod == 'TOKEN'}">
-                            TOKEN
-                        </option>
+                        <option value="USER_PASSWORD" th:selected="${loginMethod == 'USER_PASSWORD'}">USER_PASSWORD</option>
+                        <option value="TOKEN" th:selected="${loginMethod == 'TOKEN'}">TOKEN</option>
                     </select>
                 </div>
 
-                <!-- STATUS: chỉ hiện khi là SELLER -->
-                <div class="tl-filter-group" th:if="${isSeller}">
-                    <label for="status">Trạng thái</label>
-                    <select id="status" name="status">
-                        <option value=""
-                                th:selected="${status == null or status == ''}">
-                            Tất cả
-                        </option>
-                        <option value="PENDING"
-                                th:selected="${status == 'PENDING'}">
-                            PENDING
-                        </option>
-                        <option value="APPROVED"
-                                th:selected="${status == 'APPROVED'}">
-                            APPROVED
-                        </option>
-                        <option value="REJECTED"
-                                th:selected="${status == 'REJECTED'}">
-                            REJECTED
-                        </option>
-                        <option value="PUBLISHED"
-                                th:selected="${status == 'PUBLISHED'}">
-                            PUBLISHED
-                        </option>
-                        <option value="DEACTIVATED"
-                                th:selected="${status == 'DEACTIVATED'}">
-                            DEACTIVATED
-                        </option>
+                <!-- PRICE RANGE -->
+                <div class="tl-filter-group">
+                    <label>Giá (đ)</label>
+                    <div class="tl-price-range">
+                        <input type="number" name="priceMin" placeholder="Từ" th:value="${priceMin}">
+                        <span> - </span>
+                        <input type="number" name="priceMax" placeholder="Đến" th:value="${priceMax}">
+                    </div>
+                </div>
+
+                <!-- SORT BY -->
+                <div class="tl-filter-group">
+                    <label for="sort">Sắp xếp theo</label>
+                    <select id="sort" name="sort">
+                        <option value="" th:selected="${sort == null or sort == ''}">Mặc định</option>
+                        <option value="date_desc" th:selected="${sort == 'date_desc'}">Ngày mới nhất</option>
+                        <option value="date_asc" th:selected="${sort == 'date_asc'}">Ngày cũ nhất</option>
+                        <option value="price_asc" th:selected="${sort == 'price_asc'}">Giá tăng dần</option>
+                        <option value="price_desc" th:selected="${sort == 'price_desc'}">Giá giảm dần</option>
                     </select>
                 </div>
 
-                <button type="submit" class="tl-btn tl-btn-primary tl-btn-full">
-                    Áp dụng
-                </button>
-
-                <a th:href="@{/toollist}" class="tl-btn tl-btn-secondary tl-btn-full tl-mt-8">
-                    Xóa lọc
-                </a>
+                <button type="submit" class="tl-btn tl-btn-primary tl-btn-full">Áp dụng</button>
+                <a th:href="@{/toollist}" class="tl-btn tl-btn-secondary tl-btn-full tl-mt-8">Xóa lọc</a>
 
             </form>
         </aside>
@@ -105,20 +122,17 @@
         <!-- CONTENT -->
         <section class="tl-content">
 
-            <!-- THANH ACTION TRÊN -->
+            <!-- TOP BAR -->
             <div class="tl-top-bar">
                 <div class="tl-top-left">
-                    <span class="tl-result"
-                          th:if="${tools != null}">
-                        Tìm thấy
-                        <strong th:text="${#lists.size(tools)}">0</strong>
-                        tool.
+                    <span class="tl-result" th:if="${tools != null}">
+                        Tìm thấy <strong th:text="${#lists.size(tools)}">0</strong> tool.
                     </span>
                 </div>
 
                 <!-- Nút ADD cho SELLER -->
                 <div class="tl-top-right" sec:authorize="hasRole('SELLER')">
-                    <a th:href="@{/toollist/new}" class="tl-btn tl-btn-primary">
+                    <a th:href="@{/tools/seller/add}" class="tl-btn tl-btn-primary">
                         + Thêm Tool
                     </a>
                 </div>
@@ -126,61 +140,68 @@
 
             <!-- GRID TOOL -->
             <div class="tl-grid" th:if="${tools != null and !#lists.isEmpty(tools)}">
+                <article class="tl-card" th:each="tool : ${tools}">
 
-                <article class="tl-card"
-                         th:each="tool : ${tools}">
-
-                    <!-- ẢNH + BADGE TRẠNG THÁI -->
+                    <!-- ẢNH + BADGE -->
                     <div class="tl-card-image-wrapper">
-                        <img th:src="@{'/' + ${tool.image}}"
+                        <img th:src="@{ ${tool.image}}">
                              alt="Tool image"
                              class="tl-card-image" />
-
-                        <!-- BADGE trạng thái: hiển thị cho mọi role, nhưng Seller quan tâm hơn -->
-                        <span class="tl-badge"
-                              th:switch="${tool.status}">
-
-                        <span th:case="'PUBLISHED'" class="tl-badge tl-badge-published">
-                            [[${tool.status}]]
+                        <span class="tl-badge" th:switch="${tool.status}">
+                            <span th:case="'PUBLISHED'" class="tl-badge tl-badge-published">[[${tool.status}]]</span>
+                            <span th:case="'PENDING'" class="tl-badge tl-badge-pending">[[${tool.status}]]</span>
+                            <span th:case="'REJECTED'" class="tl-badge tl-badge-rejected">[[${tool.status}]]</span>
+                            <span th:case="'DEACTIVATED'" class="tl-badge tl-badge-deactivated">[[${tool.status}]]</span>
+                            <span th:case="*">UNKNOWN</span>
                         </span>
-
-                        <span th:case="'PENDING'" class="tl-badge tl-badge-pending">
-                            [[${tool.status}]]
-                        </span>
-
-                        <span th:case="'REJECTED'" class="tl-badge tl-badge-rejected">
-                            [[${tool.status}]]
-                        </span>
-
-                        <span th:case="'DEACTIVATED'" class="tl-badge tl-badge-deactivated">
-                            [[${tool.status}]]
-                        </span>
-
-                                                <!-- default -->
-                        <span th:case="*">UNKNOWN</span>
-                    </span>
-
                     </div>
 
                     <!-- NỘI DUNG -->
                     <div class="tl-card-body">
-                        <!-- TÊN TOOL -->
-                        <h3 class="tl-card-title"
-                            th:text="${tool.toolName}">
-                            Tên tool
-                        </h3>
+                        <h3 class="tl-card-title" th:text="${tool.toolName}">Tên tool</h3>
 
-                        <!-- SELLER (đơn giản, nếu có) -->
-                        <p class="tl-card-seller"
-                           th:if="${tool.seller != null}">
+                        <!-- CATEGORY -->
+                        <p class="tl-card-category" th:if="${tool.category != null}">
+                            Danh mục:
+                            <span th:text="${tool.category.categoryName}">Category</span>
+                        </p>
+
+                        <!-- SELLER -->
+                        <p class="tl-card-seller" th:if="${tool.seller != null}">
                             Seller:
-                            <span th:text="${tool.seller.fullName}"
-                                  class="tl-card-seller-name">
-                                Seller Name
+                            <span th:text="${tool.seller.fullName}" class="tl-card-seller-name">Seller Name</span>
+                        </p>
+
+                        <!-- PRICE RANGE -->
+                        <p class="tl-card-price">
+                            Giá:
+                            <span th:if="${tool.minPrice != null and tool.maxPrice != null and tool.minPrice.compareTo(tool.maxPrice) == 0}">
+                                <strong th:text="${#numbers.formatDecimal(tool.minPrice, 0, 'COMMA', 0, 'POINT')}">0</strong> đ
+                            </span>
+                            <span th:if="${tool.minPrice != null and tool.maxPrice != null and tool.minPrice.compareTo(tool.maxPrice) != 0}">
+                                <strong th:text="${#numbers.formatDecimal(tool.minPrice, 0, 'COMMA', 0, 'POINT')}">0</strong>
+                                -
+                                <strong th:text="${#numbers.formatDecimal(tool.maxPrice, 0, 'COMMA', 0, 'POINT')}">0</strong> đ
+                            </span>
+                            <span th:if="${tool.minPrice == null}">
+                                <strong>Liên hệ</strong>
                             </span>
                         </p>
 
-                        <!-- RATING + REVIEWS (nếu có dữ liệu) -->
+                        <!-- LICENSE LIST -->
+                        <div class="tl-card-licenses"
+                             th:if="${tool.licenses != null and !#lists.isEmpty(tool.licenses)}">
+                            <p class="tl-card-license-title mb-1">License:</p>
+                            <ul class="tl-license-list">
+                                <li th:each="lic : ${tool.licenses}">
+                                    Gói <span th:text="${lic.durationDays}">0</span> ngày
+                                    -
+                                    <span th:text="${#numbers.formatDecimal(lic.price, 0, 'COMMA', 0, 'POINT')}">0</span> đ
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- RATING -->
                         <div class="tl-card-rating">
                             <span class="tl-stars">★</span>
                             <span class="tl-rating-value"
@@ -192,23 +213,16 @@
                             </span>
                         </div>
 
-                        <!-- MÔ TẢ NGẮN -->
-                        <p class="tl-card-desc"
-                           th:text="${tool.description}">
-                            Mô tả tool...
-                        </p>
+                        <!-- MÔ TẢ -->
+                        <p class="tl-card-desc" th:text="${tool.description}">Mô tả tool...</p>
 
                         <!-- SỐ LƯỢNG -->
                         <div class="tl-card-stock">
                             <span>
                                 Tồn kho:
-                                <strong th:text="${tool.availableQuantity != null ? tool.availableQuantity : 0}">
-                                    0
-                                </strong>
+                                <strong th:text="${tool.availableQuantity != null ? tool.availableQuantity : 0}">0</strong>
                                 /
-                                <span th:text="${tool.quantity}">
-                                    0
-                                </span>
+                                <span th:text="${tool.quantity}">0</span>
                             </span>
                         </div>
                     </div>
@@ -216,53 +230,59 @@
                     <!-- FOOTER ACTION -->
                     <div class="tl-card-footer">
 
-                        <!-- Xem chi tiết: luôn có -->
-                        <a th:href="@{'/toollist/detail/' + ${tool.toolId}}"
+                        <!-- Xem chi tiết -->
+                        <a th:href="@{'/tools/detail/' + ${tool.toolId}}"
                            class="tl-btn tl-btn-outline tl-btn-sm">
                             Xem chi tiết
                         </a>
 
-                        <!-- Chức năng cho SELLER -->
+                        <!-- Chỉ user đăng nhập mới thấy "Thêm vào giỏ hàng" -->
+                        <a th:if="${tool.seller.accountId != currentUserId}"
+                           th:href="@{'/toollist/cart/' + ${tool.toolId}}"
+                           class="tl-btn tl-btn-outline tl-btn-sm"
+                           sec:authorize="hasRole('CUSTOMER')">
+                            Thêm vào giỏ hàng
+                        </a>
+
+
+                        <!-- SELLER ACTIONS -->
                         <div class="tl-card-actions" sec:authorize="hasRole('SELLER')">
 
-                            <!-- Toggle cho PUBLISHED / DEACTIVATED -->
-                            <form th:if="${tool.status.name() == 'PUBLISHED' || tool.status.name() == 'DEACTIVATED'}"
-                                  th:action="@{'/toollist/toggle/' + ${tool.toolId}}"
+                            <!-- Nút toggle trạng thái -->
+                            <form th:action="@{'/toollist/toggle/' + ${tool.toolId}}"
                                   method="post"
-                                  class="tl-inline-form">
-
+                                  class="tl-inline-form"
+                                  th:if="${tool.status.name() != 'REJECTED'
+                      && tool.status.name() != 'VIOLATED'}">
                                 <button type="submit"
                                         class="tl-btn-status"
                                         th:classappend="' status-' + ${tool.status.name().toLowerCase()}"
                                         th:text="${tool.status.name()}">
-                                    STATUS
                                 </button>
                             </form>
 
-                            <!-- Trạng thái khác → chỉ hiển thị -->
-                            <button th:if="${tool.status.name() != 'PUBLISHED' && tool.status.name() != 'DEACTIVATED'}"
+                            <!-- Nút toggle DISABLED CHO REJECTED / VIOLATED -->
+                            <button th:if="${tool.status.name() == 'REJECTED'
+                        || tool.status.name() == 'VIOLATED'}"
                                     class="tl-btn-status"
                                     th:classappend="' status-' + ${tool.status.name().toLowerCase()}"
                                     disabled
                                     th:text="${tool.status.name()}">
-                                STATUS
                             </button>
 
-                            <!-- EDIT chỉ cho DEACTIVATED -->
-                            <a th:if="${tool.status.name() == 'DEACTIVATED'}"
-                               th:href="@{'/toollist/edit/' + ${tool.toolId}}"
+                            <!-- EDIT RULES:
+                                 - KHÔNG CHO EDIT NẾU STATUS = PUBLISHED
+                                 - CÁC TRẠNG THÁI KHÁC → EDIT ĐƯỢC -->
+                            <a th:if="${tool.status.name() != 'PUBLISHED'}"
+                               th:href="@{'/tools/seller/edit/' + ${tool.toolId}}"
                                class="tl-btn tl-btn-success tl-btn-sm">
                                 Sửa
                             </a>
 
                         </div>
-
                     </div>
 
-
-
                 </article>
-
             </div>
 
             <!-- EMPTY STATE -->
@@ -271,9 +291,7 @@
             </div>
 
         </section>
-
     </section>
-
 </main>
 
 </body>

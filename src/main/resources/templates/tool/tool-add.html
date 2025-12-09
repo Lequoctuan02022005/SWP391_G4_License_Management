@@ -12,24 +12,26 @@
 <body>
 
 <!-- HEADER -->
-<div th:insert="common/header :: header"></div>
+<div th:insert="~{common/header :: header}"></div>
 
-<!-- MAIN CONTENT -->
 <div class="container mt-4">
 
     <h2 class="fw-bold mb-4">Add New Tool</h2>
 
-    <form method="post" enctype="multipart/form-data" class="bg-white p-4 shadow-sm rounded">
+    <form method="post" enctype="multipart/form-data"
+          th:action="@{/tools/seller/add}">
 
         <div class="row g-4 align-items-stretch tool-wrapper">
 
-            <!-- LEFT PREVIEW -->
+            <!-- LEFT IMAGE PREVIEW -->
             <div class="col-md-5 d-flex full-height">
                 <div id="previewBox" class="preview-box">
-                    Preview Image
+
+                    <img th:if="${tool != null && tool.image != null}"
+                         th:src="@{'/' + ${tool.image}}"
+                         id="oldPreview">
                 </div>
             </div>
-
 
             <!-- RIGHT FORM -->
             <div class="col-md-7 full-height">
@@ -37,30 +39,39 @@
                 <!-- Tool Name -->
                 <div class="mb-3">
                     <label class="fw-bold">Tool Name</label>
-                    <input type="text" class="form-control" name="toolName" required>
+                    <input type="text" class="form-control" name="toolName"
+                           th:value="${tool?.toolName}" required>
                 </div>
 
                 <!-- Upload Image -->
                 <div class="mb-3">
                     <label class="fw-bold">Upload Image</label>
+
                     <input type="file" class="form-control"
                            name="imageFile" accept="image/*"
-                           onchange="loadImage(event)" required>
+                           onchange="loadImage(event)"
+                           th:attr="required=${tool == null}">
                 </div>
 
                 <!-- Upload Tool -->
                 <div class="mb-3">
                     <label class="fw-bold">Upload Tool File (.exe, .zip, .rar)</label>
-                    <input type="file" class="form-control" name="toolFile" required>
+
+                    <input type="file" class="form-control" name="toolFile"
+                           th:attr="required=${tool == null}">
                 </div>
 
                 <!-- Category -->
                 <div class="mb-3">
                     <label class="fw-bold">Category</label>
-                    <select name="categoryId" class="form-select" required>
+                    <select name="category.categoryId" class="form-select" required>
                         <option value="">-- Select category --</option>
+
                         <th:block th:each="c : ${categories}">
-                            <option th:value="${c.categoryId}" th:text="${c.categoryName}"></option>
+                            <option th:value="${c.categoryId}"
+                                    th:selected="${categoryId != null ? categoryId == c.categoryId : false}"
+                                    th:text="${c.categoryName}">
+                            </option>
                         </th:block>
                     </select>
                 </div>
@@ -68,23 +79,33 @@
                 <!-- Description -->
                 <div class="mb-3">
                     <label class="fw-bold">Description</label>
-                    <textarea class="form-control" name="description" rows="3" required></textarea>
+                    <textarea class="form-control" name="description" rows="3" required
+                              th:text="${tool?.description}"></textarea>
                 </div>
 
                 <!-- Login Method -->
                 <div class="mb-3">
                     <label class="fw-bold">Login Method</label>
                     <select name="loginMethod" class="form-select" required>
-                        <option value="">-- Select method --</option>
-                        <option value="USER_PASSWORD">Username + Password</option>
-                        <option value="TOKEN">Token</option>
+                        <option value="">-- Select --</option>
+
+                        <option value="USER_PASSWORD"
+                                th:selected="${tool?.loginMethod?.name() == 'USER_PASSWORD'}">
+                            Username + Password
+                        </option>
+
+                        <option value="TOKEN"
+                                th:selected="${tool?.loginMethod?.name() == 'TOKEN'}">
+                            Token
+                        </option>
                     </select>
                 </div>
 
                 <!-- Quantity -->
                 <div class="mb-3">
                     <label class="fw-bold">Quantity</label>
-                    <input type="number" class="form-control" name="quantity" min="1" required>
+                    <input type="number" class="form-control" name="quantity"
+                           th:value="${tool?.quantity}" min="1" required>
                 </div>
 
                 <!-- LICENSE PACKAGES -->
@@ -92,51 +113,71 @@
                     <label class="fw-bold">License Packages</label>
 
                     <div id="licenseGroup">
-                        <div class="row mb-2 license-row">
-                            <div class="col-5">
-                                <input type="number" name="licenseDays" class="form-control" placeholder="Days" required>
-                            </div>
-                            <div class="col-5">
-                                <input type="number" name="licensePrices" class="form-control" placeholder="Price (VND)" required>
-                            </div>
-                            <div class="col-2 d-flex align-items-center">
-                                <span class="remove-license" onclick="removeLicense(this)">×</span>
+
+                        <!-- CASE: RESTORE FROM SESSION -->
+                        <div th:if="${licenses != null}">
+                            <div class="row mb-2 license-row" th:each="lic : ${licenses}">
+                                <div class="col-5">
+                                    <input type="number" name="licenseDays" class="form-control"
+                                           th:value="${lic.durationDays}" required>
+                                </div>
+                                <div class="col-5">
+                                    <input type="number" name="licensePrices" class="form-control"
+                                           th:value="${lic.price}" required>
+                                </div>
+                                <div class="col-2 d-flex align-items-center">
+                                    <span class="remove-license" onclick="removeLicense(this)">×</span>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- CASE: NO SESSION -->
+                        <div th:if="${licenses == null}">
+                            <div class="row mb-2 license-row">
+                                <div class="col-5">
+                                    <input type="number" name="licenseDays" class="form-control" placeholder="Days" required>
+                                </div>
+                                <div class="col-5">
+                                    <input type="number" name="licensePrices" class="form-control" placeholder="Price (VND)" required>
+                                </div>
+                                <div class="col-2 d-flex align-items-center">
+                                    <span class="remove-license" onclick="removeLicense(this)">×</span>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <button type="button" onclick="addLicense()"
-                            class="btn btn-outline-primary btn-sm">
+                    <button type="button" onclick="addLicense()" class="btn btn-outline-primary btn-sm">
                         + Add Package
                     </button>
                 </div>
 
-                <!-- BUTTONS -->
-                <div class="mt-4">
-                    <button class="btn btn-success px-4">Save Tool</button>
-                    <a href="/tools/seller" class="btn btn-outline-secondary px-4">Cancel</a>
-                </div>
+                <button type="submit" class="btn btn-success px-4">Save Tool</button>
+
+                <a href="/tools/seller/add?cancel=true" class="btn btn-secondary px-4">Cancel</a>
 
             </div>
         </div>
+
     </form>
 </div>
 
 <!-- JS -->
 <script>
     function loadImage(event) {
-        let preview = document.getElementById("previewBox");
+        const preview = document.getElementById("previewBox");
         preview.innerHTML = "";
 
-        let img = document.createElement("img");
+        const img = document.createElement("img");
         img.src = URL.createObjectURL(event.target.files[0]);
         preview.appendChild(img);
     }
 
     function addLicense() {
-        let group = document.getElementById("licenseGroup");
+        const group = document.getElementById("licenseGroup");
 
-        let div = document.createElement("div");
+        const div = document.createElement("div");
         div.classList.add("row", "mb-2", "license-row");
 
         div.innerHTML = `
@@ -148,8 +189,7 @@
             </div>
             <div class="col-2 d-flex align-items-center">
                 <span class="remove-license" onclick="removeLicense(this)">×</span>
-            </div>
-        `;
+            </div>`;
         group.appendChild(div);
     }
 

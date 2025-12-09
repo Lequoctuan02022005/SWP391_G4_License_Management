@@ -30,19 +30,24 @@ public class TokenController {
 
     @PreAuthorize("hasRole('SELLER')")
     @GetMapping("/manage")
-    public String showTokenManage(HttpSession session, RedirectAttributes ra) {
+    public String showTokenManage(HttpSession session, RedirectAttributes ra, Model model) {
         Account seller = (Account) session.getAttribute("loggedInAccount");
         if (seller == null) {
             ra.addFlashAttribute("error", "Please login first.");
             return "redirect:/login";
         }
 
-        var pendingTool = session.getAttribute("pendingTool");
-        if (pendingTool == null) {
+        ToolFlowService.ToolSessionData pending =
+                (ToolFlowService.ToolSessionData) session.getAttribute("pendingTool");
+
+        if (pending == null) {
             ra.addFlashAttribute("error", "No pending tool found. Please create a tool first.");
             return "redirect:/tools/seller/add";
         }
-        return "seller/token-manage";
+
+        model.addAttribute("tokens", pending.getTokens());
+        model.addAttribute("quantity", pending.getTool().getQuantity());
+        return "tool/token-manage";
     }
 
     @PreAuthorize("hasRole('SELLER')")
@@ -68,7 +73,7 @@ public class TokenController {
 
             toolFlowService.finalizeTokenTool(tokens, session);
             ra.addFlashAttribute("success", "✅ Tool created successfully!");
-            return "redirect:/tools/seller";
+            return "redirect:/toollist";
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
@@ -84,7 +89,6 @@ public class TokenController {
             ra.addFlashAttribute("error", "Please login first.");
             return "redirect:/login";
         }
-        toolFlowService.cancelToolCreation(session);
         ra.addFlashAttribute("info", "Tool creation canceled. Returning to add form.");
         return "redirect:/tools/seller/add";
     }
@@ -110,7 +114,7 @@ public class TokenController {
 
         model.addAttribute("tool", pending.getTool());
         model.addAttribute("tokens", pending.getTokens());
-        return "seller/token-edit";
+        return "tool/token-manage";
     }
 
     @PreAuthorize("hasRole('SELLER')")
@@ -133,7 +137,7 @@ public class TokenController {
 
             toolFlowService.finalizeEditTokenTool(tokens, session);
             ra.addFlashAttribute("success", "✅ Tokens and quantity updated successfully!");
-            return "redirect:/tools/seller";
+            return "redirect:/toollist";
 
         } catch (Exception e) {
             ra.addFlashAttribute("error", e.getMessage());
@@ -151,7 +155,7 @@ public class TokenController {
         }
         toolFlowService.cancelToolCreation(session);
         ra.addFlashAttribute("info", "Token edit canceled. Returning to tools.");
-        return "redirect:/tools/seller";
+        return "redirect:/toollist";
     }
 
     // ========== VALIDATION ERROR HANDLER ==========
