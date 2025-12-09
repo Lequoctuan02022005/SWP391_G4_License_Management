@@ -57,5 +57,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
            """)
     Optional<Long> findIdByEmail(@Param("email") String email);
     Optional<Account> findByEmailIgnoreCase(String email);
+    @Query("SELECT a FROM Account a JOIN a.role r WHERE r.roleId = 2 or r.roleId = 1")
+    List<Account> findAllSellers();
+
 }
 

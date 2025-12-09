@@ -112,7 +112,6 @@ body {
 .tl-btn-primary {
     background: #2563eb;
     color: #fff;
-    border: none;
 }
 
 .tl-btn-primary:hover {
@@ -122,7 +121,6 @@ body {
 .tl-btn-secondary {
     background: #e5e7eb;
     color: #333;
-    border: none;
 }
 
 .tl-btn-secondary:hover {
@@ -165,7 +163,6 @@ body {
     display: flex;
     flex-direction: column;
     transition: 0.25s;
-    height: 100%;
 }
 
 .tl-card:hover {
@@ -186,7 +183,6 @@ body {
     height: 170px;
     object-fit: cover;
     object-position: center;
-
 }
 
 /* =======================================
@@ -268,7 +264,9 @@ body {
     margin-bottom: 4px;
 }
 
-/* Rating */
+/* =======================================
+   RATING
+======================================= */
 .tl-card-rating {
     margin-top: 8px;
     font-size: 14px;
@@ -289,7 +287,9 @@ body {
     margin-left: 4px;
 }
 
-/* Mô tả */
+/* =======================================
+   MÔ TẢ
+======================================= */
 .tl-card-desc {
     font-size: 14px;
     color: #555;
@@ -331,7 +331,9 @@ body {
     padding: 6px 12px;
 }
 
-/* SELLER ACTIONS */
+/* =======================================
+   SELLER ACTIONS
+======================================= */
 .tl-card-actions {
     display: flex;
     flex-direction: column;
@@ -347,7 +349,7 @@ body {
     background: #138a3f;
 }
 
-/* STATUS BUTTON SELLER */
+/* TRẠNG THÁI NÚT */
 .tl-btn-status {
     border: none;
     padding: 6px 14px;
@@ -398,5 +400,80 @@ body {
 @media (max-width: 900px) {
     .tl-layout {
         grid-template-columns: 1fr;
+    }
+}
+.tl-card-image-wrapper {
+    position: relative;
+}
+
+.tl-sold-out-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    border-radius: 12px;
+    pointer-events: none;
+}
+/* PAGINATION WRAPPER */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+
+/* BASE STYLE */
+.pagination a,
+.pagination span a {
+    display: inline-block;
+    padding: 8px 14px;
+    border: 1px solid #dcdcdc;
+    background: #fff;
+    color: #333;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.25s ease;
+}
+
+/* HOVER */
+.pagination a:hover {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* ACTIVE PAGE */
+.pagination a.active {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+    cursor: default;
+}
+
+/* DISABLED (Prev/Next) */
+.pagination a[disabled],
+.pagination a.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 500px) {
+    .pagination a,
+    .pagination span a {
+        padding: 6px 10px;
+        font-size: 13px;
     }
 }

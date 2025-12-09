@@ -75,8 +75,8 @@ public class RegisterController {
                              Model model) {
         try {
             accountService.verifyCode(code);
-            model.addAttribute("successMessage", "Xác minh thành công! Bạn có thể đăng nhập ngay.");
-            model.addAttribute("redirectUrl", "/login");  // verify-code.html sẽ tự redirect sau 5s
+            model.addAttribute("successMessage", "Xác minh thành công! Cảm ơn bạn đã đăng kí! Xin mời bạn đăng nhập lại sau 4 giây.");
+            model.addAttribute("redirectUrl", "/login");  // verify-code.html sẽ tự redirect sau 2s
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
         }
