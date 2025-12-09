@@ -13,7 +13,7 @@
 <div class="container mt-5">
     <h2>Edit Category</h2>
 
-    <form th:action="@{'/mod/categories/edit/' + ${category.categoryId}}"
+    <form th:action="@{'/moderator/categories/edit/' + ${category.categoryId}}"
           th:object="${category}" method="post">
 
         <div class="mb-3">
@@ -40,7 +40,7 @@
         </div>
 
         <button class="btn btn-success">Update</button>
-        <a class="btn btn-secondary" href="/mod/categories">Back</a>
+        <a class="btn btn-secondary" href="/moderator/categories">Back</a>
     </form>
 
 </div>
