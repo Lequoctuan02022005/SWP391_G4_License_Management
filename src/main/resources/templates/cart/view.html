@@ -1,136 +1,186 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Giỏ hàng của bạn</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div th:replace="~{common/header :: header}"></div>
 
-<div th:replace="~{common/header :: header}"></div>
-
-<main class="container my-5">
-    <h2 class="mb-4 text-primary">
+    <main class="container my-5">
+      <h2 class="mb-4 text-primary">
         <i class="fas fa-shopping-cart me-2"></i>Giỏ hàng của bạn
-    </h2>
+      </h2>
 
-    <div th:if="${items == null or items.isEmpty()}" class="text-center py-5 bg-light rounded">
+      <div
+        th:if="${items == null or items.isEmpty()}"
+        class="text-center py-5 bg-light rounded"
+      >
         <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
         <h4 class="text-muted">Giỏ hàng trống</h4>
         <a href="/toollist" class="btn btn-primary btn-lg">Tiếp tục mua sắm</a>
-    </div>
+      </div>
 
-    <div th:if="${items != null and !items.isEmpty()}">
+      <div th:if="${items != null and !items.isEmpty()}">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-primary">
-                <tr>
-                    <th>Sản phẩm</th>
-                    <th>License</th>
-                    <th>Giá</th>
-                    <th>Số lượng</th>
-                    <th>Tổng</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="item : ${items}">
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <img th:src="@{${item.tool.image != null ? '/uploads/images/' + item.tool.image : '/img/placeholder-tool.jpg'}}"
-                                 width="70" class="rounded me-3" alt="tool">
-                            <div>
-                                <strong th:text="${item.tool.toolName}">Tool</strong>
-                            </div>
-                        </div>
-                    </td>
-                    <td th:text="${item.license.name}">License</td>
-                    <td th:text="${#numbers.formatInteger(item.unitPrice, 0, 'COMMA')} + ' VND'"></td>
-                    <td>
-                        <input type="number" class="form-control w-75" min="1"
-                               th:value="${item.quantity}"
-                               th:data-id="${item.cartItemId}"
-                               onchange="updateQty(this)">
-                    </td>
-                    <td th:text="${#numbers.formatInteger(item.totalPrice, 0, 'COMMA')} + ' VND'"></td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-danger"
-                                th:onclick="'removeItem(' + ${item.cartItemId} + ')'">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+          <table class="table table-hover align-middle">
+            <thead class="table-primary">
+              <tr>
+                <th>Sản phẩm</th>
+                <th>License</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th>Tổng</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="item : ${items}">
+                <td>
+                  <div class="d-flex align-items-center">
+                    <img
+                      th:src="@{${item.tool.image != null ? '/uploads/images/' + item.tool.image : '/img/placeholder-tool.jpg'}}"
+                      width="70"
+                      class="rounded me-3"
+                      alt="tool"
+                    />
+                    <div>
+                      <strong th:text="${item.tool.toolName}">Tool</strong>
+                    </div>
+                  </div>
+                </td>
+                <td th:text="${item.license.name}">License</td>
+                <td
+                  th:text="${#numbers.formatInteger(item.unitPrice, 0, 'COMMA')} + ' VND'"
+                ></td>
+                <td>
+                  <input
+                    type="number"
+                    class="form-control w-75"
+                    min="1"
+                    th:value="${item.quantity}"
+                    th:data-id="${item.cartItemId}"
+                    onchange="updateQty(this)"
+                  />
+                </td>
+                <td
+                  th:text="${#numbers.formatInteger(item.totalPrice, 0, 'COMMA')} + ' VND'"
+                ></td>
+                <td>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    th:onclick="'removeItem(' + ${item.cartItemId} + ')'"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div class="text-end mt-4 bg-light p-4 rounded">
-            <h4>Tổng thanh toán:
-                <span class="text-danger fw-bold fs-3"
-                      th:text="${#aggregates.sum(items.!totalPrice)} + ' VND'">0 VND</span>
-            </h4>
-            <a href="/checkout" class="btn btn-success btn-lg px-5">
-                <i class="fas fa-credit-card me-2"></i>Thanh toán
-            </a>
+          <h4>
+            Tổng thanh toán:
+            <span
+              class="text-danger fw-bold fs-3"
+              th:text="${#numbers.formatInteger(#aggregates.sum(items.![totalPrice]), 0, 'COMMA')} + ' VND'"
+              >0 VND</span
+            >
+          </h4>
+          <a href="/checkout" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-credit-card me-2"></i>Thanh toán
+          </a>
         </div>
-    </div>
-</main>
+      </div>
+    </main>
 
-<div th:replace="~{common/footer :: footer}"></div>
+    <div th:replace="~{common/footer :: footer}"></div>
 
-<script th:inline="javascript">
-    async function updateQty(input) {
+    <script th:inline="javascript">
+      async function updateQty(input) {
         const id = input.dataset.id;
         let qty = parseInt(input.value);
+        console.log("Updating cart item:", id, "with quantity:", qty);
+
         if (isNaN(qty) || qty < 1) {
-            input.value = 1;
-            qty = 1;
+          input.value = 1;
+          qty = 1;
         }
 
         try {
-            const res = await fetch('/cart/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    cartItemId: id,
-                    quantity: qty
-                })
+          const res = await fetch("/cart/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              cartItemId: id,
+              quantity: qty,
+            }),
+          });
+
+          console.log("Update response status:", res.status);
+
+          if (res.ok) {
+            const data = await res.json();
+            console.log("Update success:", data);
+            location.reload();
+          } else {
+            const errorData = await res.json();
+            console.error("Update failed:", errorData);
+            alert("Cập nhật thất bại: " + (errorData.message || res.status));
+          }
+        } catch (e) {
+          console.error("Update error:", e);
+          alert("Lỗi kết nối: " + e.message);
+        }
+      }
+
+      async function removeItem(id) {
+        console.log("Removing cart item:", id);
+
+        if (confirm("Xóa sản phẩm này khỏi giỏ hàng?")) {
+          try {
+            const res = await fetch("/cart/remove", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({ cartItemId: id }),
             });
 
+            console.log("Remove response status:", res.status);
+
             if (res.ok) {
-                location.reload();
+              const data = await res.json();
+              console.log("Remove success:", data);
+              location.reload();
             } else {
-                alert('Cập nhật thất bại!');
-                location.reload();
+              const errorData = await res.json();
+              console.error("Remove failed:", errorData);
+              alert("Xóa thất bại: " + (errorData.message || res.status));
             }
-        } catch (e) {
-            console.error(e);
-            alert('Lỗi kết nối!');
+          } catch (e) {
+            console.error("Remove error:", e);
+            alert("Xóa thất bại: " + e.message);
+          }
         }
-    }
+      }
 
-    async function removeItem(id) {
-        if (confirm('Xóa sản phẩm này khỏi giỏ hàng?')) {
-            try {
-                await fetch('/cart/remove', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ cartItemId: id })
-                });
-                location.reload();
-            } catch (e) {
-                alert('Xóa thất bại!');
-            }
+      document.addEventListener("DOMContentLoaded", () => {
+        if (typeof window.updateCartCount === "function") {
+          window.updateCartCount();
         }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof window.updateCartCount === 'function') {
-            window.updateCartCount();
-        }
-    });
-</script>
-</body>
+      });
+    </script>
+  </body>
 </html>
