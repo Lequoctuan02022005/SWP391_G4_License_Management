@@ -1,5 +1,6 @@
 package swp391.fa25.lms.controller.tool;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -244,20 +245,21 @@ public class ToolController {
     public String viewToolDetail(
             @PathVariable Long id,
             Model model,
-            HttpSession session
+            HttpSession session , HttpServletRequest request
     ) {
         Tool tool = toolService.getToolById(id);
         if (tool == null) {
             return "redirect:/error";
         }
 
-        Account user = (Account) session.getAttribute("loggedInAccount");
+        Account account = (Account) request.getSession().getAttribute("loggedInAccount");
 
-        boolean isCustomer = (user != null && user.getRole().getRoleName() == Role.RoleName.CUSTOMER);
+        boolean isCustomer = (account != null && account.getRole().getRoleName() == Role.RoleName.CUSTOMER);
 
         model.addAttribute("tool", tool);
         model.addAttribute("licenses", tool.getLicenses());
         model.addAttribute("isCustomer", isCustomer);
+        model.addAttribute("account", account);
 
         return "tool/tool-detail";
     }
