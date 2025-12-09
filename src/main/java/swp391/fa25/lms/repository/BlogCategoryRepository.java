@@ -60,4 +60,19 @@ public interface BlogCategoryRepository extends JpaRepository<BlogCategory, Long
      */
     @Query("SELECT c FROM BlogCategory c WHERE c.displayOrder BETWEEN :start AND :end ORDER BY c.displayOrder")
     List<BlogCategory> findByDisplayOrderBetween(@Param("start") Integer start, @Param("end") Integer end);
+
+    /**
+     * Search và sort categories
+     */
+    @Query("SELECT c FROM BlogCategory c WHERE " +
+            "(:keyword IS NULL OR LOWER(c.categoryName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.slug) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+            "(:status IS NULL OR c.status = :status) " +
+            "ORDER BY " +
+            "CASE WHEN :sortBy = 'categoryName' THEN c.categoryName END ASC, " +
+            "CASE WHEN :sortBy = 'displayOrder' THEN c.displayOrder END ASC, " +
+            "CASE WHEN :sortBy = 'createdAt' THEN c.createdAt END ASC, " +
+            "CASE WHEN :sortBy = 'status' THEN c.status END ASC")
+    List<BlogCategory> searchAndSort(@Param("keyword") String keyword,
+                                     @Param("status") BlogCategory.Status status,
+                                     @Param("sortBy") String sortBy);
 }

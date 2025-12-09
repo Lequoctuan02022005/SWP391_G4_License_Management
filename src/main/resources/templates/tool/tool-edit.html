@@ -12,21 +12,29 @@
 <body>
 
 <!-- HEADER -->
-<div th:insert="common/header :: header"></div>
+<!--<div th:insert="common/header :: header"></div>-->
 
 <div class="container mt-4">
 
     <h2 class="fw-bold mb-4">Edit Tool</h2>
 
-    <form method="post" enctype="multipart/form-data" class="bg-white p-4 shadow-sm rounded">
+    <form th:action="@{/tools/seller/edit/{id}(id=${tool.toolId})}"
+          method="post"
+          enctype="multipart/form-data"
+          class="bg-white p-4 shadow-sm rounded">
+
+        <!-- HIDDEN FIELDS (bắt buộc tránh null) -->
+        <input type="hidden" name="loginMethod" th:value="${tool.loginMethod.name()}">
+        <input type="hidden" name="quantity" th:value="${tool.quantity}">
+        <input type="hidden" name="note" th:value="${tool.note}">
+        <input type="hidden" name="description" th:value="${tool.description}">
+        <input type="hidden" name="category.categoryId" th:value="${tool.category.categoryId}">
 
         <div class="row g-4 align-items-stretch tool-wrapper">
 
-            <!-- LEFT IMAGE PREVIEW -->
+            <!-- LEFT IMAGE -->
             <div class="col-md-5 d-flex full-height">
                 <div id="previewBox" class="preview-box">
-
-                    <!-- ẢNH CŨ TỪ DATABASE -->
                     <img th:if="${tool.image != null}"
                          th:src="@{'/' + ${tool.image}}"
                          id="oldPreview"
@@ -46,14 +54,14 @@
 
                 <!-- Upload New Image -->
                 <div class="mb-3">
-                    <label class="fw-bold">Upload New Image (optional)</label>
+                    <label class="fw-bold">Upload New Image</label>
                     <input type="file" class="form-control" name="imageFile"
                            accept="image/*" onchange="loadImage(event)">
                 </div>
 
                 <!-- Upload New Tool File -->
                 <div class="mb-3">
-                    <label class="fw-bold">Upload New Tool File (optional)</label>
+                    <label class="fw-bold">Upload New Tool File</label>
                     <input type="file" class="form-control" name="toolFile">
                 </div>
 
@@ -69,71 +77,80 @@
                     </select>
                 </div>
 
-                <!-- Description -->
-                <div class="mb-3">
+                <!-- Description (edit được nếu USER_PASSWORD) -->
+                <div class="mb-3" th:if="${tool.loginMethod.name() == 'USER_PASSWORD'}">
                     <label class="fw-bold">Description</label>
                     <textarea class="form-control" name="description" rows="3" required
+                              th:text="${tool.description}"></textarea>
+                </div>
+
+                <!-- Description readonly nếu TOKEN -->
+                <div class="mb-3" th:if="${tool.loginMethod.name() == 'TOKEN'}">
+                    <label class="fw-bold">Description</label>
+                    <textarea class="form-control" rows="3" disabled
                               th:text="${tool.description}"></textarea>
                 </div>
 
                 <!-- Login Method -->
                 <div class="mb-3">
                     <label class="fw-bold">Login Method</label>
-                    <select name="loginMethod" class="form-select" required>
-                        <option value="USER_PASSWORD"
-                                th:selected="${tool.loginMethod.name() == 'USER_PASSWORD'}">
-                            Username + Password
-                        </option>
-
-                        <option value="TOKEN"
-                                th:selected="${tool.loginMethod.name() == 'TOKEN'}">
-                            Token
-                        </option>
-                    </select>
+                    <input class="form-control" th:value="${tool.loginMethod.name()}" disabled>
                 </div>
 
                 <!-- Quantity -->
-                <div class="mb-3">
+                <div class="mb-3" th:if="${tool.loginMethod.name() == 'USER_PASSWORD'}">
                     <label class="fw-bold">Quantity</label>
                     <input type="number" class="form-control"
-                           name="quantity" th:value="${tool.quantity}" min="1" required>
+                           name="quantity" th:value="${tool.quantity}" required>
                 </div>
 
-                <!-- LICENSE LIST (Chỉ hiển thị nếu login method = USER_PASSWORD) -->
+                <div class="mb-3" th:if="${tool.loginMethod.name() == 'TOKEN'}">
+                    <label class="fw-bold">Quantity</label>
+                    <input type="number" class="form-control" th:value="${tool.quantity}" disabled>
+                </div>
+
+                <!-- License Packages -->
                 <div class="mb-3" th:if="${tool.loginMethod.name() == 'USER_PASSWORD'}">
                     <label class="fw-bold">License Packages</label>
-
                     <div id="licenseGroup">
-
-                        <!-- LOOP LICENSE CŨ -->
-                        <div th:each="l,iter : ${tool.licenses}" class="row mb-2 license-row">
+                        <div th:each="l : ${tool.licenses}" class="row mb-2 license-row">
                             <div class="col-5">
                                 <input type="number" name="licenseDays"
-                                       th:value="${l.durationDays}"
-                                       class="form-control" required>
+                                       th:value="${l.durationDays}" class="form-control" required>
                             </div>
-
                             <div class="col-5">
                                 <input type="number" name="licensePrices"
-                                       th:value="${l.price}"
-                                       class="form-control" required>
+                                       th:value="${l.price}" class="form-control" required>
                             </div>
-
                             <div class="col-2 d-flex align-items-center">
                                 <span class="remove-license" onclick="removeLicense(this)">×</span>
                             </div>
                         </div>
-
                     </div>
-
                     <button type="button" onclick="addLicense()"
                             class="btn btn-outline-primary btn-sm">+ Add Package</button>
                 </div>
 
-                <!-- BUTTONS -->
+                <!-- BUTTON -->
                 <div class="mt-4">
-                    <button class="btn btn-success px-4">Save Changes</button>
+
+                    <!-- USER_PASSWORD -->
+                    <button th:if="${tool.loginMethod.name() == 'USER_PASSWORD'}"
+                            class="btn btn-success px-4">
+                        Save Changes
+                    </button>
+
+                    <!-- TOKEN → nhảy vào edit token -->
+                    <button th:if="${tool.loginMethod.name() == 'TOKEN'}"
+                            type="submit"
+                            name="action"
+                            value="token"
+                            class="btn btn-primary px-4">
+                        Manage Tokens
+                    </button>
+
                     <a href="/toollist" class="btn btn-outline-secondary px-4">Cancel</a>
+
                 </div>
             </div>
         </div>

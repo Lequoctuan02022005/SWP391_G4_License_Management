@@ -1,5 +1,6 @@
 package swp391.fa25.lms.controller.tool;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -158,7 +159,7 @@ public class ToolController {
 
         Tool tool = toolService.getToolByIdAndSeller(id, seller);
         if (tool == null) {
-            redirectAttrs.addFlashAttribute("success", "Tool created successfully!");
+            redirectAttrs.addFlashAttribute("error", "Tool not found.");
             return "redirect:/toollist";
         }
 
@@ -172,7 +173,7 @@ public class ToolController {
     @PostMapping("/seller/edit/{id}")
     public String updateTool(
             @PathVariable Long id,
-            @ModelAttribute("tool") Tool updatedTool,
+            @ModelAttribute Tool updatedTool,
             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             @RequestParam(value = "toolFile", required = false) MultipartFile toolFile,
             @RequestParam(value = "licenseDays", required = false) List<Integer> licenseDays,
@@ -183,30 +184,68 @@ public class ToolController {
     ) {
 
         Account seller = requireActiveSeller(session, redirectAttrs);
-        if (seller == null) {
-            return "redirect:/login";
-        }
+        if (seller == null) return "redirect:/login";
 
         try {
             Tool existing = toolService.getToolByIdAndSeller(id, seller);
-            if (existing == null) {
-                throw new IllegalArgumentException("Tool not found or unauthorized.");
+            if (existing == null)
+                throw new IllegalArgumentException("Tool not found.");
+
+            // LOG — kiểm tra action & login method
+            System.out.println("ACTION = " + action);
+            System.out.println("UPDATED LOGIN METHOD = " + updatedTool.getLoginMethod());
+            System.out.println("EXISTING LOGIN METHOD = " + existing.getLoginMethod());
+
+            // ======== MERGE DATA BẮT BUỘC — TRÁNH NULL ========
+            updatedTool.setToolId(existing.getToolId());
+            updatedTool.setSeller(existing.getSeller());
+            updatedTool.setCreatedAt(existing.getCreatedAt());
+            updatedTool.setUpdatedAt(LocalDateTime.now());
+            updatedTool.setStatus(Tool.Status.PENDING);
+
+            // CATEGORY (LUÔN LẤY TỪ HIDDEN FIELD)
+            if (updatedTool.getCategory() == null ||
+                    updatedTool.getCategory().getCategoryId() == null) {
+                updatedTool.setCategory(existing.getCategory());
+            } else {
+                updatedTool.setCategory(
+                        toolService.getCategoryById(
+                                updatedTool.getCategory().getCategoryId()
+                        )
+                );
             }
 
-            String imagePath = null;
-            String toolPath = null;
-
-            if (imageFile != null && !imageFile.isEmpty()) {
-                imagePath = fileStorageService.uploadImage(imageFile);
-            }
-            if (toolFile != null && !toolFile.isEmpty()) {
-                toolPath = fileStorageService.uploadToolFile(toolFile);
+            // DESCRIPTION (TOKEN MODE gửi hidden → không bao giờ null)
+            if (updatedTool.getDescription() == null || updatedTool.getDescription().isBlank()) {
+                updatedTool.setDescription(existing.getDescription());
             }
 
-            // Nếu loginMethod = TOKEN và action=token => chuyển sang flow token-edit
-            if (Objects.equals(action, "token") && existing.getLoginMethod() == Tool.LoginMethod.TOKEN) {
-                List<Integer> days = (licenseDays != null) ? licenseDays : new ArrayList<>();
-                List<Double> prices = (licensePrices != null) ? licensePrices : new ArrayList<>();
+            // NOTE
+            if (updatedTool.getNote() == null)
+                updatedTool.setNote(existing.getNote());
+
+            // QUANTITY (TOKEN MODE bị disabled → lấy hidden)
+            if (updatedTool.getQuantity() == null)
+                updatedTool.setQuantity(existing.getQuantity());
+
+            // ===== TOKEN FLOW =====
+            if ("token".equals(action) && existing.getLoginMethod() == Tool.LoginMethod.TOKEN) {
+
+                // COPY CÁC COLLECTION ĐỂ TRÁNH ORPHAN DELETION
+                updatedTool.setFiles(existing.getFiles());
+                updatedTool.setLicenses(existing.getLicenses());
+                updatedTool.setFeedbacks(existing.getFeedbacks());
+                updatedTool.setOrders(existing.getOrders());
+
+                // HANDLE IMAGE
+                if (imageFile != null && !imageFile.isEmpty()) {
+                    updatedTool.setImage(fileStorageService.uploadImage(imageFile));
+                } else {
+                    updatedTool.setImage(existing.getImage());
+                }
+
+                List<Integer> days = licenseDays != null ? licenseDays : new ArrayList<>();
+                List<Double> prices = licensePrices != null ? licensePrices : new ArrayList<>();
 
                 toolFlowService.startEditToolSession(
                         existing,
@@ -217,25 +256,36 @@ public class ToolController {
                         prices,
                         session
                 );
-                redirectAttrs.addFlashAttribute("info", "Please review and update tokens for this tool.");
+
+                redirectAttrs.addFlashAttribute("info", "Update tokens before finalizing.");
                 return "redirect:/tools/token/edit";
             }
+            // ======== USERNAME + PASSWORD FLOW ========
 
-            // USER_PASSWORD → cập nhật trực tiếp
+            String imgPath = null;
+            String toolPath = null;
+
+            if (imageFile != null && !imageFile.isEmpty())
+                imgPath = fileStorageService.uploadImage(imageFile);
+
+            if (toolFile != null && !toolFile.isEmpty())
+                toolPath = fileStorageService.uploadToolFile(toolFile);
+
             toolService.updateTool(
                     id,
                     updatedTool,
-                    imagePath,
+                    imgPath,
                     toolPath,
                     licenseDays != null ? licenseDays : new ArrayList<>(),
                     licensePrices != null ? licensePrices : new ArrayList<>(),
                     seller
             );
 
-            redirectAttrs.addFlashAttribute("success", "Tool updated successfully!");
-            return "redirect:/tools/seller";
+            redirectAttrs.addFlashAttribute("success", "Tool updated!");
+            return "redirect:/toollist";
 
         } catch (Exception e) {
+            e.printStackTrace();
             redirectAttrs.addFlashAttribute("error", e.getMessage());
             return "redirect:/tools/seller/edit/" + id;
         }
@@ -244,20 +294,21 @@ public class ToolController {
     public String viewToolDetail(
             @PathVariable Long id,
             Model model,
-            HttpSession session
+            HttpSession session , HttpServletRequest request
     ) {
         Tool tool = toolService.getToolById(id);
         if (tool == null) {
             return "redirect:/error";
         }
 
-        Account user = (Account) session.getAttribute("loggedInAccount");
+        Account account = (Account) request.getSession().getAttribute("loggedInAccount");
 
-        boolean isCustomer = (user != null && user.getRole().getRoleName() == Role.RoleName.CUSTOMER);
+        boolean isCustomer = (account != null && account.getRole().getRoleName() == Role.RoleName.CUSTOMER);
 
         model.addAttribute("tool", tool);
         model.addAttribute("licenses", tool.getLicenses());
         model.addAttribute("isCustomer", isCustomer);
+        model.addAttribute("account", account);
 
         return "tool/tool-detail";
     }

@@ -286,7 +286,7 @@
 
                             <!-- Các trạng thái khác thì nút bị disable -->
                             <button th:if="${tool.status.name() != 'PUBLISHED'
-                and tool.status.name() != 'DEACTIVATED'}"
+                                    and tool.status.name() != 'DEACTIVATED'}"
                                     class="tl-btn-status"
                                     th:classappend="' status-' + ${tool.status.name().toLowerCase()}"
                                     disabled

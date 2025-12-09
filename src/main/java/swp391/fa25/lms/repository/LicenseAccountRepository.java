@@ -16,4 +16,5 @@ public interface LicenseAccountRepository extends JpaRepository<LicenseAccount, 
 
     List<LicenseAccount> findByStatusAndLicense_Tool_ToolId(LicenseAccount.Status status, Long licenseToolToolId);
 
+    int countByLicense_Tool_ToolIdAndUsedFalse(Long toolId);
 }

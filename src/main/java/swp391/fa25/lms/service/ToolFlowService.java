@@ -162,41 +162,45 @@ public class ToolFlowService {
         if (existingTool.getLoginMethod() != updatedData.getLoginMethod())
             throw new IllegalArgumentException("Login method cannot be changed.");
 
+        // UPDATE BASIC FIELDS
+        existingTool.setToolName(updatedData.getToolName());
+        existingTool.setDescription(updatedData.getDescription());
+        existingTool.setCategory(updatedData.getCategory());
+        existingTool.setNote(updatedData.getNote());
+        existingTool.setUpdatedAt(LocalDateTime.now());
+        existingTool.setStatus(Tool.Status.PENDING);
+
         // HANDLE IMAGE
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
-                updatedData.setImage(fileStorageService.uploadImage(imageFile));
+                existingTool.setImage(fileStorageService.uploadImage(imageFile));
             } catch (IOException e) {
                 throw new IllegalStateException("Image upload failed: " + e.getMessage());
             }
-
-        } else {
-            updatedData.setImage(existingTool.getImage());
         }
 
-        // HANDLE TOOL FILES
-        List<ToolFile> newFiles = new ArrayList<>(existingTool.getFiles());
+        // ========== FIX ORPHAN REMOVAL: GIỮ NGUYÊN LIST ==========
+        List<ToolFile> currentFiles = existingTool.getFiles(); // giữ reference thật
 
         if (toolFile != null && !toolFile.isEmpty()) {
-            String newPath;
             try {
-                newPath = fileStorageService.uploadToolFile(toolFile);
+                String newPath = fileStorageService.uploadToolFile(toolFile);
+
+                ToolFile f = new ToolFile();
+                f.setTool(existingTool);
+                f.setFilePath(newPath);
+                f.setUploadedBy(existingTool.getSeller());
+                f.setCreatedAt(LocalDateTime.now());
+                f.setFileType(ToolFile.FileType.ORIGINAL);
+
+                currentFiles.add(f); // MODIFY, KHÔNG REPLACE LIST
+
             } catch (IOException e) {
                 throw new IllegalStateException("Tool file upload failed: " + e.getMessage());
             }
-            ToolFile f = new ToolFile();
-            f.setTool(existingTool);
-            f.setFilePath(newPath);
-            f.setUploadedBy(existingTool.getSeller());
-            f.setCreatedAt(LocalDateTime.now());
-            f.setFileType(ToolFile.FileType.ORIGINAL);
-
-            newFiles.add(f);
         }
 
-        updatedData.setFiles(newFiles);
-
-        // BUILD NEW LICENSE LIST
+        // BUILD LICENSE LIST (tạm thời cho session)
         List<License> newLicenses = new ArrayList<>();
         for (int i = 0; i < licenseDays.size(); i++) {
             License l = new License();
@@ -206,14 +210,18 @@ public class ToolFlowService {
             newLicenses.add(l);
         }
 
-        // LOAD CURRENT TOKEN LIST
-        List<LicenseAccount> acc = licenseAccountRepository.findByLicense_Tool_ToolId(existingTool.getToolId());
-        List<String> tokens = acc.stream().map(LicenseAccount::getToken).collect(Collectors.toList());
+        // LOAD TOKENS
+        List<LicenseAccount> acc =
+                licenseAccountRepository.findByLicense_Tool_ToolId(existingTool.getToolId());
 
+        List<String> tokens = acc.stream()
+                .map(LicenseAccount::getToken)
+                .collect(Collectors.toList());
+
+        // SAVE TO SESSION
         session.setAttribute(SESSION_PENDING_EDIT,
                 new ToolSessionData(existingTool, existingTool.getCategory(), newLicenses, null, tokens));
     }
-
     // ============================================================
     // 4️⃣ FINALIZE EDIT TOOL (TOKEN)
     // ============================================================
@@ -225,9 +233,6 @@ public class ToolFlowService {
 
         Tool tool = pending.getTool();
 
-        if (tokens.size() != tool.getQuantity())
-            throw new IllegalArgumentException("Token count mismatch.");
-
         // CHECK DUPLICATE
         for (String t : tokens) {
             LicenseAccount acc = licenseAccountRepository.findByToken(t);
@@ -238,11 +243,11 @@ public class ToolFlowService {
 
         // UPDATE TOKENS
         tokenService.updateTokensForTool(tool, tokens);
-
+        int newQty = tokens.size();
         // UPDATE LICENSES + QUANTITY
         toolService.updateQuantityAndLicenses(
                 tool.getToolId(),
-                tokens.size(),
+                newQty,
                 pending.getLicenses()
         );
 

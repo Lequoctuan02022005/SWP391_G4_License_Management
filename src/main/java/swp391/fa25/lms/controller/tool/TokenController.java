@@ -119,7 +119,7 @@ public class TokenController {
 
     @PreAuthorize("hasRole('SELLER')")
     @PostMapping("/edit/finalize")
-    public String finalizeEditTokens(@RequestParam("tokens") String tokenString,
+    public String finalizeEditTokens(@RequestParam("tokens")  List<String> tokens,
                                      HttpSession session,
                                      RedirectAttributes ra) {
 
@@ -130,11 +130,6 @@ public class TokenController {
         }
 
         try {
-            List<String> tokens = Arrays.stream(tokenString.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .toList();
-
             toolFlowService.finalizeEditTokenTool(tokens, session);
             ra.addFlashAttribute("success", "✅ Tokens and quantity updated successfully!");
             return "redirect:/toollist";

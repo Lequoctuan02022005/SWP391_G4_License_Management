@@ -9,19 +9,20 @@
 </head>
 
 <body class="bg-light">
+<div th:replace="moderator/mod-header :: modHeader"></div>
 
 <div class="container mt-5">
 
     <div class="d-flex justify-content-between mb-4">
         <h2 class="fw-bold">Category Management</h2>
 
-        <form method="get" th:action="@{/mod/categories}" class="d-flex">
+        <form method="get" th:action="@{/moderator/categories}" class="d-flex">
             <input type="text" name="keyword" th:value="${keyword}"
                    class="form-control me-2" placeholder="Search...">
             <button class="btn btn-outline-primary">Search</button>
         </form>
 
-        <a href="/mod/categories/create" class="btn btn-primary ms-3">+ Create</a>
+        <a href="/moderator/categories/create" class="btn btn-primary ms-3">+ Create</a>
     </div>
 
     <div class="card shadow-sm">
@@ -50,7 +51,7 @@
                             Edit
                         </a>
                         <a class="btn btn-danger btn-sm"
-                           th:href="@{'/mod/categories/delete/' + ${c.categoryId}}"
+                           th:href="@{'/moderator/categories/delete/' + ${c.categoryId}}"
                            onclick="return confirm('Delete this category?')">
                             Delete
                         </a>

@@ -28,8 +28,12 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
 
     /**
      * Tìm tất cả blog theo category và status với phân trang
+     * CHỈ lấy blog từ category ACTIVE
      */
-    Page<Blog> findByCategoryAndStatus(BlogCategory category, Blog.Status status, Pageable pageable);
+    @Query("SELECT b FROM Blog b WHERE b.category = :category AND b.status = :status AND b.category.status = 'ACTIVE'")
+    Page<Blog> findByCategoryAndStatus(@Param("category") BlogCategory category, 
+                                       @Param("status") Blog.Status status, 
+                                       Pageable pageable);
 
     /**
      * Tìm blog theo author (Manager)
@@ -38,25 +42,29 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
 
     /**
      * Search blog theo title hoặc content (full-text search)
+     * Chỉ lấy blog từ category ACTIVE
      */
     @Query("SELECT b FROM Blog b " +
             "WHERE (LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(b.summary) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
-            "b.status = :status")
+            "b.status = :status AND " +
+            "b.category.status = 'ACTIVE'")
     Page<Blog> searchByKeyword(@Param("keyword") String keyword, 
                                 @Param("status") Blog.Status status, 
                                 Pageable pageable);
 
     /**
      * Advanced search với nhiều filters
+     * Chỉ lấy blog từ category ACTIVE
      */
     @Query("SELECT b FROM Blog b " +
             "WHERE (:categoryId IS NULL OR b.category.blogCategoryId = :categoryId) AND " +
             "(:status IS NULL OR b.status = :status) AND " +
             "(:authorId IS NULL OR b.author.accountId = :authorId) AND " +
             "(:keyword IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+            "LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+            "b.category.status = 'ACTIVE'")
     Page<Blog> advancedSearch(@Param("categoryId") Long categoryId,
                                @Param("status") Blog.Status status,
                                @Param("authorId") Long authorId,
@@ -65,31 +73,37 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
 
     /**
      * Lấy các blog published và có scheduledPublishAt <= hiện tại
+     * Chỉ lấy blog từ category ACTIVE
      */
     @Query("SELECT b FROM Blog b " +
             "WHERE b.status = 'PUBLISHED' AND " +
-            "(b.scheduledPublishAt IS NULL OR b.scheduledPublishAt <= :now)")
+            "(b.scheduledPublishAt IS NULL OR b.scheduledPublishAt <= :now) AND " +
+            "b.category.status = 'ACTIVE'")
     Page<Blog> findPublishedBlogs(@Param("now") LocalDateTime now, Pageable pageable);
 
     /**
      * Lấy top blog theo view count
+     * Chỉ lấy blog từ category ACTIVE
      */
     @Query("SELECT DISTINCT b FROM Blog b " +
             "LEFT JOIN FETCH b.category " +
             "LEFT JOIN FETCH b.author " +
-            "WHERE b.status = 'PUBLISHED' " +
+            "WHERE b.status = 'PUBLISHED' AND " +
+            "b.category.status = 'ACTIVE' " +
             "ORDER BY b.viewCount DESC")
     List<Blog> findTopViewedBlogs(Pageable pageable);
 
     /**
      * Lấy các blog liên quan (cùng category, khác ID)
+     * Chỉ lấy blog từ category ACTIVE
      */
     @Query("SELECT DISTINCT b FROM Blog b " +
             "LEFT JOIN FETCH b.category " +
             "LEFT JOIN FETCH b.author " +
             "WHERE b.category.blogCategoryId = :categoryId AND " +
             "b.blogId != :excludeBlogId AND " +
-            "b.status = 'PUBLISHED' " +
+            "b.status = 'PUBLISHED' AND " +
+            "b.category.status = 'ACTIVE' " +
             "ORDER BY b.createdAt DESC")
     List<Blog> findRelatedBlogs(@Param("categoryId") Long categoryId, 
                                  @Param("excludeBlogId") Long excludeBlogId,
@@ -107,8 +121,9 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
 
     /**
      * Đếm số blog PUBLISHED theo category (dùng cho public view)
+     * Chỉ đếm blog từ category ACTIVE
      */
-    @Query("SELECT COUNT(b) FROM Blog b WHERE b.category = :category AND b.status = 'PUBLISHED'")
+    @Query("SELECT COUNT(b) FROM Blog b WHERE b.category = :category AND b.status = 'PUBLISHED' AND b.category.status = 'ACTIVE'")
     long countPublishedBlogsByCategory(@Param("category") BlogCategory category);
 
     /**
