@@ -308,36 +308,55 @@
 
                 </article>
             </div>
-            <!-- Pagination -->
-            <div class="mt-3">
+            <!-- PAGINATION -->
+            <div class="pagination" th:if="${totalPages >= 1}">
 
-                <!-- Chỉ hiển thị phân trang khi totalPages >= 1 -->
-                <nav th:if="${totalPages >= 1}">
-                    <ul class="pagination justify-content-center">
+                <!-- Prev (ẩn khi ở trang đầu) -->
+                <a th:if="${currentPage > 1}"
+                   th:href="@{'/toollist'
+            + '?page=' + (${currentPage - 1})
+            + '&keyword=' + ${keyword}
+            + '&categoryId=' + ${categoryId}
+            + '&loginMethod=' + ${loginMethod}
+            + '&status=' + ${status}
+            + '&author=' + ${author}
+            + '&priceMin=' + ${priceMin}
+            + '&priceMax=' + ${priceMax}
+            + '&sort=' + ${sort}}">
+                    &laquo;
+                </a>
 
-                        <!-- Nút về trang đầu (<<) — Ẩn nếu đang ở trang 1 -->
-                        <li class="page-item" th:classappend="${currentPage == 1} ? 'disabled'">
-                            <a class="page-link"
-                               th:href="@{|/toollist?page=1&keyword=${keyword}|}">&laquo;</a>
-                        </li>
+                <!-- Page Numbers -->
+                <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+        <a th:href="@{'/toollist'
+                + '?page=' + ${i}
+                + '&keyword=' + ${keyword}
+                + '&categoryId=' + ${categoryId}
+                + '&loginMethod=' + ${loginMethod}
+                + '&status=' + ${status}
+                + '&author=' + ${author}
+                + '&priceMin=' + ${priceMin}
+                + '&priceMax=' + ${priceMax}
+                + '&sort=' + ${sort}}"
+           th:text="${i}"
+           th:classappend="${i == currentPage} ? 'active'">
+        </a>
+    </span>
 
-                        <!-- Vòng lặp số trang -->
-                        <li class="page-item"
-                            th:each="i : ${#numbers.sequence(1, totalPages)}"
-                            th:classappend="${i == currentPage} ? 'active'">
-                            <a class="page-link"
-                               th:href="@{|/toollist?page=${i}&keyword=${keyword}|}"
-                               th:text="${i}">1</a>
-                        </li>
-
-                        <!-- Nút đến trang cuối (>>) — Ẩn nếu đang ở trang cuối -->
-                        <li class="page-item" th:classappend="${currentPage == totalPages} ? 'disabled'">
-                            <a class="page-link"
-                               th:href="@{|/toollist?page=${totalPages}&keyword=${keyword}|}">&raquo;</a>
-                        </li>
-
-                    </ul>
-                </nav>
+                <!-- Next (ẩn khi ở trang cuối) -->
+                <a th:if="${currentPage < totalPages }"
+                   th:href="@{'/toollist'
+            + '?page=' + (${currentPage + 1})
+            + '&keyword=' + ${keyword}
+            + '&categoryId=' + ${categoryId}
+            + '&loginMethod=' + ${loginMethod}
+            + '&status=' + ${status}
+            + '&author=' + ${author}
+            + '&priceMin=' + ${priceMin}
+            + '&priceMax=' + ${priceMax}
+            + '&sort=' + ${sort}}">
+                    &raquo;
+                </a>
             </div>
 
 

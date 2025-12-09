@@ -423,43 +423,6 @@ body {
     border-radius: 12px;
     pointer-events: none;
 }
-/* PAGINATION */
-.tl-pagination {
-    text-align: center;
-    margin-top: 24px;
-}
-
-.tl-pagination ul {
-    list-style: none;
-    padding: 0;
-    display: inline-flex;
-    gap: 6px;
-}
-
-.tl-pagination li {
-    display: inline-block;
-}
-
-.tl-pagination a {
-    display: block;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-size: 14px;
-    text-decoration: none;
-    color: #333;
-}
-
-.tl-pagination li.active a {
-    background-color: #007bff;
-    color: white !important;
-    border-color: #007bff;
-}
-
-.tl-pagination li.disabled a {
-    opacity: 0.4;
-    pointer-events: none;
-}
 /* PAGINATION WRAPPER */
 .pagination {
     display: flex;
