@@ -40,6 +40,14 @@ public interface BlogCategoryService {
     List<BlogCategoryDTO> getAllCategories();
 
     /**
+     * Tìm kiếm và sắp xếp categories
+     * @param keyword - search keyword for name, description, slug
+     * @param status - status filter: "ACTIVE", "INACTIVE", or null for all
+     * @param sortBy - sort field: displayOrder, categoryName, createdAt, status
+     */
+    List<BlogCategoryDTO> searchCategories(String keyword, String status, String sortBy);
+
+    /**
      * Lấy tất cả categories ACTIVE
      */
     List<BlogCategoryDTO> getActiveCategories();

@@ -32,21 +32,16 @@
         <!-- Sidebar -->
         <nav class="col-md-2 d-md-block bg-light sidebar">
             <div class="position-sticky pt-3">
-                <h5 class="px-3 mb-3">Blog Management</h5>
+                <h5 class="px-3 mb-3">License Management</h5>
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/manager/blogs}">
-                            <i class="bi bi-list-ul"></i> Blog List
+                            <i class="bi bi-list-ul"></i> Blog Management
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" th:href="@{/manager/blog-categories}">
                             <i class="bi bi-folder"></i> Category Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/home}">
-                            <i class="bi bi-house"></i> Home
                         </a>
                     </li>
                 </ul>
@@ -72,6 +67,47 @@
             <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form method="get" th:action="@{/manager/blog-categories}" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Search</label>
+                            <input type="text" name="keyword" class="form-control" 
+                                   th:value="${keyword}" placeholder="Search by name, description, slug...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select" th:value="${status}">
+                                <option value="">All</option>
+                                <option value="ACTIVE" th:selected="${status == 'ACTIVE'}">Active</option>
+                                <option value="INACTIVE" th:selected="${status == 'INACTIVE'}">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Sort By</label>
+                            <select name="sortBy" class="form-select">
+                                <option value="displayOrder" th:selected="${sortBy == 'displayOrder'}">Display Order</option>
+                                <option value="categoryName" th:selected="${sortBy == 'categoryName'}">Name</option>
+                                <option value="createdAt" th:selected="${sortBy == 'createdAt'}">Created Date</option>
+                                <option value="status" th:selected="${sortBy == 'status'}">Status</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary flex-grow-1">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                                <a th:href="@{/manager/blog-categories}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- Category Table -->
@@ -112,7 +148,7 @@
                                         <code th:text="${category.slug}"></code>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-info" th:text="${category.blogCount}">0</span>
+                                        <span th:text="${category.blogCount}">0</span>
                                     </td>
                                     <td>
                                         <span th:if="${category.status == 'ACTIVE'}" class="badge bg-success">

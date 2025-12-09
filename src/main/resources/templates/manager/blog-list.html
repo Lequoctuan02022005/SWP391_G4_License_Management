@@ -36,21 +36,16 @@
         <!-- Sidebar -->
         <nav class="col-md-2 d-md-block bg-light sidebar">
             <div class="position-sticky pt-3">
-                <h5 class="px-3 mb-3">Blog Management</h5>
+                <h5 class="px-3 mb-3">License Management</h5>
                 <ul class="nav flex-column">
                     <li class="nav-item">
                         <a class="nav-link active" th:href="@{/manager/blogs}">
-                            <i class="bi bi-list-ul"></i> Blog List
+                            <i class="bi bi-list-ul"></i> Blog Management
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/manager/blog-categories}">
                             <i class="bi bi-folder"></i> Category Management
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/home}">
-                            <i class="bi bi-house"></i> Home
                         </a>
                     </li>
                 </ul>
@@ -108,9 +103,14 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">&nbsp;</label>
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-search"></i> Search
-                            </button>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary flex-grow-1">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                                <a th:href="@{/manager/blogs}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle"></i>
+                                </a>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -161,7 +161,7 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <i class="bi bi-eye"></i> <span th:text="${blog.viewCount}">0</span>
+                                        <span th:text="${blog.viewCount}">0</span>
                                     </td>
                                     <td>
                                         <small th:text="${#temporals.format(blog.createdAt, 'dd/MM/yyyy HH:mm')}"></small>

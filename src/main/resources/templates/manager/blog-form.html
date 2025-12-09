@@ -93,9 +93,9 @@
                   th:object="${blog}"
                   th:action="@{${isEdit != null and isEdit ? '/manager/blogs/edit/' + blog.blogId : '/manager/blogs/create'}}">                
                 <!-- Hidden fields to preserve data in edit mode -->
-                <input type="hidden" th:field="*{blogId}" th:if="${isEdit != null and isEdit}" />
-                <input type="hidden" th:field="*{thumbnailImage}" th:if="${isEdit != null and isEdit}" />
-                <input type="hidden" th:field="*{bannerImage}" th:if="${isEdit != null and isEdit}" />
+                <input type="hidden" name="blogId" th:value="${blog.blogId}" th:if="${isEdit != null and isEdit}" />
+                <input type="hidden" name="thumbnailImage" th:value="${blog.thumbnailImage}" th:if="${isEdit != null and isEdit}" />
+                <input type="hidden" name="bannerImage" th:value="${blog.bannerImage}" th:if="${isEdit != null and isEdit}" />
                 
                 <div class="row">
                     <!-- Left Column -->
@@ -160,16 +160,15 @@
                                 <strong>Publish Settings</strong>
                             </div>
                             <div class="card-body">
+                                <!-- Status (Always Display as Readonly) -->
                                 <div class="mb-3">
                                     <label class="form-label">Status</label>
-                                    <select class="form-select" 
-                                            th:classappend="${#fields.hasErrors('status')} ? 'is-invalid'"
-                                            th:field="*{status}">
-                                        <option value="DRAFT">Draft</option>
-                                        <option value="PUBLISHED">Published</option>
-                                        <option value="ARCHIVED">Archived</option>
-                                    </select>
-                                    <div class="text-danger small mt-1" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
+                                    <input type="text" class="form-control" 
+                                           th:value="${isEdit != null and isEdit ? blog.status : 'DRAFT'}" 
+                                           readonly>
+                                    <input type="hidden" th:field="*{status}">
+                                    <small class="text-muted" th:if="${isEdit != null and isEdit}">Use Publish/Unpublish/Archive buttons in blog list to change status</small>
+                                    <small class="text-muted" th:unless="${isEdit != null and isEdit}">New blogs are created as Draft by default</small>
                                 </div>
 
                                 <div class="mb-3">

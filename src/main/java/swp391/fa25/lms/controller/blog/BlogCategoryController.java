@@ -16,6 +16,8 @@ import swp391.fa25.lms.dto.blog.UpdateBlogCategoryDTO;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.service.BlogCategoryService;
 
+import java.util.List;
+
 /**
  * Blog Category Controller - Manager Only
  * Quản lý danh mục blog: /manager/blog-categories/**
@@ -29,12 +31,19 @@ public class BlogCategoryController {
     private final BlogCategoryService categoryService;
 
     /**
-     * Danh sách category
+     * Danh sách category với search và sort
      * GET /manager/blog-categories
      */
     @PreAuthorize("hasRole('MANAGER')")
     @GetMapping
-    public String listCategories(HttpSession session, Model model, RedirectAttributes ra) {
+    public String listCategories(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "displayOrder") String sortBy,
+            HttpSession session, 
+            Model model, 
+            RedirectAttributes ra) {
+        
         Account manager = (Account) session.getAttribute("loggedInAccount");
         if (manager == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
@@ -42,13 +51,21 @@ public class BlogCategoryController {
         }
 
         try {
+            List<BlogCategoryDTO> categories = categoryService.searchCategories(keyword, status, sortBy);
+            
+            model.addAttribute("categories", categories);
+            model.addAttribute("keyword", keyword);
+            model.addAttribute("status", status);
+            model.addAttribute("sortBy", sortBy);
+            model.addAttribute("manager", manager);
+            
+            return "manager/blog-categories";
+        } catch (Exception e) {
+            log.error("Error loading categories with keyword={}, status={}, sortBy={}", keyword, status, sortBy, e);
+            model.addAttribute("error", "Lỗi tải danh sách danh mục: " + e.getMessage());
             model.addAttribute("categories", categoryService.getAllCategories());
             model.addAttribute("manager", manager);
             return "manager/blog-categories";
-        } catch (Exception e) {
-            log.error("Error loading categories", e);
-            ra.addFlashAttribute("error", "Lỗi tải danh sách danh mục");
-            return "redirect:/home";
         }
     }
 
@@ -66,10 +83,10 @@ public class BlogCategoryController {
         }
 
         CreateBlogCategoryDTO dto = new CreateBlogCategoryDTO();
-        dto.setStatus("ACTIVE");
         dto.setDisplayOrder(0);
 
         model.addAttribute("category", dto);
+        model.addAttribute("isEdit", false);
         model.addAttribute("manager", manager);
 
         return "manager/category-form";

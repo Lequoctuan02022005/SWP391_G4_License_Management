@@ -52,4 +52,8 @@ public class BlogCategoryDTO {
         this(category);
         this.blogCount = blogCount;
     }
+
+    public boolean isActive() {
+        return "ACTIVE".equals(this.status);
+    }
 }
