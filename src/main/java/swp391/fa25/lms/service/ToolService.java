@@ -7,10 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import swp391.fa25.lms.model.*;
-import swp391.fa25.lms.repository.CategoryRepository;
-import swp391.fa25.lms.repository.FeedbackRepository;
-import swp391.fa25.lms.repository.LicenseToolRepository;
-import swp391.fa25.lms.repository.ToolRepository;
+import swp391.fa25.lms.repository.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,8 +25,7 @@ public class ToolService {
     @Autowired private LicenseToolRepository licenseRepo;
     @Autowired private FeedbackRepository feedbackRepo;
     @Autowired private FavoriteService favoriteService;
-
-
+    @Autowired private LicenseAccountRepository licenseAccountRepository;
 
     // ========== Finders ==========
     public boolean existsByToolName(String name) {
@@ -88,6 +84,8 @@ public class ToolService {
         tool.setNote(newData.getNote());
         tool.setUpdatedAt(LocalDateTime.now());
         tool.setStatus(Tool.Status.PENDING);
+        tool.setQuantity(newData.getQuantity());
+        tool.setAvailableQuantity(newData.getQuantity());
 
         // CATEGORY
         if (newData.getCategory() != null) {
@@ -170,8 +168,9 @@ public class ToolService {
                 licenseRepo.delete(old.get(i));
             }
         }
-
         tool.setQuantity(qty);
+        int available = licenseAccountRepository.countByLicense_Tool_ToolIdAndUsedFalse(toolId);
+        tool.setAvailableQuantity(available);
         tool.setUpdatedAt(LocalDateTime.now());
         toolRepo.save(tool);
     }
