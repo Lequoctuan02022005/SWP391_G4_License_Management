@@ -11,8 +11,8 @@ public class SupportService {
 
     private final JavaMailSender mailSender;
 
-    private final String adminMail = "huytqhe186506@fpt.edu.vn";
-    private final String managerMail = "tuna10a6@gmail.com";
+    private final String adminMail = "tuna10a6@gmail.com";
+    private final String managerMail = "huytqhe186506@fpt.edu.vn";
 
     public void sendSupportEmail(String name, String email, String subject, String messageContent) {
 

@@ -26,6 +26,7 @@
     <section class="tl-layout">
 
         <!-- FILTER SIDEBAR -->
+
         <aside class="tl-filter-sidebar">
 
             <h2 class="tl-filter-title">Bộ lọc</h2>
@@ -140,19 +141,48 @@
 
             <!-- GRID TOOL -->
             <div class="tl-grid" th:if="${tools != null and !#lists.isEmpty(tools)}">
-                <article class="tl-card" th:each="tool : ${tools}">
+                <article class="tl-card"
+                         th:each="tool : ${tools}"
+                         th:if="${isSeller or tool.status.name() == 'PUBLISHED'}">
+                    <!-- PAGINATION -->
+                    <div class="tl-pagination" th:if="${totalPages > 1}">
+                        <ul>
+                            <!-- Previous -->
+                            <li th:classappend="${currentPage == 0} ? 'disabled'">
+                                <a th:href="@{|/toollist?page=${currentPage - 1}|}">«</a>
+                            </li>
+
+                            <!-- Page Numbers -->
+                            <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                th:classappend="${i == currentPage} ? 'active'">
+                                <a th:href="@{|/toollist?page=${i}|}" th:text="${i + 1}"></a>
+                            </li>
+
+                            <!-- Next -->
+                            <li th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
+                                <a th:href="@{|/toollist?page=${currentPage + 1}|}">»</a>
+                            </li>
+                        </ul>
+                    </div>
+
 
                     <!-- ẢNH + BADGE -->
                     <div class="tl-card-image-wrapper">
                         <img th:src="@{ ${tool.image}}"
                              alt="Tool image"
                              class="tl-card-image" />
+
+                        <!-- SOLD OUT OVERLAY -->
+                        <div class="tl-sold-out-overlay"
+                             th:if="${tool.availableQuantity != null and tool.availableQuantity == 0}">
+                            HẾT HÀNG
+                        </div>
                         <span class="tl-badge" th:switch="${tool.status}">
                             <span th:case="'PUBLISHED'" class="tl-badge tl-badge-published">[[${tool.status}]]</span>
                             <span th:case="'PENDING'" class="tl-badge tl-badge-pending">[[${tool.status}]]</span>
                             <span th:case="'REJECTED'" class="tl-badge tl-badge-rejected">[[${tool.status}]]</span>
                             <span th:case="'DEACTIVATED'" class="tl-badge tl-badge-deactivated">[[${tool.status}]]</span>
-                            <span th:case="*">UNKNOWN</span>
+
                         </span>
                     </div>
 
@@ -236,13 +266,28 @@
                             Xem chi tiết
                         </a>
 
-                        <!-- Chỉ user đăng nhập mới thấy "Thêm vào giỏ hàng" -->
-                        <a th:if="${tool.seller.accountId != currentUserId}"
+                        <!-- CUSTOMER ADD TO CART -->
+                        <!-- Chỉ hiện nếu:
+                             - Không phải tool của chính seller
+                             - Còn hàng (availableQuantity > 0)
+                        -->
+                        <a th:if="${tool.seller.accountId != currentUserId
+                           and tool.availableQuantity != null
+                           and tool.availableQuantity > 0}"
                            th:href="@{'/toollist/cart/' + ${tool.toolId}}"
                            class="tl-btn tl-btn-outline tl-btn-sm"
                            sec:authorize="hasRole('CUSTOMER')">
                             Thêm vào giỏ hàng
                         </a>
+
+                        <!-- Khi hết hàng thì hiển thị bản disabled -->
+                        <button th:if="${tool.availableQuantity == 0}"
+                                class="tl-btn tl-btn-outline tl-btn-sm"
+                                style="opacity: 0.55; cursor: not-allowed;"
+                                disabled>
+                            Hết hàng
+                        </button>
+
 
 
                         <!-- SELLER ACTIONS -->
