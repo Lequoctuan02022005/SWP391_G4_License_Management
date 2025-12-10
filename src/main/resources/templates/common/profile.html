@@ -8,10 +8,9 @@
     <link th:href="@{/css/profile.css}" rel="stylesheet">
 </head>
 <body>
-<div th:replace="common/header "></div>
+<div th:replace="common/header"></div>
 
 <div class="container py-5">
-
 
     <div class="profile-wrapper mx-auto">
 
@@ -23,9 +22,35 @@
             </div>
         </div>
 
-        <!-- Alert -->
+        <!-- Alerts -->
         <div th:if="${param.updated}" class="alert alert-success mb-4">
             Thông tin đã được cập nhật thành công.
+        </div>
+        <div th:if="${param.avatarUpdated}" class="alert alert-success mb-4">
+            Ảnh đại diện đã được cập nhật thành công.
+        </div>
+
+        <!-- Avatar -->
+        <div class="text-center mb-4">
+            <img th:if="${profile.images != null}"
+                 th:src="@{'/uploads/avatar/' + ${profile.images}}"
+                 class="rounded-circle shadow-sm"
+                 style="width: 120px; height: 120px; object-fit: cover;"
+                 alt="Avatar">
+            <img th:if="${profile.images == null}"
+                 th:src="@{'/uploads/avatar/default.png'}"
+                 class="rounded-circle shadow-sm"
+                 style="width: 120px; height: 120px; object-fit: cover;"
+                 alt="Avatar">
+        </div>
+
+
+
+        <!-- Button upload avatar -->
+        <div class="text-center mb-4">
+            <button class="btn btn-dark-soft" data-bs-toggle="modal" data-bs-target="#updateAvatarModal">
+                Thay đổi ảnh đại diện
+            </button>
         </div>
 
         <!-- Card nội dung -->
@@ -64,14 +89,12 @@
                 <div class="col-md-6">
                     <label class="form-label text-muted">Trạng thái</label>
                     <div>
-                        <span class="badge px-3 py-2 rounded-pill fw-semibold"
-                              th:classappend="${profile.status == 'ACTIVE'}
-                                    ? 'bg-success-subtle text-success'
-                                    : 'bg-danger-subtle text-danger'"
-                                                      th:text="${profile.status}">
+                        <span class="badge px-3 py-2 rounded-pill"
+                              th:classappend="${profile.status == 'ACTIVE'} ? 'bg-success-subtle text-success fw-semibold'
+                                           : 'bg-secondary-subtle text-secondary fw-semibold'"
+                              th:text="${profile.status}">
                             ACTIVE
                         </span>
-
                     </div>
                 </div>
             </div>
@@ -99,18 +122,15 @@
 
             <hr class="my-3">
 
-            <!-- Hàng nút chức năng -->
+            <!-- Buttons -->
             <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
                 <!-- Nút Cập nhật thông tin -->
-                <button class="btn btn-dark-soft px-4"
-                        data-bs-toggle="modal"
-                        data-bs-target="#updateInfoModal">
+                <button class="btn btn-dark-soft px-4" data-bs-toggle="modal" data-bs-target="#updateInfoModal">
                     Cập nhật thông tin
                 </button>
 
-                <!-- Nút Đổi mật khẩu: CHỈ LINK sang trang change password có sẵn -->
-                <a class="btn btn-outline-warning px-4"
-                   th:href="@{/change-password}">
+                <!-- Nút Đổi mật khẩu -->
+                <a class="btn btn-outline-warning px-4" th:href="@{/change-password}">
                     Đổi mật khẩu
                 </a>
             </div>
@@ -121,7 +141,7 @@
 
 <!-- =========================
      MODAL UPDATE INFO
-   ========================= -->
+========================= -->
 <div class="modal fade" id="updateInfoModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <form class="modal-content" method="post" th:action="@{/profile/update}">
@@ -131,25 +151,20 @@
             </div>
 
             <div class="modal-body">
-
                 <div class="mb-3">
                     <label class="form-label">Họ và tên</label>
-                    <input type="text" class="form-control" name="fullName"
-                           th:value="${profile.fullName}" required>
+                    <input type="text" class="form-control" name="fullName" th:value="${profile.fullName}" required>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Số điện thoại</label>
-                    <input type="text" class="form-control" name="phone"
-                           th:value="${profile.phone}">
+                    <input type="text" class="form-control" name="phone" th:value="${profile.phone}">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">Địa chỉ</label>
-                    <input type="text" class="form-control" name="address"
-                           th:value="${profile.address}">
+                    <input type="text" class="form-control" name="address" th:value="${profile.address}">
                 </div>
-
             </div>
 
             <div class="modal-footer">
@@ -159,6 +174,27 @@
     </div>
 </div>
 
+<!-- =========================
+     MODAL UPLOAD AVATAR
+========================= -->
+<div class="modal fade" id="updateAvatarModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" th:action="@{/profile/update-avatar}" enctype="multipart/form-data">
+            <div class="modal-header">
+                <h5 class="modal-title">Cập nhật avatar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Chọn ảnh mới</label>
+                <input type="file" class="form-control" name="avatar" accept="image/*" required>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-dark-soft w-100">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import swp391.fa25.lms.model.Account;
-import swp391.fa25.lms.model.Category;
 import swp391.fa25.lms.model.Tool;
 import swp391.fa25.lms.service.AccountService;
 import swp391.fa25.lms.service.ToolListService;
@@ -33,36 +32,34 @@ public class ToolListController {
             @RequestParam(required = false) String priceMin,
             @RequestParam(required = false) String priceMax,
             @RequestParam(required = false) String sort,
-
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "6") int size,
-
             Model model,
             Authentication auth) {
 
-        // ====== FIX 1: CHUYỂN PARAM "null" THÀNH null THẬT ======
+        // ====== GET ACCOUNT FOR HEADER ======
+        Account account = null;
+        boolean isSeller = false;
+        Long sellerId = null;
 
+        if (auth != null) {
+            account = accountService.findByEmail(auth.getName());
+            if (account != null && account.getRole().getRoleId() == 2) {
+                isSeller = true;
+                sellerId = account.getAccountId();
+            }
+        }
+        model.addAttribute("account", account); // add account for header
+
+        // ====== PARSE PARAMS ======
         Long categoryIdVal = parseLongOrNull(categoryId);
         Long authorVal = parseLongOrNull(author);
         Integer priceMinVal = parseIntOrNull(priceMin);
         Integer priceMaxVal = parseIntOrNull(priceMax);
 
-        // Khi user chọn "Tất cả"
         if (categoryIdVal != null && categoryIdVal == 0) categoryIdVal = null;
         if (authorVal != null && authorVal == 0) authorVal = null;
 
-        boolean isSeller = false;
-        Long sellerId = null;
-
-        if (auth != null) {
-            Account acc = accountService.findByEmail(auth.getName());
-            if (acc != null && acc.getRole().getRoleId() == 2) {
-                isSeller = true;
-                sellerId = acc.getAccountId();
-            }
-        }
-
-        // ====== FIX 2: PARSE ENUM AN TOÀN ======
         Tool.LoginMethod loginMethodEnum = null;
         if (loginMethod != null && !loginMethod.isBlank() && !"null".equals(loginMethod)) {
             try { loginMethodEnum = Tool.LoginMethod.valueOf(loginMethod); } catch (Exception ignored) {}
@@ -73,7 +70,7 @@ public class ToolListController {
             try { statusEnum = Tool.Status.valueOf(status); } catch (Exception ignored) {}
         }
 
-        // ====== LOAD DATA PHÂN TRANG ======
+        // ====== LOAD TOOLS & PAGINATION ======
         List<Tool> tools;
         int totalTools;
 
@@ -99,17 +96,15 @@ public class ToolListController {
 
         int totalPages = (int) Math.ceil((double) totalTools / size);
 
-        // ====== FULL FILTER DATA ======
+        // ====== ADD DATA TO MODEL ======
+        model.addAttribute("tools", tools);
+        model.addAttribute("isSeller", isSeller);
+
         model.addAttribute("categories", toolListService.getAllCategoriesFromDB());
         model.addAttribute("sellers", toolListService.getAllSellersFromDB());
         model.addAttribute("statuses", toolListService.getAllStatuses());
         model.addAttribute("loginMethods", toolListService.getAllLoginMethods());
 
-        // Data
-        model.addAttribute("tools", tools);
-        model.addAttribute("isSeller", isSeller);
-
-        // Giữ lại filter khi reload
         model.addAttribute("keyword", keyword);
         model.addAttribute("categoryId", categoryIdVal);
         model.addAttribute("loginMethod", loginMethod);
@@ -123,10 +118,10 @@ public class ToolListController {
         model.addAttribute("pageSize", size);
         model.addAttribute("totalPages", totalPages);
 
-        return "tool/toollist";
+        return "tool/toollist"; // ensure view folder is "tool"
     }
 
-    // ================== FIX 3: HÀM CHUYỂN "null" THÀNH null ================
+    // ================== HELPER METHODS ==================
     private Long parseLongOrNull(String value) {
         if (value == null || value.equals("null") || value.isBlank()) return null;
         try { return Long.valueOf(value); } catch (Exception e) { return null; }
@@ -137,7 +132,7 @@ public class ToolListController {
         try { return Integer.valueOf(value); } catch (Exception e) { return null; }
     }
 
-    // ===========================================================
+    // ================== TOGGLE STATUS ==================
     @PostMapping("/toggle/{id}")
     public String toggleToolStatus(@PathVariable("id") Long toolId,
                                    Authentication auth) {

@@ -262,7 +262,6 @@ public class AccountService {
         return account;
     }
 
-    // ====================== FORGOT PASSWORD ======================
     // =========================================================
     // ===============  FORGOT PASSWORD (OTP)  =================
     // =========================================================
@@ -446,6 +445,8 @@ public class AccountService {
         accountRepo.save(account);
     }
 
+
+    // ====================== FORGOT PASSWORD ======================
     public void resetPasswordAndSendMail(String email) {
         if (email == null || email.trim().isEmpty()) {
             throw new RuntimeException("Vui lòng nhập email.");
