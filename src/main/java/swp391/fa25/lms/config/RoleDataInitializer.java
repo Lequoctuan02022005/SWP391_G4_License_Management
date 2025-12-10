@@ -52,6 +52,9 @@ public class RoleDataInitializer implements CommandLineRunner {
             seller.setPassword(passwordEncoder.encode("123456"));
             seller.setStatus(Account.AccountStatus.ACTIVE);
             seller.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());
+            seller.setSellerActive(false);
+            seller.setSellerExpiryDate(null);
+            seller.setSellerPackage(null);
             accountRepo.save(seller);
             System.out.println("⭐ Seller created");
         }
@@ -78,6 +81,7 @@ public class RoleDataInitializer implements CommandLineRunner {
             manager.setRole(roleRepo.findByRoleName(Role.RoleName.MANAGER).get());
             accountRepo.save(manager);
             System.out.println("⭐ Manager created");
+        }
             // ===== CREATE MODERATOR USER =====
             if (!accountRepo.existsByEmail("mod@gmail.com")) {
                 Account mod = new Account();
@@ -89,28 +93,25 @@ public class RoleDataInitializer implements CommandLineRunner {
                 accountRepo.save(mod);
                 System.out.println("⭐ Moderator created");
             }
-            if (!accountRepo.existsByEmail("expiredseller@gmail.com")) {
+            if (!accountRepo.existsByEmail("selleractive@gmail.com")) {
+                Account activeSeller = new Account();
+                activeSeller.setEmail("selleractive@gmail.com");
+                activeSeller.setFullName("Seller Active");
+                activeSeller.setPassword(passwordEncoder.encode("123456"));
+                activeSeller.setStatus(Account.AccountStatus.ACTIVE);
+                activeSeller.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());
 
-                Account expired = new Account();
-                expired.setEmail("expiredseller@gmail.com");
-                expired.setFullName("Seller Hết Hạn");
-                expired.setPassword(passwordEncoder.encode("123456"));
-                expired.setStatus(Account.AccountStatus.ACTIVE);
-                expired.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());
+                activeSeller.setSellerActive(true);
+                activeSeller.setSellerExpiryDate(LocalDateTime.now().plusDays(30));
 
-                // 🔥 Đánh dấu seller nhưng đã hết hạn
-                expired.setSellerActive(false);
-                expired.setSellerExpiryDate(LocalDateTime.now().minusDays(10));
-                expired.setSellerPackage(null);
+                accountRepo.save(activeSeller);
 
-                accountRepo.save(expired);
-
-                System.out.println("⭐ Expired seller created");
+                System.out.println("⭐ Seller còn hạn được tạo");
             }
             System.out.println("✅ Initialization completed!");
         }
 
-    }
+
     private void createRoleIfMissing(Integer id, Role.RoleName name, String note) {
         if (!roleRepo.existsById(id)) {
             Role role = new Role();
