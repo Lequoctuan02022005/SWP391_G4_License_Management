@@ -263,6 +263,189 @@ public class AccountService {
     }
 
     // ====================== FORGOT PASSWORD ======================
+    // =========================================================
+    // ===============  FORGOT PASSWORD (OTP)  =================
+    // =========================================================
+
+    /**
+     * Bước 1: Nhập email -> sinh mã -> gửi mã qua email
+     */
+    public void initiateForgotPassword(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("Vui lòng nhập email.");
+        }
+        if (!EMAIL_REGEX.matcher(email).matches()) {
+            throw new RuntimeException("Định dạng email không hợp lệ.");
+        }
+
+        Account account = accountRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Email không tồn tại trong hệ thống."));
+
+        if (!Boolean.TRUE.equals(account.getVerified())) {
+            throw new RuntimeException("Tài khoản chưa xác minh email. Vui lòng đăng ký/ xác minh trước.");
+        }
+        if (account.getStatus() == Account.AccountStatus.DEACTIVATED) {
+            throw new RuntimeException("Tài khoản đang bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
+        }
+
+        // Sinh mã OTP 6 số
+        String code = String.format("%06d", new Random().nextInt(999999));
+        account.setVerificationCode(code);
+        account.setCodeExpiry(LocalDateTime.now().plusMinutes(tokenExpiryMinutes));
+
+        accountRepo.save(account);
+
+        sendPasswordResetCode(account, code);
+    }
+
+    /**
+     * Gửi email chứa mã OTP phục vụ quên mật khẩu
+     */
+    private void sendPasswordResetCode(Account account, String code) {
+        try {
+            String subject = "[LMS] Mã xác minh đặt lại mật khẩu";
+
+            String body =
+                    "<div style='font-family: Arial, sans-serif; font-size:14px; color:#333;'>"
+                            + "<p>Xin chào <b>" + account.getFullName() + "</b>,</p>"
+                            + "<p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản trên hệ thống <b>LMS</b>.</p>"
+                            + "<p>Mã xác minh đặt lại mật khẩu của bạn là:</p>"
+                            + "<div style='background:#f3f3f3;padding:12px 16px;border-radius:6px;"
+                            + "display:inline-block;font-size:20px;font-weight:bold;letter-spacing:4px;'>"
+                            + code + "</div>"
+                            + "<p style='margin-top:12px;'>Mã này có hiệu lực trong <b>"
+                            + tokenExpiryMinutes + " phút</b>.</p>"
+                            + "<p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.</p>"
+                            + "<p>Trân trọng,<br><b>Đội ngũ LMS</b></p>"
+                            + "</div>";
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(account.getEmail());
+            helper.setSubject(subject);
+            helper.setText(body, true);
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            logger.error("Lỗi gửi email mã đặt lại mật khẩu", e);
+            throw new RuntimeException("Không thể gửi email mã đặt lại mật khẩu. Vui lòng thử lại sau.");
+        }
+    }
+
+    /**
+     * Bước 2: Xác minh mã OTP quên mật khẩu
+     */
+    public void verifyPasswordResetCode(String email, String code) {
+        if (code == null || code.trim().isEmpty()) {
+            throw new RuntimeException("Vui lòng nhập mã xác minh.");
+        }
+
+        Account account = accountRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản."));
+
+        if (account.getVerificationCode() == null ||
+                !account.getVerificationCode().equals(code)) {
+            throw new RuntimeException("Mã xác minh không đúng.");
+        }
+
+        if (account.getCodeExpiry() == null || account.getCodeExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Mã xác minh đã hết hạn. Vui lòng yêu cầu lại.");
+        }
+
+        // Ở bước này ta CHƯA xóa code, để sau khi reset xong sẽ xóa.
+        // Chỉ cần verify thành công là được, phần session đã xử lý ở controller.
+    }
+
+    /**
+     * Bước 3: Sau khi OTP đúng -> đặt lại mật khẩu mới
+     */
+    public void resetPasswordAfterVerify(String email,
+                                         String newPassword,
+                                         String confirmPassword) {
+
+        Account account = accountRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản."));
+
+        // Kiểm tra xem còn mã không (tránh tự ý gọi API không qua verify)
+        if (account.getVerificationCode() == null ||
+                account.getCodeExpiry() == null ||
+                account.getCodeExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Phiên đặt lại mật khẩu đã hết hạn. Vui lòng yêu cầu lại.");
+        }
+
+        // Validate mật khẩu
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new RuntimeException("Mật khẩu mới không được để trống.");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            throw new RuntimeException("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+        }
+        if (newPassword.contains(" ")) {
+            throw new RuntimeException("Mật khẩu không được chứa khoảng trắng.");
+        }
+        if (!PASS_REGEX.matcher(newPassword).matches()) {
+            throw new RuntimeException(
+                    "Mật khẩu phải có ít nhất 8 ký tự, bao gồm 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt.");
+        }
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        account.setVerificationCode(null);
+        account.setCodeExpiry(null);
+        account.setUpdatedAt(LocalDateTime.now());
+
+        accountRepo.save(account);
+    }
+
+    // =========================================================
+    // ===============  CHANGE PASSWORD (LOGGED IN) ============
+    // =========================================================
+
+    public void changePassword(String email,
+                               String oldPassword,
+                               String newPassword,
+                               String confirmPassword) {
+
+        if (email == null || email.trim().isEmpty()) {
+            throw new RuntimeException("Không xác định được tài khoản.");
+        }
+
+        Account account = accountRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản."));
+
+        if (oldPassword == null || oldPassword.trim().isEmpty()) {
+            throw new RuntimeException("Vui lòng nhập mật khẩu hiện tại.");
+        }
+        if (!passwordEncoder.matches(oldPassword, account.getPassword())) {
+            throw new RuntimeException("Mật khẩu hiện tại không đúng.");
+        }
+
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new RuntimeException("Mật khẩu mới không được để trống.");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            throw new RuntimeException("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+        }
+        if (newPassword.contains(" ")) {
+            throw new RuntimeException("Mật khẩu mới không được chứa khoảng trắng.");
+        }
+        if (!PASS_REGEX.matcher(newPassword).matches()) {
+            throw new RuntimeException(
+                    "Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt.");
+        }
+
+        // Không cho dùng lại mật khẩu cũ
+        if (passwordEncoder.matches(newPassword, account.getPassword())) {
+            throw new RuntimeException("Mật khẩu mới không được trùng với mật khẩu hiện tại.");
+        }
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        account.setUpdatedAt(LocalDateTime.now());
+
+        accountRepo.save(account);
+    }
+
     public void resetPasswordAndSendMail(String email) {
         if (email == null || email.trim().isEmpty()) {
             throw new RuntimeException("Vui lòng nhập email.");

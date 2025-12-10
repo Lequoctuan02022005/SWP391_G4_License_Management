@@ -112,7 +112,7 @@ public class RoleDataInitializer implements CommandLineRunner {
             System.out.println("✅ Initialization completed!");
         }
 
-    }
+
     private void createRoleIfMissing(Integer id, Role.RoleName name, String note) {
         if (!roleRepo.existsById(id)) {
             Role role = new Role();

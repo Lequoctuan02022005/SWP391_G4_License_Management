@@ -1,0 +1,56 @@
+body {
+    background: #f3f4f8;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.profile-wrapper {
+    max-width: 900px;
+}
+
+.profile-card {
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid rgba(15,23,42,0.05);
+}
+
+.form-label {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1f2933;
+}
+
+.info-readonly {
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+/* Soft button style */
+.btn-dark-soft {
+    background: #111827;
+    color: #f9fafb;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-dark-soft:hover {
+    background: #020617;
+    color: #ffffff;
+}
+
+.badge {
+    font-size: 0.8rem;
+}
+
+/* Modal style nhẹ nhàng */
+.modal-content {
+    border-radius: 16px;
+    border: 1px solid rgba(15,23,42,0.06);
+}
