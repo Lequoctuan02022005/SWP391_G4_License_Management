@@ -85,7 +85,19 @@
                             <li><a class="dropdown-item" th:href="@{/change-password}">Đổi mật khẩu</a></li>
                             <li><a class="dropdown-item" th:href="@{/orders}">Đơn hàng đã mua</a></li>
 <!--                            <li><a class="dropdown-item" th:href="@{/payment-history}">Lịch sử thanh toán</a></li>-->
-                            <li><a class="dropdown-item" th:href="@{/register-seller}">Đăng ký làm seller</a></li>
+                            <li th:if="${session.loggedInAccount != null}"
+                                 th:switch="${session.loggedInAccount.sellerActive}">
+                            <!-- Đã là seller -->
+                            <a class="dropdown-item" th:if="${session.loggedInAccount.sellerActive}"
+                               th:href="@{/seller/renew}">
+                                Gia hạn Seller
+                            </a>
+                            <!-- Customer hoặc Seller hết hạn -->
+                            <a class="dropdown-item" th:if="${!session.loggedInAccount.sellerActive}"
+                               th:href="@{/seller/renew}">
+                                Đăng ký làm Seller
+                            </a>
+                        </li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" th:href="@{/logout}">Thoát</a></li>
                         </ul>

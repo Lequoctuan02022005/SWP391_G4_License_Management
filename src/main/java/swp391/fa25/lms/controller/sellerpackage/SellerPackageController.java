@@ -29,18 +29,20 @@ public class SellerPackageController {
         Account seller = (Account) session.getAttribute("loggedInAccount");
         if (seller == null) return "redirect:/login";
 
-        // Lấy gói hiện tại (nếu có)
-        SellerSubscription activeSub = subscriptionRepo
-                .findByAccountOrderByStartDateDesc(seller)
-                .stream()
-                .filter(SellerSubscription::isActive)
-                .findFirst()
-                .orElse(null);
+        List<SellerSubscription> subs = subscriptionRepo.findByAccountOrderByStartDateDesc(seller);
+        boolean isNewSeller = subs.isEmpty();
+        boolean expired = false;
+        LocalDateTime expiryDate = null;
 
-        LocalDateTime expiryDate = activeSub != null ? activeSub.getEndDate() : null;
+        if (!isNewSeller) {
+            SellerSubscription latest = subs.get(0);
+            expiryDate = latest.getEndDate();
+            expired = expiryDate.isBefore(LocalDateTime.now());
+        }
+        model.addAttribute("isNewSeller", isNewSeller);
+        model.addAttribute("expired", expired);
         model.addAttribute("currentExpiry", expiryDate);
 
-        // Load danh sách gói seller còn hoạt động
         List<SellerPackage> packages = packageRepo.findByStatus(SellerPackage.Status.ACTIVE);
         model.addAttribute("packages", packages);
 
@@ -71,6 +73,10 @@ public class SellerPackageController {
         newSub.setActive(true);
 
         subscriptionRepo.save(newSub);
+
+        seller.setSellerActive(true);
+        seller.setSellerExpiryDate(newSub.getEndDate());
+        session.setAttribute("loggedInAccount", seller);
 
         return "redirect:/tools/seller";
     }

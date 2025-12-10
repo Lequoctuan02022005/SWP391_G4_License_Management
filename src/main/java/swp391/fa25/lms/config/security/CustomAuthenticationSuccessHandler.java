@@ -54,6 +54,7 @@ public class CustomAuthenticationSuccessHandler
         request.getSession().setAttribute("loggedInAccount", account);
 
         if (role != Role.RoleName.SELLER) {
+            request.getSession().setAttribute("loggedInAccount", account);
             redirectByRole(role, response);
             return;
         }
@@ -66,10 +67,19 @@ public class CustomAuthenticationSuccessHandler
                 .orElse(null);
 
         if (activeSub == null) {
+
+            account.setSellerActive(false);
+            account.setSellerExpiryDate(null);
+            accountRepository.save(account);
+            request.getSession().setAttribute("loggedInAccount", account);
             response.sendRedirect("/seller/renew");
             return;
         }
-
+        // ========== SELLER CÒN HẠN ==========
+        account.setSellerActive(true);
+        account.setSellerExpiryDate(activeSub.getEndDate());
+        accountRepository.save(account);
+        request.getSession().setAttribute("loggedInAccount", account);
         response.sendRedirect("/home");
     }
 

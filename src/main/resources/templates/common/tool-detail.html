@@ -1,230 +1,285 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title th:text="${tool.toolName}">Chi tiết sản phẩm</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link th:href="@{/css/home.css}" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link th:href="@{/css/home.css}" rel="stylesheet" />
 
     <!-- CSRF Meta Tags (chỉ có khi đã login) -->
-    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}" th:if="${_csrf != null}"/>
-</head>
-<body>
+    <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}" />
+    <meta
+      name="_csrf_header"
+      th:content="${_csrf.headerName}"
+      th:if="${_csrf != null}"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <div th:replace="~{common/header :: header}"></div>
 
-<!-- Header -->
-<div th:replace="~{common/header :: header}"></div>
-
-<main class="container my-5">
-    <div class="row g-5 align-items-start">
-
+    <main class="container my-5">
+      <div class="row g-5 align-items-start">
         <!-- Ảnh sản phẩm -->
         <div class="col-lg-5 text-center">
-            <img th:src="@{${tool.image != null ? '/' + tool.image : '/img/placeholder-tool.jpg'}}"
-                 class="img-fluid rounded shadow"
-                 alt="Ảnh tool"
-                 style="max-height: 520px; object-fit: cover;">
-            <div th:if="${tool.availableQuantity == 0}" class="mt-3">
-                <span class="badge bg-danger fs-4 px-4 py-2">HẾT HÀNG</span>
-            </div>
+          <img
+            th:src="@{${tool.image != null ? '/' + tool.image : '/img/placeholder-tool.jpg'}}"
+            class="img-fluid rounded shadow"
+            alt="Ảnh tool"
+            style="max-height: 520px; object-fit: cover"
+          />
+          <div th:if="${tool.availableQuantity == 0}" class="mt-3">
+            <span class="badge bg-danger fs-4 px-4 py-2">HẾT HÀNG</span>
+          </div>
         </div>
 
         <!-- Thông tin + mua hàng -->
         <div class="col-lg-7">
-            <h1 class="fw-bold display-5 mb-3" th:text="${tool.toolName}">Tên công cụ</h1>
+          <h1 class="fw-bold display-5 mb-3" th:text="${tool.toolName}">
+            Tên công cụ
+          </h1>
 
-            <p class="text-muted mb-2">
-                Người bán: <strong th:text="${tool.seller.fullName}">Seller</strong>
-            </p>
-            <p class="text-muted mb-4">
-                Còn lại: <strong th:text="${tool.availableQuantity}">0</strong> sản phẩm
-            </p>
+          <p class="text-muted mb-2">
+            Người bán: <strong th:text="${tool.seller.fullName}">Seller</strong>
+          </p>
+          <p class="text-muted mb-4">
+            Còn lại: <strong th:text="${tool.availableQuantity}">0</strong> sản
+            phẩm
+          </p>
 
-            <!-- Giá -->
-            <div class="bg-light p-4 rounded mb-4">
-                <h2 class="text-danger fw-bold">
-                    <span id="price-display">
-                        <span th:if="${#lists.isEmpty(tool.licenses)}">Miễn phí</span>
-                        <span th:unless="${#lists.isEmpty(tool.licenses)}"
-                              th:text="${#numbers.formatInteger(tool.licenses[0].price, 0, 'COMMA')} + ' VND'"></span>
-                    </span>
-                </h2>
+          <!-- Giá -->
+          <div class="bg-light p-4 rounded mb-4">
+            <h2 class="text-danger fw-bold">
+              <span id="price-display">
+                <span th:if="${#lists.isEmpty(tool.licenses)}">Miễn phí</span>
+                <span
+                  th:unless="${#lists.isEmpty(tool.licenses)}"
+                  th:text="${#numbers.formatInteger(tool.licenses[0].price, 0, 'COMMA')} + ' VND'"
+                ></span>
+              </span>
+            </h2>
+          </div>
+
+          <!-- Chọn License -->
+          <div class="mb-5">
+            <h5 class="fw-bold mb-3">Chọn gói License:</h5>
+            <div
+              th:if="${#lists.isEmpty(tool.licenses)}"
+              class="text-muted mb-3"
+            >
+              Không có license nào.
             </div>
-
-            <!-- Chọn License -->
-            <div class="mb-5">
-                <h5 class="fw-bold mb-3">Chọn gói License:</h5>
-                <div th:if="${#lists.isEmpty(tool.licenses)}" class="text-muted mb-3">
-                    Không có license nào.
-                </div>
-                <div class="d-flex flex-wrap gap-3">
-                    <div th:each="lic : ${tool.licenses}"
-                         class="license-item border rounded px-4 py-3 text-center cursor-pointer bg-white shadow-sm"
-                         th:classappend="${licStat.index == 0 ? 'active' : ''}"
-                         th:data-price="${lic.price}"
-                         th:data-license-id="${lic.licenseId}"
-                         th:text="${lic.name}"
-                         onclick="selectLicense(this)">
-                    </div>
-                </div>
+            <div class="d-flex flex-wrap gap-3">
+              <div
+                th:each="lic : ${tool.licenses}"
+                class="license-item border rounded px-4 py-3 text-center cursor-pointer bg-white shadow-sm"
+                th:classappend="${licStat.index == 0 ? 'active' : ''}"
+                th:data-price="${lic.price}"
+                th:data-license-id="${lic.licenseId}"
+                th:text="${lic.name}"
+                onclick="selectLicense(this)"
+              ></div>
             </div>
+          </div>
 
-            <!-- Nút hành động -->
-            <div class="d-flex gap-3">
-                <button type="button"
-                        class="btn btn-primary btn-lg px-5 fw-bold"
-                        th:disabled="${tool.availableQuantity == 0}"
-                        onclick="addToCart()">
-                    <i class="fas fa-cart-plus me-2"></i>
-                    <span th:text="${tool.availableQuantity == 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}"></span>
-                </button>
+          <!-- Nút hành động -->
+          <div class="d-flex gap-3">
+            <button
+              type="button"
+              class="btn btn-primary btn-lg px-5 fw-bold"
+              th:disabled="${tool.availableQuantity == 0}"
+              onclick="addToCart()"
+            >
+              <i class="fas fa-cart-plus me-2"></i>
+              <span
+                th:text="${tool.availableQuantity == 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}"
+              ></span>
+            </button>
 
-                <a th:href="@{/cart/view}" class="btn btn-outline-dark btn-lg px-5">
-                    <i class="fas fa-shopping-cart"></i> Xem giỏ hàng
-                </a>
-            </div>
+            <a th:href="@{/cart/view}" class="btn btn-outline-dark btn-lg px-5">
+              <i class="fas fa-shopping-cart"></i> Xem giỏ hàng
+            </a>
+          </div>
         </div>
-    </div>
-</main>
+      </div>
+    </main>
 
-<!-- Footer -->
-<div th:replace="~{common/footer :: footer}"></div>
+    <!-- Footer -->
+    <div th:replace="~{common/footer :: footer}"></div>
 
-<!-- Modal yêu cầu login -->
-<div class="modal fade" id="loginModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <!-- Modal yêu cầu login -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title">Yêu cầu đăng nhập</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">Bạn cần đăng nhập để thêm vào giỏ hàng.</div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <a href="/login" class="btn btn-primary">Đăng nhập</a>
-            </div>
+          <div class="modal-header border-0">
+            <h5 class="modal-title">Yêu cầu đăng nhập</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">Bạn cần đăng nhập để thêm vào giỏ hàng.</div>
+          <div class="modal-footer border-0">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Hủy
+            </button>
+            <a href="/login" class="btn btn-primary">Đăng nhập</a>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- Form ẩn fallback -->
-<form id="addToCartForm" th:action="@{/cart/add}" method="post" class="d-none">
-    <input type="hidden" name="toolId" th:value="${tool.toolId}">
-    <input type="hidden" id="licenseIdInput" name="licenseId">
-    <input type="hidden" name="quantity" value="1">
-    <input type="hidden" name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}">
-</form>
+    <!-- Form ẩn fallback -->
+    <form
+      id="addToCartForm"
+      th:action="@{/cart/add}"
+      method="post"
+      class="d-none"
+    >
+      <input type="hidden" name="toolId" th:value="${tool.toolId}" />
+      <input type="hidden" id="licenseIdInput" name="licenseId" />
+      <input type="hidden" name="quantity" value="1" />
+      <input
+        type="hidden"
+        name="${_csrf.parameterName}"
+        th:value="${_csrf.token}"
+        th:if="${_csrf != null}"
+      />
+    </form>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    const isLoggedIn = /*[[${account != null}]]*/ false;
-    const toolId = /*[[${tool.toolId}]]*/ 0;
-    const available = /*[[${tool.availableQuantity}]]*/ 0;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+      const isLoggedIn = /*[[${account != null}]]*/ false;
+      const toolId = /*[[${tool.toolId}]]*/ 0;
+      const available = /*[[${tool.availableQuantity}]]*/ 0;
 
-    function formatPrice(p) {
-        return p ? new Intl.NumberFormat('vi-VN').format(p) + ' VND' : 'Miễn phí';
-    }
+      function formatPrice(p) {
+        return p
+          ? new Intl.NumberFormat("vi-VN").format(p) + " VND"
+          : "Miễn phí";
+      }
 
-    function selectLicense(el) {
-        document.querySelectorAll('.license-item').forEach(e => e.classList.remove('active'));
-        el.classList.add('active');
-        document.getElementById('price-display').innerHTML = formatPrice(el.dataset.price);
-        document.getElementById('licenseIdInput').value = el.dataset.licenseId;
-    }
+      function selectLicense(el) {
+        document
+          .querySelectorAll(".license-item")
+          .forEach((e) => e.classList.remove("active"));
+        el.classList.add("active");
+        document.getElementById("price-display").innerHTML = formatPrice(
+          el.dataset.price
+        );
+        document.getElementById("licenseIdInput").value = el.dataset.licenseId;
+      }
 
-    // Hàm thêm vào giỏ hàng - ĐÃ FIX 100% LỖI CSRF
-    async function addToCart() {
+      // Hàm thêm vào giỏ hàng - ĐÃ FIX 100% LỖI CSRF
+      async function addToCart() {
         if (available <= 0) {
-            return alert('Sản phẩm đã hết hàng!');
+          return alert("Sản phẩm đã hết hàng!");
         }
 
         if (!isLoggedIn) {
-            new bootstrap.Modal(document.getElementById('loginModal')).show();
-            return;
+          new bootstrap.Modal(document.getElementById("loginModal")).show();
+          return;
         }
 
-        const activeLicense = document.querySelector('.license-item.active');
+        const activeLicense = document.querySelector(".license-item.active");
         if (!activeLicense) {
-            return alert('Vui lòng chọn một gói license!');
+          return alert("Vui lòng chọn một gói license!");
         }
 
         // Lấy CSRF an toàn - không crash khi chưa login
         const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
-        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+        const csrfHeaderMeta = document.querySelector(
+          'meta[name="_csrf_header"]'
+        );
 
         const headers = {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Requested-With": "XMLHttpRequest",
         };
 
         // Chỉ thêm header CSRF nếu tồn tại (người dùng đã login)
         if (csrfTokenMeta && csrfHeaderMeta) {
-            headers[csrfHeaderMeta.content] = csrfTokenMeta.content;
+          headers[csrfHeaderMeta.content] = csrfTokenMeta.content;
         }
 
         try {
-            const response = await fetch('/cart/add', {
-                method: 'POST',
-                headers: headers,
-                body: new URLSearchParams({
-                    toolId: toolId,
-                    licenseId: activeLicense.dataset.licenseId,
-                    quantity: 1
-                })
-            });
+          const response = await fetch(window.location.origin + "/cart/add", {
+            method: "POST",
+            headers: headers,
+            body: new URLSearchParams({
+              toolId: toolId,
+              licenseId: activeLicense.dataset.licenseId,
+              quantity: 1,
+            }),
+          });
 
-            const result = await response.json();
+          const result = await response.json();
 
-            if (response.ok && result.success) {
-                alert('Thêm vào giỏ hàng thành công!');
-                // Cập nhật badge giỏ hàng nếu có hàm
-                if (typeof window.updateCartBadge === 'function') {
-                    window.updateCartBadge();
-                }
-            } else {
-                alert(result.message || 'Không thể thêm vào giỏ hàng');
+          if (response.ok && result.success) {
+            alert("Thêm vào giỏ hàng thành công!");
+            // Cập nhật badge giỏ hàng nếu có hàm
+            if (typeof window.updateCartBadge === "function") {
+              window.updateCartBadge();
             }
+          } else {
+            alert(result.message || "Không thể thêm vào giỏ hàng");
+          }
         } catch (error) {
-            console.error('Lỗi mạng:', error);
-            // Fallback: submit form ẩn
-            document.getElementById('licenseIdInput').value = activeLicense.dataset.licenseId;
-            document.getElementById('addToCartForm').submit();
+          console.error("Lỗi mạng:", error);
+          // Fallback: submit form ẩn
+          document.getElementById("licenseIdInput").value =
+            activeLicense.dataset.licenseId;
+          document.getElementById("addToCartForm").submit();
         }
-    }
+      }
 
-    // Tự động chọn license đầu tiên khi trang load
-    document.addEventListener('DOMContentLoaded', () => {
-        const firstLicense = document.querySelector('.license-item');
+      // Tự động chọn license đầu tiên khi trang load
+      document.addEventListener("DOMContentLoaded", () => {
+        const firstLicense = document.querySelector(".license-item");
         if (firstLicense) {
-            selectLicense(firstLicense);
+          selectLicense(firstLicense);
         }
-    });
-    /*]]>*/
-</script>
+      });
+      /*]]>*/
+    </script>
 
-<style>
-    .license-item {
+    <style>
+      .license-item {
         transition: all 0.3s ease;
         min-width: 120px;
-    }
-    .license-item.active {
+      }
+      .license-item.active {
         background: #0d6efd !important;
         color: white !important;
         font-weight: bold;
         box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
-    }
-    .license-item:hover:not(.active) {
+      }
+      .license-item:hover:not(.active) {
         transform: translateY(-4px);
-        box-shadow: 0 8px 20, 0 8px 20px rgba(0,0,0,0.15);
-    }
-    .cursor-pointer {
+        box-shadow: 0 8px 20, 0 8px 20px rgba(0, 0, 0, 0.15);
+      }
+      .cursor-pointer {
         cursor: pointer;
-    }
-</style>
-</body>
+      }
+    </style>
+  </body>
 </html>
