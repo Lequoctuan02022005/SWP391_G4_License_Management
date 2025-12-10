@@ -15,10 +15,14 @@ import java.util.Optional;
 @Transactional
 public class CartService {
 
-    @Autowired private CartRepository cartRepository;
-    @Autowired private CartItemRepository cartItemRepository;
-    @Autowired private ToolRepository toolRepository;
-    @Autowired private LicenseToolRepository licenseRepository;
+    @Autowired
+    private CartRepository cartRepository;
+    @Autowired
+    private CartItemRepository cartItemRepository;
+    @Autowired
+    private ToolRepository toolRepository;
+    @Autowired
+    private LicenseToolRepository licenseRepository;
 
     public Cart getOrCreateCart(Account account) {
         return cartRepository.findByAccount(account)
@@ -32,7 +36,8 @@ public class CartService {
     }
 
     public int addToCart(Account account, Long toolId, Long licenseId, int quantity) {
-        if (quantity <= 0) throw new IllegalArgumentException("Số lượng phải lớn hơn 0");
+        if (quantity <= 0)
+            throw new IllegalArgumentException("Số lượng phải lớn hơn 0");
 
         Cart cart = getOrCreateCart(account);
 
@@ -46,15 +51,12 @@ public class CartService {
             throw new IllegalArgumentException("Sản phẩm đã hết hàng");
         }
 
-        // Tìm item đã tồn tại chưa
         Optional<CartItem> existingOpt = cartItemRepository.findByCartAndToolAndLicense(cart, tool, license);
 
         if (existingOpt.isPresent()) {
-            // Cập nhật số lượng
             CartItem item = existingOpt.get();
             item.setQuantity(item.getQuantity() + quantity);
-            // @PreUpdate sẽ tự tính lại totalPrice nhờ phương thức recalcTotal()
-            cartItemRepository.saveAndFlush(item); // QUAN TRỌNG: PHẢI SAVE!
+            cartItemRepository.saveAndFlush(item);
         } else {
             // Tạo mới item
             CartItem newItem = new CartItem();
@@ -63,33 +65,33 @@ public class CartService {
             newItem.setLicense(license);
             newItem.setQuantity(quantity);
             newItem.setUnitPrice(license.getPrice() != null ? license.getPrice() : 0.0);
-            // totalPrice sẽ được tính tự động trong @PrePersist
-            cart.getItems().add(newItem); //  thêm vào collection
-            cartItemRepository.saveAndFlush(newItem); // QUAN TRỌNG: PHẢI SAVE!
+            cart.getItems().add(newItem);
+            cartItemRepository.saveAndFlush(newItem);
         }
 
         return getCartItemCount(account);
     }
 
     public void updateQuantity(Account account, Long cartItemId, int quantity) {
-        if (quantity <= 0) throw new IllegalArgumentException("Số lượng phải lớn hơn 0");
+        if (quantity <= 0)
+            throw new IllegalArgumentException("Số lượng phải lớn hơn 0");
 
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm trong giỏ hàng"));
 
-        if (!item.getCart().getAccount().equals(account)) {
+        if (!item.getCart().getAccount().getAccountId().equals(account.getAccountId())) {
             throw new SecurityException("Không được sửa giỏ hàng của người khác");
         }
 
         item.setQuantity(quantity);
-        cartItemRepository.save(item); // Sẽ tự gọi @PreUpdate → tính lại totalPrice
+        cartItemRepository.save(item);
     }
 
     public void removeItem(Account account, Long cartItemId) {
         CartItem item = cartItemRepository.findById(cartItemId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm"));
 
-        if (!item.getCart().getAccount().equals(account)) {
+        if (!item.getCart().getAccount().getAccountId().equals(account.getAccountId())) {
             throw new SecurityException("Không được xóa sản phẩm của người khác");
         }
 
@@ -100,5 +102,31 @@ public class CartService {
         return cartRepository.findByAccount(account)
                 .map(cart -> cartItemRepository.sumQuantityByCart(cart))
                 .orElse(0);
+    }
+
+    public void clearCart(Account account) {
+        Cart cart = cartRepository.findByAccountWithItems(account).orElse(null);
+        if (cart != null) {
+            var items = cart.getItems();
+            if (items != null && !items.isEmpty()) {
+                cartItemRepository.deleteAll(items);
+                cartItemRepository.flush();
+
+                items.clear();
+            } else {
+                System.out.println("Cart is already empty");
+            }
+        }
+    }
+
+    public Cart getCartWithItems(Account account) {
+        return cartRepository.findByAccountWithItems(account)
+                .orElseGet(() -> {
+                    Cart cart = new Cart();
+                    cart.setAccount(account);
+                    cart.setStatus(Cart.CartStatus.ACTIVE);
+                    cart.setItems(new ArrayList<>());
+                    return cartRepository.save(cart);
+                });
     }
 }

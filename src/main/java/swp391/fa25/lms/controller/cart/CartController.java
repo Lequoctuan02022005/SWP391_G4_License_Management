@@ -17,7 +17,8 @@ import java.util.Map;
 @RequestMapping("/cart")
 public class CartController {
 
-    @Autowired private CartService cartService;
+    @Autowired
+    private CartService cartService;
 
     @PostMapping("/add")
     @ResponseBody
@@ -38,8 +39,7 @@ public class CartController {
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Đã thêm vào giỏ hàng!",
-                    "count", count
-            ));
+                    "count", count));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", e.getMessage()));
@@ -54,7 +54,10 @@ public class CartController {
             HttpServletRequest request) {
 
         Account account = (Account) request.getSession().getAttribute("loggedInAccount");
-        if (account == null) return ResponseEntity.status(401).build();
+        if (account == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("success", false, "message", "Vui lòng đăng nhập"));
+        }
 
         try {
             cartService.updateQuantity(account, cartItemId, quantity);
@@ -73,17 +76,26 @@ public class CartController {
             HttpServletRequest request) {
 
         Account account = (Account) request.getSession().getAttribute("loggedInAccount");
-        if (account == null) return ResponseEntity.status(401).build();
+        if (account == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("success", false, "message", "Vui lòng đăng nhập"));
+        }
 
-        cartService.removeItem(account, cartItemId);
-        int count = cartService.getCartItemCount(account);
-        return ResponseEntity.ok(Map.of("success", true, "count", count));
+        try {
+            cartService.removeItem(account, cartItemId);
+            int count = cartService.getCartItemCount(account);
+            return ResponseEntity.ok(Map.of("success", true, "count", count));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 
     @GetMapping("/view")
     public String viewCart(Model model, HttpServletRequest request) {
         Account account = (Account) request.getSession().getAttribute("loggedInAccount");
-        if (account == null) return "redirect:/login";
+        if (account == null)
+            return "redirect:/login";
 
         var cart = cartService.getOrCreateCart(account);
         model.addAttribute("cart", cart);
@@ -96,7 +108,8 @@ public class CartController {
     @ResponseBody
     public ResponseEntity<Integer> getCartCount(HttpServletRequest request) {
         Account account = (Account) request.getSession().getAttribute("loggedInAccount");
-        if (account == null) return ResponseEntity.ok(0);
+        if (account == null)
+            return ResponseEntity.ok(0);
         return ResponseEntity.ok(cartService.getCartItemCount(account));
     }
 }
