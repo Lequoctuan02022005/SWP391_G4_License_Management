@@ -1,0 +1,110 @@
+/* ===== General Body ===== */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* ===== Profile Wrapper ===== */
+.profile-wrapper {
+    max-width: 900px;
+    margin: auto;
+}
+
+/* ===== Profile Card ===== */
+.profile-card {
+    background-color: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Info Labels ===== */
+.profile-card .form-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* ===== Info Values ===== */
+.profile-card .info-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #212529;
+    padding: 8px 10px;
+    background-color: #f1f3f5;
+    border-radius: 10px;
+}
+
+/* ===== Readonly Inputs ===== */
+.profile-card .info-readonly {
+    background-color: #e9ecef;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 10px;
+    color: #495057;
+}
+
+/* ===== Badges ===== */
+.badge {
+    font-size: 0.85rem;
+    padding: 0.45em 0.8em;
+}
+
+/* ===== Avatar ===== */
+.profile-card img.rounded-circle {
+    border: 4px solid #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+.profile-card img.rounded-circle:hover {
+    transform: scale(1.05);
+}
+
+/* ===== Buttons ===== */
+.btn-dark-soft {
+    background-color: #212529;
+    color: #fff;
+    border-radius: 12px;
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-dark-soft:hover {
+    background-color: #343a40;
+    color: #fff;
+}
+
+.btn-outline-warning {
+    border-radius: 12px;
+    padding: 8px 20px;
+}
+
+/* ===== Modal Styling ===== */
+.modal-content {
+    border-radius: 20px;
+    padding: 20px;
+}
+
+/* ===== Form Inputs in Modal ===== */
+.modal-content .form-control {
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+/* ===== Alert Messages ===== */
+.alert {
+    border-radius: 12px;
+    font-size: 0.95rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+    .profile-card {
+        padding: 20px;
+    }
+    .profile-wrapper {
+        padding: 0 15px;
+    }
+}
