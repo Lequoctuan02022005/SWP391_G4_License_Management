@@ -8,8 +8,10 @@
     <link th:href="@{/css/profile.css}" rel="stylesheet">
 </head>
 <body>
+<div th:replace="common/header "></div>
 
 <div class="container py-5">
+
 
     <div class="profile-wrapper mx-auto">
 
@@ -62,12 +64,14 @@
                 <div class="col-md-6">
                     <label class="form-label text-muted">Trạng thái</label>
                     <div>
-                        <span class="badge px-3 py-2 rounded-pill"
-                              th:classappend="${profile.status == 'ACTIVE'} ? 'bg-success-subtle text-success fw-semibold'
-                                           : 'bg-secondary-subtle text-secondary fw-semibold'"
-                              th:text="${profile.status}">
+                        <span class="badge px-3 py-2 rounded-pill fw-semibold"
+                              th:classappend="${profile.status == 'ACTIVE'}
+                                    ? 'bg-success-subtle text-success'
+                                    : 'bg-danger-subtle text-danger'"
+                                                      th:text="${profile.status}">
                             ACTIVE
                         </span>
+
                     </div>
                 </div>
             </div>
