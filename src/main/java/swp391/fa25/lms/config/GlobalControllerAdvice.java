@@ -15,7 +15,7 @@ public class GlobalControllerAdvice {
     private final ProfileService profileService;
 
     @ModelAttribute("account")
-    public Account addAccountToModel(Authentication authentication) {
+    public Account   addAccountToModel(Authentication authentication) {
         if (authentication != null) {
             return profileService.getByEmail(authentication.getName());
         }
