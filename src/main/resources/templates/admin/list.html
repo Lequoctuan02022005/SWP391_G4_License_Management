@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>License Accounts</title>
+    <style>
+        body{font-family:Arial;margin:24px}
+        .row{display:flex;gap:12px;flex-wrap:wrap}
+        input,select,button{padding:8px}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{border:1px solid #ddd;padding:8px;vertical-align:top}
+        th{background:#f6f6f6}
+        .msg{padding:10px;margin:10px 0;border-radius:6px}
+        .success{background:#e8fff0;border:1px solid #9be8b2}
+        .error{background:#ffecec;border:1px solid #ffb3b3}
+        a.btn{padding:6px 10px;border:1px solid #ccc;border-radius:6px;text-decoration:none}
+    </style>
+</head>
+<body>
+
+<h2>License Account List</h2>
+
+<div th:if="${success}" class="msg success" th:text="${success}"></div>
+
+<form method="get" th:action="@{/system-admin/license-accounts}">
+    <div class="row">
+        <input type="text" name="q" placeholder="Search username/token/license/tool" th:value="${q}"/>
+        <input type="number" name="toolId" placeholder="toolId (optional)" th:value="${toolId}"/>
+
+        <select name="status">
+            <option value="">-- Status --</option>
+            <option th:selected="${status?.name()=='ACTIVE'}" value="ACTIVE">ACTIVE</option>
+            <option th:selected="${status?.name()=='EXPIRED'}" value="EXPIRED">EXPIRED</option>
+            <option th:selected="${status?.name()=='REVOKED'}" value="REVOKED">REVOKED</option>
+        </select>
+
+        <select name="used">
+            <option value="">-- Used --</option>
+            <option th:selected="${used == true}" value="true">true</option>
+            <option th:selected="${used == false}" value="false">false</option>
+        </select>
+
+        <button type="submit">Filter</button>
+        <a class="btn" th:href="@{/system-admin/license-accounts/create}">+ Create</a>
+    </div>
+</form>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Tool / License</th>
+        <th>Login method</th>
+        <th>Credential</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Status</th>
+        <th>Used</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="x : ${items}">
+        <td th:text="${x.licenseAccountId}"></td>
+
+        <td>
+            <div><b th:text="${x.license?.tool?.toolName}">Tool</b></div>
+            <div th:text="${x.license?.name}">License</div>
+        </td>
+
+        <td th:text="${x.license?.tool?.loginMethod}">METHOD</td>
+
+        <td>
+            <div th:if="${x.username != null}">
+                <b>Username:</b> <span th:text="${x.username}"></span><br/>
+                <b>Password:</b> <span th:text="${x.password}"></span>
+            </div>
+            <div th:if="${x.token != null}">
+                <b>Token:</b> <span th:text="${x.token}"></span>
+            </div>
+        </td>
+
+        <td th:text="${x.startDate}"></td>
+        <td th:text="${x.endDate}"></td>
+        <td th:text="${x.status}"></td>
+        <td th:text="${x.used}"></td>
+        <td>
+            <a class="btn" th:href="@{/system-admin/license-accounts/{id}/edit(id=${x.licenseAccountId})}">Edit</a>
+            <a class="btn" th:href="@{/system-admin/license-accounts/{id}/renew(id=${x.licenseAccountId})}">Renew</a>
+        </td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(items)}">
+        <td colspan="9">No data</td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

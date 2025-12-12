@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Renew License Account</title>
+    <style>
+        body{font-family:Arial;margin:24px}
+        .msg{padding:10px;margin:10px 0;border-radius:6px}
+        .success{background:#e8fff0;border:1px solid #9be8b2}
+        .error{background:#ffecec;border:1px solid #ffb3b3}
+        input,button{padding:8px}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{border:1px solid #ddd;padding:8px}
+        th{background:#f6f6f6}
+        a.btn{padding:6px 10px;border:1px solid #ccc;border-radius:6px;text-decoration:none}
+    </style>
+</head>
+<body>
+
+<h2>Renew License Account</h2>
+
+<div th:if="${success}" class="msg success" th:text="${success}"></div>
+<div th:if="${error}" class="msg error" th:text="${error}"></div>
+
+<div>
+    <b>ID:</b> <span th:text="${la.licenseAccountId}"></span><br/>
+    <b>Tool:</b> <span th:text="${la.license?.tool?.toolName}"></span><br/>
+    <b>License:</b> <span th:text="${la.license?.name}"></span><br/>
+    <b>Current End:</b> <span th:text="${la.endDate}"></span><br/>
+    <b>Status:</b> <span th:text="${la.status}"></span>
+</div>
+
+<hr/>
+
+<form th:action="@{/system-admin/license-accounts/{id}/renew(id=${la.licenseAccountId})}"
+      th:object="${renew}" method="post">
+
+    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:end">
+        <div>
+            <label>New End Date</label><br/>
+            <input type="datetime-local" th:field="*{newEndDate}"/>
+            <div style="color:#c00;font-size:12px" th:if="${#fields.hasErrors('newEndDate')}" th:errors="*{newEndDate}"></div>
+        </div>
+
+        <div>
+            <label>Amount Paid (optional)</label><br/>
+            <input type="number" step="0.01" th:field="*{amountPaid}"/>
+            <div style="color:#c00;font-size:12px" th:if="${#fields.hasErrors('amountPaid')}" th:errors="*{amountPaid}"></div>
+        </div>
+
+        <button type="submit">Renew</button>
+        <a class="btn" th:href="@{/system-admin/license-accounts}">Back</a>
+    </div>
+</form>
+
+<h3>Renew Logs</h3>
+<table>
+    <thead>
+    <tr>
+        <th>renewLogId</th>
+        <th>renewDate</th>
+        <th>newEndDate</th>
+        <th>amountPaid</th>
+        <th>transactionId</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="r : ${logs}">
+        <td th:text="${r.renewLogId}"></td>
+        <td th:text="${r.renewDate}"></td>
+        <td th:text="${r.newEndDate}"></td>
+        <td th:text="${r.amountPaid}"></td>
+        <td th:text="${r.transaction != null ? r.transaction.transactionId : ''}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(logs)}">
+        <td colspan="5">No renew log</td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
