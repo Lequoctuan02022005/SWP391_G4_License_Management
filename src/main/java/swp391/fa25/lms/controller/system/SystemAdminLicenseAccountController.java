@@ -35,7 +35,7 @@ public class SystemAdminLicenseAccountController {
         model.addAttribute("status", status);
         model.addAttribute("used", used);
 
-        return "admin/list";
+        return "admin/license-account-list";
     }
 
     @GetMapping("/create")
@@ -45,7 +45,7 @@ public class SystemAdminLicenseAccountController {
         model.addAttribute("mode", "create");
         model.addAttribute("statuses", LicenseAccount.Status.values());
 
-        return "admin/form";
+        return "admin/license-account-form";
     }
 
     @PostMapping("/create")
@@ -60,7 +60,7 @@ public class SystemAdminLicenseAccountController {
         model.addAttribute("statuses", LicenseAccount.Status.values());
 
         if (br.hasErrors()) {
-            return "admin/form";
+            return "admin/license-account-form";
         }
 
         try {
@@ -69,7 +69,7 @@ public class SystemAdminLicenseAccountController {
             return "redirect:/system-admin/license-accounts";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "admin/form";
+            return "admin/license-account-form";
         }
     }
 
@@ -94,7 +94,7 @@ public class SystemAdminLicenseAccountController {
         model.addAttribute("id", id);
         model.addAttribute("statuses", LicenseAccount.Status.values());
 
-        return "admin/form";
+        return "admin/license-account-form";
     }
 
     @PostMapping("/{id}/edit")
@@ -111,7 +111,7 @@ public class SystemAdminLicenseAccountController {
         model.addAttribute("statuses", LicenseAccount.Status.values());
 
         if (br.hasErrors()) {
-            return "admin/form";
+            return "admin/license-account-form";
         }
 
         try {
@@ -120,7 +120,7 @@ public class SystemAdminLicenseAccountController {
             return "redirect:/system-admin/license-accounts";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "admin/form";
+            return "admin/license-account-form";
         }
     }
 
@@ -135,8 +135,10 @@ public class SystemAdminLicenseAccountController {
         model.addAttribute("la", la);
         model.addAttribute("renew", renew);
         model.addAttribute("logs", licenseAccountService.getRenewLogs(id));
+        model.addAttribute("id", id);
+        model.addAttribute("mode", "renew");
 
-        return "admin/renew";
+        return "admin/license-account-renew";
     }
 
     @PostMapping("/{id}/renew")
@@ -151,9 +153,12 @@ public class SystemAdminLicenseAccountController {
 
         model.addAttribute("la", la);
         model.addAttribute("logs", licenseAccountService.getRenewLogs(id));
+        model.addAttribute("renew", renew); // ⭐ add lại để view bind field
+        model.addAttribute("id", id);
+        model.addAttribute("mode", "renew");
 
         if (br.hasErrors()) {
-            return "admin/renew";
+            return "admin/license-account-renew";
         }
 
         try {
@@ -164,7 +169,8 @@ public class SystemAdminLicenseAccountController {
             return "redirect:/system-admin/license-accounts/" + id + "/renew";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
-            return "admin/renew";
+            return "admin/license-account-renew";
         }
     }
+
 }

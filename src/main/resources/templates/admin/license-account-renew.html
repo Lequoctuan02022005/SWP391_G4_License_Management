@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Renew License Account</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+
+    <style>
+        body { background:#f5f7fa; font-family:"Inter", sans-serif; }
+        .page-title { font-weight:700; font-size:28px; }
+        .card { border-radius:12px; }
+        thead.table-header { background:#1f2937; color:#fff; font-size:15px; }
+        .action-btn { border-radius:6px; padding:6px 14px; }
+        .hint { font-size:12px; color:#6b7280; }
+    </style>
+</head>
+<body>
+
+<div th:replace="admin/admin-header :: adminHeader"></div>
+
+<div class="container mt-5" style="max-width: 980px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="page-title">Renew License Account</h2>
+        <a class="btn btn-outline-dark action-btn" th:href="@{/system-admin/license-accounts}">Back</a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success shadow-sm" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger shadow-sm" th:text="${error}"></div>
+
+    <!-- Info -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-3"><b>ID:</b> <span th:text="${la.licenseAccountId}"></span></div>
+                <div class="col-md-3"><b>Status:</b> <span th:text="${la.status}"></span></div>
+                <div class="col-md-3"><b>Current End:</b>
+                    <span th:text="${la.endDate != null ? #temporals.format(la.endDate,'yyyy-MM-dd HH:mm') : ''}"></span>
+                </div>
+                <div class="col-md-3"><b>Used:</b> <span th:text="${la.used}"></span></div>
+
+                <div class="col-md-6">
+                    <b>Tool:</b>
+                    <span th:text="${(la.license != null and la.license.tool != null) ? la.license.tool.toolName : 'N/A'}"></span>
+                </div>
+                <div class="col-md-6">
+                    <b>License:</b>
+                    <span th:text="${la.license != null ? la.license.name : 'N/A'}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Renew form -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Renew</h5>
+
+            <form th:action="@{/system-admin/license-accounts/{id}/renew(id=${la.licenseAccountId})}"
+                  th:object="${renew}" method="post">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" th:field="*{licenseAccountId}"/>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">New End Date</label>
+                        <input class="form-control" type="datetime-local" th:field="*{newEndDate}"/>
+                        <div class="text-danger mt-1"
+                             th:if="${#fields.hasErrors('newEndDate')}" th:errors="*{newEndDate}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Amount Paid (optional)</label>
+                        <input class="form-control" type="number" step="0.01" th:field="*{amountPaid}"/>
+                        <div class="text-danger mt-1"
+                             th:if="${#fields.hasErrors('amountPaid')}" th:errors="*{amountPaid}"></div>
+                        <div class="hint">Số tiền gia hạn để ghi log</div>
+                    </div>
+
+                    <div class="col-12 d-flex gap-2">
+                        <button class="btn btn-primary action-btn">Renew</button>
+                        <a class="btn btn-secondary action-btn" th:href="@{/system-admin/license-accounts}">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logs -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Renew Logs</h5>
+
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-header">
+                <tr>
+                    <th>renewLogId</th>
+                    <th>renewDate</th>
+                    <th>newEndDate</th>
+                    <th>amountPaid</th>
+                    <th>transactionId</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${logs}">
+                    <td th:text="${r.renewLogId}"></td>
+                    <td th:text="${r.renewDate != null ? #temporals.format(r.renewDate,'yyyy-MM-dd HH:mm') : ''}"></td>
+                    <td th:text="${r.newEndDate != null ? #temporals.format(r.newEndDate,'yyyy-MM-dd HH:mm') : ''}"></td>
+                    <td th:text="${r.amountPaid}"></td>
+                    <td th:text="${r.transaction != null ? r.transaction.transactionId : ''}"></td>
+                </tr>
+                <tr th:if="${logs == null or #lists.isEmpty(logs)}">
+                    <td colspan="5" class="text-muted py-4">No renew log</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
