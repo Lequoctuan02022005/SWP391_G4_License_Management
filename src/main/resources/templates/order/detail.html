@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Chi tiết đơn hàng</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#f6f7fb; color:#111; }
+        .container { max-width: 950px; margin: 24px auto; padding: 0 16px; }
+        .card { background:#fff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.06); padding: 16px; }
+        .top { display:flex; align-items:center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        h1 { margin: 0; font-size: 22px; }
+        .btn { display:inline-block; padding: 10px 14px; border-radius: 10px; text-decoration:none; font-weight: 700; }
+        .btn-ghost { background:#eef2ff; color:#1f3a8a; }
+        .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+        .box { border: 1px solid #edf0f5; border-radius: 12px; padding: 12px; background:#fbfcff; }
+        .label { font-size: 12px; color:#555; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+        .value { font-size: 14px; }
+        .value b { font-size: 16px; }
+        .badge { display:inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+        .b-pending { background:#fff7ed; color:#9a3412; }
+        .b-success { background:#ecfdf5; color:#065f46; }
+        .b-failed { background:#fef2f2; color:#991b1b; }
+        .b-null { background:#f3f4f6; color:#374151; }
+        .muted { color:#666; font-size: 13px; }
+        .full { grid-column: 1 / -1; }
+        .sep { height: 1px; background:#edf0f5; margin: 12px 0; }
+        @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+
+        <div class="top">
+            <h1>
+                Chi tiết đơn hàng #<span th:text="${order.orderId}">0</span>
+            </h1>
+            <a class="btn btn-ghost" th:href="@{/customer/orders}">← Quay lại danh sách</a>
+        </div>
+
+        <p class="muted" th:if="${order.createdAt != null}">
+            Tạo lúc: <b th:text="${#temporals.format(order.createdAt,'dd/MM/yyyy HH:mm')}">--</b>
+        </p>
+
+        <div class="grid">
+
+            <!-- ORDER STATUS -->
+            <div class="box">
+                <div class="label">Trạng thái đơn</div>
+                <div class="value">
+                    <span class="badge b-pending" th:if="${order.orderStatus != null and order.orderStatus.name() == 'PENDING'}">PENDING</span>
+                    <span class="badge b-success" th:if="${order.orderStatus != null and order.orderStatus.name() == 'SUCCESS'}">SUCCESS</span>
+                    <span class="badge b-failed"  th:if="${order.orderStatus != null and order.orderStatus.name() == 'FAILED'}">FAILED</span>
+                    <span class="badge b-null"    th:if="${order.orderStatus == null}">N/A</span>
+
+                    <div class="muted" th:if="${order.lastTxnRef != null}">
+                        lastTxnRef: <span th:text="${order.lastTxnRef}">ref</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRICE -->
+            <div class="box">
+                <div class="label">Giá</div>
+                <div class="value">
+                    <b th:text="${#numbers.formatDecimal(order.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</b>
+                    <div class="muted" th:if="${order.paymentMethod != null}">
+                        Payment method: <span th:text="${order.paymentMethod}">BANK</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOOL -->
+            <div class="box">
+                <div class="label">Tool</div>
+                <div class="value">
+                    <div><b th:text="${order.tool != null ? order.tool.toolName : '(N/A)'}">Tool</b></div>
+                    <div class="muted" th:if="${order.tool != null and order.tool.loginMethod != null}">
+                        Login method: <span th:text="${order.tool.loginMethod}">TOKEN</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LICENSE -->
+            <div class="box">
+                <div class="label">License</div>
+                <div class="value">
+                    <div><b th:text="${order.license != null ? order.license.name : '(N/A)'}">License</b></div>
+                    <div class="muted" th:if="${order.license != null and order.license.durationDays != null}">
+                        Duration: <span th:text="${order.license.durationDays}">0</span> ngày
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRANSACTION -->
+            <div class="box full" th:if="${order.transaction != null}">
+                <div class="label">Transaction</div>
+                <div class="value">
+                    <div>
+                        Txn ID: <b th:text="${order.transaction.transactionId}">0</b>
+                    </div>
+
+                    <div style="margin-top:8px;">
+                        <span class="badge b-pending" th:if="${order.transaction.status != null and order.transaction.status.name() == 'PENDING'}">PENDING</span>
+                        <span class="badge b-pending" th:if="${order.transaction.status != null and order.transaction.status.name() == 'PROCESSING'}">PROCESSING</span>
+                        <span class="badge b-success" th:if="${order.transaction.status != null and order.transaction.status.name() == 'SUCCESS'}">SUCCESS</span>
+                        <span class="badge b-failed"  th:if="${order.transaction.status != null and (order.transaction.status.name() == 'FAILED' or order.transaction.status.name() == 'CANCELLED')}">FAILED/CANCELLED</span>
+                        <span class="badge b-null" th:if="${order.transaction.status == null}">N/A</span>
+                    </div>
+
+                    <div class="sep"></div>
+
+                    <div class="muted" th:if="${order.transaction.vnpayTxnRef != null}">
+                        vnpayTxnRef: <b th:text="${order.transaction.vnpayTxnRef}">ref</b>
+                    </div>
+                    <div class="muted" th:if="${order.transaction.vnpayResponseCode != null}">
+                        Response code: <b th:text="${order.transaction.vnpayResponseCode}">00</b>
+                    </div>
+
+                    <div class="muted" th:if="${paymentMsg != null}">
+                        Message: <b th:text="${paymentMsg}">msg</b>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box full" th:if="${order.transaction == null}">
+                <div class="label">Transaction</div>
+                <div class="value">
+                    <span class="badge b-null">N/A</span>
+                    <div class="muted">Đơn này chưa gắn transaction (hoặc chưa thanh toán).</div>
+                </div>
+            </div>
+
+            <!-- LICENSE ACCOUNT -->
+            <div class="box full" th:if="${order.licenseAccount != null}">
+                <div class="label">License Account được cấp</div>
+                <div class="value">
+                    <div>ID: <b th:text="${order.licenseAccount.licenseAccountId}">0</b></div>
+
+                    <div style="margin-top:8px;">
+                        <span class="badge b-success" th:if="${order.licenseAccount.status != null and order.licenseAccount.status.name() == 'ACTIVE'}">ACTIVE</span>
+                        <span class="badge b-pending" th:if="${order.licenseAccount.status != null and order.licenseAccount.status.name() == 'EXPIRED'}">EXPIRED</span>
+                        <span class="badge b-failed"  th:if="${order.licenseAccount.status != null and order.licenseAccount.status.name() == 'REVOKED'}">REVOKED</span>
+                        <span class="badge b-null" th:if="${order.licenseAccount.status == null}">N/A</span>
+                    </div>
+
+                    <div class="sep"></div>
+
+                    <!-- TOKEN mode -->
+                    <div th:if="${order.licenseAccount.token != null}">
+                        Token: <b th:text="${order.licenseAccount.token}">token</b>
+                    </div>
+
+                    <!-- USER/PASS mode -->
+                    <div th:if="${order.licenseAccount.token == null}">
+                        <div>Username: <b th:text="${order.licenseAccount.username != null ? order.licenseAccount.username : '(N/A)'}">user</b></div>
+                        <div>Password: <b th:text="${order.licenseAccount.password != null ? order.licenseAccount.password : '(N/A)'}">pass</b></div>
+                    </div>
+
+                    <div class="muted" style="margin-top:8px;">
+                        Used: <b th:text="${order.licenseAccount.used}">false</b>
+                    </div>
+
+                    <div class="muted" th:if="${order.licenseAccount.startDate != null and order.licenseAccount.endDate != null}">
+                        Thời hạn:
+                        <b th:text="${#temporals.format(order.licenseAccount.startDate,'dd/MM/yyyy HH:mm')}">--</b>
+                        →
+                        <b th:text="${#temporals.format(order.licenseAccount.endDate,'dd/MM/yyyy HH:mm')}">--</b>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box full" th:if="${order.licenseAccount == null}">
+                <div class="label">License Account được cấp</div>
+                <div class="value">
+                    <span class="badge b-null">Chưa tạo</span>
+                    <div class="muted">LicenseAccount thường được tạo sau khi thanh toán SUCCESS hoặc theo flow cấp phát.</div>
+                </div>
+            </div>
+
+            <!-- ACTION HINT -->
+            <div class="box full">
+                <div class="label">Ghi chú</div>
+                <div class="value">
+                    <div th:if="${order.canFeedbackOrReport}">
+                        Bạn có thể Feedback/Report cho đơn này (vì đơn SUCCESS).
+                    </div>
+                    <div th:if="${!order.canFeedbackOrReport}">
+                        Feedback/Report chỉ bật khi đơn SUCCESS.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

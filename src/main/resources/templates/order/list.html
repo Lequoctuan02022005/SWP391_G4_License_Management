@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lịch sử đơn hàng</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#f6f7fb; color:#111; }
+        .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+        .card { background:#fff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.06); padding: 16px; }
+        h1 { margin: 0 0 12px; font-size: 22px; }
+        .sub { margin: 0 0 16px; color:#555; font-size: 14px; }
+        .row { display:flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+        .field { display:flex; flex-direction: column; gap: 6px; }
+        label { font-size: 12px; color:#444; }
+        input, select { padding: 10px 10px; border: 1px solid #d7d9e0; border-radius: 10px; outline: none; min-width: 180px; background:#fff; }
+        .btn { cursor:pointer; border:0; border-radius: 10px; padding: 10px 14px; font-weight: 600; display:inline-block; text-decoration:none; text-align:center; }
+        .btn-primary { background:#1f6feb; color:#fff; }
+        .btn-ghost { background:#eef2ff; color:#1f3a8a; }
+        table { width:100%; border-collapse: collapse; margin-top: 14px; }
+        th, td { text-align:left; padding: 12px 10px; border-bottom: 1px solid #edf0f5; vertical-align: top; }
+        th { font-size: 12px; color:#555; text-transform: uppercase; letter-spacing: .04em; }
+        td { font-size: 14px; }
+        .badge { display:inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+        .b-pending { background:#fff7ed; color:#9a3412; }
+        .b-success { background:#ecfdf5; color:#065f46; }
+        .b-failed { background:#fef2f2; color:#991b1b; }
+        .b-null { background:#f3f4f6; color:#374151; }
+        .muted { color:#666; font-size: 13px; }
+        .actions a { text-decoration:none; font-weight: 700; color:#1f6feb; }
+        .pager { display:flex; gap: 8px; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; }
+        .page-links { display:flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .pill { padding: 8px 10px; border-radius: 10px; background:#f3f4f6; color:#111; text-decoration: none; font-weight: 700; display:inline-block; }
+        .pill.disabled { opacity: .5; pointer-events:none; }
+        .pill.active { background:#111; color:#fff; }
+        .empty { padding: 18px; border: 1px dashed #d7d9e0; border-radius: 12px; background:#fbfcff; margin-top: 14px; }
+    </style>
+</head>
+
+<body>
+<div class="container" th:with="safeSize=${pageData != null ? pageData.size : (size != null ? size : 10)}">
+    <div class="card">
+        <h1>Lịch sử đơn hàng</h1>
+        <p class="sub">Xem các đơn hàng/transaction của bạn. Có thể lọc theo trạng thái và thời gian.</p>
+
+        <!-- FILTER FORM -->
+        <form th:action="@{/customer/orders}" method="get" class="row">
+            <div class="field">
+                <label>Trạng thái đơn</label>
+                <select name="status">
+                    <option value="" th:selected="${status == null or status == ''}">Tất cả</option>
+                    <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
+                    <option value="SUCCESS" th:selected="${status == 'SUCCESS'}">SUCCESS</option>
+                    <option value="FAILED"  th:selected="${status == 'FAILED'}">FAILED</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Từ thời điểm</label>
+                <input type="datetime-local" name="from"
+                       th:value="${from != null ? #temporals.format(from, 'yyyy-MM-dd''T''HH:mm') : ''}">
+            </div>
+
+            <div class="field">
+                <label>Đến thời điểm</label>
+                <input type="datetime-local" name="to"
+                       th:value="${to != null ? #temporals.format(to, 'yyyy-MM-dd''T''HH:mm') : ''}">
+            </div>
+
+            <div class="field">
+                <label>Kích thước trang</label>
+                <select name="size">
+                    <option value="5"  th:selected="${safeSize == 5}">5</option>
+                    <option value="10" th:selected="${safeSize == 10}">10</option>
+                    <option value="20" th:selected="${safeSize == 20}">20</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>&nbsp;</label>
+                <button class="btn btn-primary" type="submit">Lọc</button>
+            </div>
+
+            <div class="field">
+                <label>&nbsp;</label>
+                <a class="btn btn-ghost" th:href="@{/customer/orders(size=${safeSize})}">Reset</a>
+            </div>
+        </form>
+
+        <!-- EMPTY -->
+        <div th:if="${pageData == null or pageData.totalElements == 0}" class="empty">
+            <b>Chưa có đơn hàng nào.</b>
+            <div class="muted">Khi bạn mua license/tool, đơn hàng sẽ xuất hiện ở đây.</div>
+        </div>
+
+        <!-- TABLE -->
+        <div th:if="${pageData != null and pageData.totalElements > 0}">
+            <table>
+                <thead>
+                <tr>
+                    <th>#Order</th>
+                    <th>Tool</th>
+                    <th>License</th>
+                    <th>Giá</th>
+                    <th>Trạng thái</th>
+                    <th>Thanh toán</th>
+                    <th>Ngày tạo</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="o : ${pageData.content}">
+                    <td>
+                        <div><b th:text="${o.orderId}">1</b></div>
+                        <div class="muted" th:if="${o.lastTxnRef != null}">
+                            txnRef: <span th:text="${o.lastTxnRef}">ref</span>
+                        </div>
+                    </td>
+
+                    <td>
+                        <div th:text="${o.tool != null ? o.tool.toolName : '(N/A)'}">Tool name</div>
+                        <div class="muted" th:if="${o.tool != null and o.tool.loginMethod != null}">
+                            Login: <span th:text="${o.tool.loginMethod}">TOKEN</span>
+                        </div>
+                    </td>
+
+                    <td th:text="${o.license != null ? o.license.name : '(N/A)'}">License</td>
+
+                    <td>
+                        <b th:text="${o.price != null ? (#numbers.formatDecimal(o.price, 0, 'COMMA', 0, 'POINT') + ' VND') : '(N/A)'}">0 VND</b>
+                    </td>
+
+                    <td>
+                        <span class="badge b-pending" th:if="${o.orderStatus != null and o.orderStatus.toString() == 'PENDING'}">PENDING</span>
+                        <span class="badge b-success" th:if="${o.orderStatus != null and o.orderStatus.toString() == 'SUCCESS'}">SUCCESS</span>
+                        <span class="badge b-failed"  th:if="${o.orderStatus != null and o.orderStatus.toString() == 'FAILED'}">FAILED</span>
+                        <span class="badge b-null"    th:if="${o.orderStatus == null}">N/A</span>
+                    </td>
+
+                    <td>
+                        <div th:if="${o.transaction != null}">
+                            <span class="badge b-pending" th:if="${o.transaction.status != null and o.transaction.status.toString() == 'PENDING'}">PENDING</span>
+                            <span class="badge b-pending" th:if="${o.transaction.status != null and o.transaction.status.toString() == 'PROCESSING'}">PROCESSING</span>
+                            <span class="badge b-success" th:if="${o.transaction.status != null and o.transaction.status.toString() == 'SUCCESS'}">SUCCESS</span>
+                            <span class="badge b-failed"  th:if="${o.transaction.status != null and (o.transaction.status.toString() == 'FAILED' or o.transaction.status.toString() == 'CANCELLED')}">FAILED/CANCELLED</span>
+
+                            <div class="muted" th:if="${o.transaction.vnpayResponseCode != null}">
+                                Code: <span th:text="${o.transaction.vnpayResponseCode}">00</span>
+                            </div>
+                        </div>
+                        <span class="badge b-null" th:if="${o.transaction == null}">N/A</span>
+                    </td>
+
+                    <td>
+                        <div th:text="${o.createdAt != null ? #temporals.format(o.createdAt,'dd/MM/yyyy HH:mm') : '(N/A)'}">--</div>
+                    </td>
+
+                    <td class="actions">
+                        <a th:href="@{/customer/orders/{id}(id=${o.orderId})}">Xem chi tiết →</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- PAGINATION -->
+            <div class="pager" th:with="cur=${pageData.number}, total=${pageData.totalPages}">
+                <div class="muted">
+                    Tổng: <b th:text="${pageData.totalElements}">0</b> đơn ·
+                    Trang <b th:text="${cur + 1}">1</b>/<b th:text="${total}">1</b>
+                </div>
+
+                <div class="page-links">
+                    <a class="pill"
+                       th:classappend="${pageData.first} ? ' disabled' : ''"
+                       th:href="@{/customer/orders(page=${cur > 0 ? cur-1 : 0}, size=${pageData.size}, status=${status}, from=${from}, to=${to})}">
+                        ← Trước
+                    </a>
+
+                    <a th:each="i : ${#numbers.sequence(0, total - 1)}"
+                       class="pill"
+                       th:classappend="${i == cur} ? ' active' : ''"
+                       th:text="${i + 1}"
+                       th:href="@{/customer/orders(page=${i}, size=${pageData.size}, status=${status}, from=${from}, to=${to})}">
+                        1
+                    </a>
+
+                    <a class="pill"
+                       th:classappend="${pageData.last} ? ' disabled' : ''"
+                       th:href="@{/customer/orders(page=${cur + 1 < total ? cur+1 : cur}, size=${pageData.size}, status=${status}, from=${from}, to=${to})}">
+                        Sau →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

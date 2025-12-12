@@ -40,7 +40,6 @@ public class SecurityConfig {
                         // Blog public pages
                         .requestMatchers("/blog", "/blog/**").permitAll()
 
-                        .requestMatchers("/system-admin/**").hasRole("ADMIN")
                         // Role-based pages
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/manager/**").hasRole("MANAGER")
@@ -48,6 +47,8 @@ public class SecurityConfig {
                         // Everything else requires authentication
                         .requestMatchers("/moderator/**").hasRole("MOD")
                         .requestMatchers("/tools/moderator/**").hasRole("MOD")
+                        .requestMatchers("/customer/**").hasRole("CUSTOMER")
+
                         .anyRequest().authenticated()
                 )
 
