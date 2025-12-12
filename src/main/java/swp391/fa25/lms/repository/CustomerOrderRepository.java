@@ -13,23 +13,34 @@ import java.util.Optional;
 @Repository
 public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Long> {
 
+    @EntityGraph(attributePaths = {"tool", "license", "transaction"})
     @Query("""
         SELECT o FROM CustomerOrder o
+        LEFT JOIN o.tool t
+        LEFT JOIN o.license l
+        LEFT JOIN o.transaction tx
         WHERE o.account.accountId = :accountId
           AND (:status IS NULL OR o.orderStatus = :status)
           AND (:from IS NULL OR o.createdAt >= :from)
           AND (:to IS NULL OR o.createdAt <= :to)
-        ORDER BY o.createdAt DESC
+          AND (
+               :q IS NULL OR :q = '' OR
+               LOWER(COALESCE(t.toolName, '')) LIKE LOWER(CONCAT('%', :q, '%')) OR
+               LOWER(COALESCE(l.name, '')) LIKE LOWER(CONCAT('%', :q, '%')) OR
+               LOWER(COALESCE(o.lastTxnRef, '')) LIKE LOWER(CONCAT('%', :q, '%')) OR
+               LOWER(COALESCE(tx.vnpayTxnRef, '')) LIKE LOWER(CONCAT('%', :q, '%')) OR
+               LOWER(CONCAT(o.orderId, '')) LIKE LOWER(CONCAT('%', :q, '%'))
+          )
     """)
     Page<CustomerOrder> findMyOrders(
             @Param("accountId") Long accountId,
+            @Param("q") String q,
             @Param("status") CustomerOrder.OrderStatus status,
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to,
             Pageable pageable
     );
 
-    // Detail (có ownership check)
     @EntityGraph(attributePaths = {"tool", "license", "transaction", "licenseAccount"})
     Optional<CustomerOrder> findByOrderIdAndAccount_AccountId(Long orderId, Long accountId);
 }

@@ -22,7 +22,7 @@
         .btn-ghost { background:#eef2ff; color:#1f3a8a; }
         table { width:100%; border-collapse: collapse; margin-top: 14px; }
         th, td { text-align:left; padding: 12px 10px; border-bottom: 1px solid #edf0f5; vertical-align: top; }
-        th { font-size: 12px; color:#555; text-transform: uppercase; letter-spacing: .04em; }
+        th { font-size: 12px; color:#555; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
         td { font-size: 14px; }
         .badge { display:inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
         .b-pending { background:#fff7ed; color:#9a3412; }
@@ -37,24 +37,36 @@
         .pill.disabled { opacity: .5; pointer-events:none; }
         .pill.active { background:#111; color:#fff; }
         .empty { padding: 18px; border: 1px dashed #d7d9e0; border-radius: 12px; background:#fbfcff; margin-top: 14px; }
+
+        .sortlink{ color:#555; text-decoration:none; font-weight:800; display:inline-flex; gap:6px; align-items:center; }
+        .sortlink:hover{ color:#111; }
+        .arrow{ font-size:12px; opacity:.85; }
     </style>
 </head>
 
 <body>
-<div class="container" th:with="safeSize=${pageData != null ? pageData.size : (size != null ? size : 10)}">
+<div class="container"
+     th:with="safeSize=${pageData != null ? pageData.size : (size != null ? size : 10)}">
     <div class="card">
         <h1>Lịch sử đơn hàng</h1>
-        <p class="sub">Xem các đơn hàng/transaction của bạn. Có thể lọc theo trạng thái và thời gian.</p>
+        <p class="sub">Xem các đơn hàng/transaction của bạn. Có thể tìm kiếm, lọc và sắp xếp theo nhiều tiêu chí.</p>
 
         <!-- FILTER FORM -->
         <form th:action="@{/customer/orders}" method="get" class="row">
+
+            <div class="field">
+                <label>Tìm kiếm</label>
+                <input type="text" name="q" placeholder="Tool / License / OrderId / txnRef..."
+                       th:value="${q}">
+            </div>
+
             <div class="field">
                 <label>Trạng thái đơn</label>
                 <select name="status">
-                    <option value="" th:selected="${status == null or status == ''}">Tất cả</option>
-                    <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
-                    <option value="SUCCESS" th:selected="${status == 'SUCCESS'}">SUCCESS</option>
-                    <option value="FAILED"  th:selected="${status == 'FAILED'}">FAILED</option>
+                    <option value="" th:selected="${statusStr == ''}">Tất cả</option>
+                    <option value="PENDING" th:selected="${statusStr == 'PENDING'}">PENDING</option>
+                    <option value="SUCCESS" th:selected="${statusStr == 'SUCCESS'}">SUCCESS</option>
+                    <option value="FAILED"  th:selected="${statusStr == 'FAILED'}">FAILED</option>
                 </select>
             </div>
 
@@ -68,6 +80,26 @@
                 <label>Đến thời điểm</label>
                 <input type="datetime-local" name="to"
                        th:value="${to != null ? #temporals.format(to, 'yyyy-MM-dd''T''HH:mm') : ''}">
+            </div>
+
+            <div class="field">
+                <label>Sắp xếp theo</label>
+                <select name="sort">
+                    <option value="createdAt" th:selected="${sort == 'createdAt'}">Ngày tạo</option>
+                    <option value="price" th:selected="${sort == 'price'}">Giá</option>
+                    <option value="toolName" th:selected="${sort == 'toolName'}">Tên Tool</option>
+                    <option value="licenseName" th:selected="${sort == 'licenseName'}">Tên License</option>
+                    <option value="orderId" th:selected="${sort == 'orderId'}">Order ID</option>
+                    <option value="orderStatus" th:selected="${sort == 'orderStatus'}">Trạng thái đơn</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Chiều</label>
+                <select name="dir">
+                    <option value="desc" th:selected="${dir == 'desc'}">Giảm dần</option>
+                    <option value="asc"  th:selected="${dir == 'asc'}">Tăng dần</option>
+                </select>
             </div>
 
             <div class="field">
@@ -86,6 +118,7 @@
 
             <div class="field">
                 <label>&nbsp;</label>
+                <!-- Reset giữ size, còn lại về mặc định -->
                 <a class="btn btn-ghost" th:href="@{/customer/orders(size=${safeSize})}">Reset</a>
             </div>
         </form>
@@ -100,14 +133,63 @@
         <div th:if="${pageData != null and pageData.totalElements > 0}">
             <table>
                 <thead>
-                <tr>
-                    <th>#Order</th>
-                    <th>Tool</th>
-                    <th>License</th>
-                    <th>Giá</th>
-                    <th>Trạng thái</th>
+                <tr th:with="baseSize=${safeSize}">
+                    <!-- ORDER ID -->
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='orderId',dir=${sort=='orderId' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            #Order
+                            <span class="arrow" th:text="${sort=='orderId' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <!-- TOOL NAME -->
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='toolName',dir=${sort=='toolName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            Tool
+                            <span class="arrow" th:text="${sort=='toolName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <!-- LICENSE NAME -->
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='licenseName',dir=${sort=='licenseName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            License
+                            <span class="arrow" th:text="${sort=='licenseName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <!-- PRICE -->
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='price',dir=${sort=='price' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            Giá
+                            <span class="arrow" th:text="${sort=='price' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <!-- ORDER STATUS (optional sort cũng được) -->
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='orderStatus',dir=${sort=='orderStatus' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            Trạng thái
+                            <span class="arrow" th:text="${sort=='orderStatus' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
                     <th>Thanh toán</th>
-                    <th>Ngày tạo</th>
+
+                    <!-- CREATED AT -->
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='createdAt',dir=${sort=='createdAt' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            Ngày tạo
+                            <span class="arrow" th:text="${sort=='createdAt' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
                     <th></th>
                 </tr>
                 </thead>
@@ -167,36 +249,42 @@
             </table>
 
             <!-- PAGINATION -->
-            <div class="pager" th:with="cur=${pageData.number}, total=${pageData.totalPages}">
+            <div class="pager"
+                 th:if="${pageData != null and pageData.totalPages > 1}"
+                 th:with="cur=${pageData.number}, total=${pageData.totalPages}, sizeVal=${pageData.size}">
+
                 <div class="muted">
                     Tổng: <b th:text="${pageData.totalElements}">0</b> đơn ·
                     Trang <b th:text="${cur + 1}">1</b>/<b th:text="${total}">1</b>
                 </div>
 
                 <div class="page-links">
+                    <!-- PREV -->
                     <a class="pill"
                        th:classappend="${pageData.first} ? ' disabled' : ''"
-                       th:href="@{/customer/orders(page=${cur > 0 ? cur-1 : 0}, size=${pageData.size}, status=${status}, from=${from}, to=${to})}">
+                       th:href="@{/customer/orders(page=${cur > 0 ? cur - 1 : 0},size=${sizeVal},q=${q},status=${statusStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
                         ← Trước
                     </a>
 
+                    <!-- PAGE NUMBERS -->
                     <a th:each="i : ${#numbers.sequence(0, total - 1)}"
                        class="pill"
                        th:classappend="${i == cur} ? ' active' : ''"
                        th:text="${i + 1}"
-                       th:href="@{/customer/orders(page=${i}, size=${pageData.size}, status=${status}, from=${from}, to=${to})}">
+                       th:href="@{/customer/orders(page=${i},size=${sizeVal},q=${q},status=${statusStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
                         1
                     </a>
 
+                    <!-- NEXT -->
                     <a class="pill"
                        th:classappend="${pageData.last} ? ' disabled' : ''"
-                       th:href="@{/customer/orders(page=${cur + 1 < total ? cur+1 : cur}, size=${pageData.size}, status=${status}, from=${from}, to=${to})}">
+                       th:href="@{/customer/orders(page=${cur + 1 < total ? cur + 1 : cur},size=${sizeVal},q=${q},status=${statusStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
                         Sau →
                     </a>
                 </div>
             </div>
-        </div>
 
+        </div>
     </div>
 </div>
 </body>

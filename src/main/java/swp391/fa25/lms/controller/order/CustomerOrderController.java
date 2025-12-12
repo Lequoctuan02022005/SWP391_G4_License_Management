@@ -25,33 +25,45 @@ public class CustomerOrderController {
     }
 
     private Long currentAccountId(Authentication auth) {
-        String email = auth.getName(); // thường là email (username)
+        String email = auth.getName();
         Account acc = accountRepo.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy account của user đang đăng nhập"));
         return acc.getAccountId();
     }
 
-    // 1) View Order List/History
     @GetMapping
     public String myOrders(Authentication auth,
                            Model model,
                            @RequestParam(defaultValue = "0") int page,
                            @RequestParam(defaultValue = "10") int size,
-                           @RequestParam(required = false) CustomerOrder.OrderStatus status,
+                           @RequestParam(required = false) String q,
+                           @RequestParam(required = false) String status,
                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
-                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to) {
+                           @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+                           @RequestParam(defaultValue = "createdAt") String sort,
+                           @RequestParam(defaultValue = "desc") String dir) {
 
         Long accountId = currentAccountId(auth);
 
-        model.addAttribute("pageData", orderService.getMyOrders(accountId, status, from, to, page, size));
-        model.addAttribute("status", status);
+        CustomerOrder.OrderStatus st = null;
+        if (org.springframework.util.StringUtils.hasText(status)) {
+            st = CustomerOrder.OrderStatus.valueOf(status);
+        }
+
+        model.addAttribute("pageData", orderService.getMyOrders(accountId, q, st, from, to, page, size, sort, dir));
+
+        model.addAttribute("q", q);
+        model.addAttribute("statusStr", status == null ? "" : status);
         model.addAttribute("from", from);
         model.addAttribute("to", to);
+        model.addAttribute("sort", sort);
+        model.addAttribute("dir", dir);
+        model.addAttribute("size", size);
 
-        return "order/list"; // Thymeleaf view
+        return "order/list";
     }
 
-    // 2) View Detail Order
+
     @GetMapping("/{orderId}")
     public String orderDetail(@PathVariable Long orderId,
                               Authentication auth,
@@ -61,7 +73,6 @@ public class CustomerOrderController {
         CustomerOrder order = orderService.getMyOrderDetail(accountId, orderId);
         model.addAttribute("order", order);
 
-        // hiển thị message VNPay (nếu có)
         if (order.getTransaction() != null) {
             model.addAttribute("paymentMsg", order.getTransaction().getVnpayResponseMessage());
         }
