@@ -85,7 +85,7 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
      * Lấy top blog theo view count
      * Chỉ lấy blog từ category ACTIVE
      */
-    @Query("SELECT DISTINCT b FROM Blog b " +
+    @Query("SELECT b FROM Blog b " +
             "LEFT JOIN FETCH b.category " +
             "LEFT JOIN FETCH b.author " +
             "WHERE b.status = 'PUBLISHED' AND " +
@@ -97,7 +97,7 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
      * Lấy các blog liên quan (cùng category, khác ID)
      * Chỉ lấy blog từ category ACTIVE
      */
-    @Query("SELECT DISTINCT b FROM Blog b " +
+    @Query("SELECT b FROM Blog b " +
             "LEFT JOIN FETCH b.category " +
             "LEFT JOIN FETCH b.author " +
             "WHERE b.category.blogCategoryId = :categoryId AND " +

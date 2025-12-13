@@ -37,6 +37,9 @@
                         <a class="nav-link" href="#category">Dịch vụ</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/blog">Blogs</a>
+                    </li>
+                    <li class="nav-item">
                             <a class="nav-link" href="#">Contact Us</a>
                     </li>
                     <li class="nav-item">
@@ -85,16 +88,23 @@
                             <li><a class="dropdown-item" th:href="@{/change-password}">Đổi mật khẩu</a></li>
                             <li><a class="dropdown-item" th:href="@{/orders}">Đơn hàng đã mua</a></li>
 <!--                            <li><a class="dropdown-item" th:href="@{/payment-history}">Lịch sử thanh toán</a></li>-->
-                            <li th:if="${session.loggedInAccount != null}"
-                                 th:switch="${session.loggedInAccount.sellerActive}">
-                            <!-- Đã là seller -->
-                            <a class="dropdown-item" th:if="${session.loggedInAccount.sellerActive}"
+                            <li th:if="${session.loggedInAccount != null}">
+                            <!-- Đã là seller và còn hạn -->
+                            <a class="dropdown-item" 
+                               th:if="${session.loggedInAccount.role != null and session.loggedInAccount.role.roleName.toString() == 'SELLER' and session.loggedInAccount.sellerActive}"
                                th:href="@{/seller/renew}">
                                 Gia hạn Seller
                             </a>
-                            <!-- Customer hoặc Seller hết hạn -->
-                            <a class="dropdown-item" th:if="${!session.loggedInAccount.sellerActive}"
+                            <!-- Đã là seller nhưng hết hạn -->
+                            <a class="dropdown-item" 
+                               th:if="${session.loggedInAccount.role != null and session.loggedInAccount.role.roleName.toString() == 'SELLER' and !session.loggedInAccount.sellerActive}"
                                th:href="@{/seller/renew}">
+                                Gia hạn Seller
+                            </a>
+                            <!-- Chưa là seller (CUSTOMER) -->
+                            <a class="dropdown-item" 
+                               th:if="${session.loggedInAccount.role != null and session.loggedInAccount.role.roleName.toString() != 'SELLER'}"
+                               th:href="@{/seller/register}">
                                 Đăng ký làm Seller
                             </a>
                         </li>
