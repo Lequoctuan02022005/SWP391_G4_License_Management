@@ -47,6 +47,7 @@ public class SecurityConfig {
                         // Blog public pages
                         .requestMatchers("/blog", "/blog/**").permitAll()
 
+                        .requestMatchers("/system-admin/license-accounts/**").hasRole("ADMIN")
                         // Role-based pages
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/manager/**").hasRole("MANAGER")
