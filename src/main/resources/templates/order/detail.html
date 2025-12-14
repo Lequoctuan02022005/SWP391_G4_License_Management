@@ -135,7 +135,15 @@
 
             <!-- LICENSE ACCOUNT -->
             <div class="box full" th:if="${order.licenseAccount != null}">
+                <div class="sep"></div>
+
+                <a class="btn btn-ghost"
+                   th:href="@{/customer/license-accounts/{id}(id=${order.licenseAccount.licenseAccountId})}">
+                    → Mở License Account
+                </a>
+
                 <div class="label">License Account được cấp</div>
+
                 <div class="value">
                     <div>ID: <b th:text="${order.licenseAccount.licenseAccountId}">0</b></div>
 

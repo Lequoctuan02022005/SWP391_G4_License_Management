@@ -79,4 +79,22 @@ public class CustomerOrderController {
 
         return "order/detail";
     }
+
+    @GetMapping("/{orderId}/license-account")
+    public String useService(@PathVariable Long orderId,
+                             Authentication auth,
+                             Model model) {
+        Long accountId = currentAccountId(auth);
+
+        CustomerOrder order = orderService.getMyOrderDetail(accountId, orderId);
+
+        if (order.getOrderStatus() != CustomerOrder.OrderStatus.SUCCESS || order.getLicenseAccount() == null) {
+            model.addAttribute("msg", "MSG-25: No active license found for this order.");
+            return "license/account/error";
+        }
+
+        // Redirect sang view license account (UC45)
+        return "redirect:/customer/license-accounts/" + order.getLicenseAccount().getLicenseAccountId()
+                + "?backOrderId=" + orderId;
+    }
 }

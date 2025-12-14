@@ -7,6 +7,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Dùng cho ADMIN renew thủ công (nếu có).
+ */
 public class LicenseRenewDTO {
 
     @NotNull(message = "Thiếu licenseAccountId")
@@ -19,7 +22,6 @@ public class LicenseRenewDTO {
     @DecimalMin(value = "0.00", message = "Số tiền phải >= 0")
     private BigDecimal amountPaid;
 
-    // getters/setters
     public Long getLicenseAccountId() { return licenseAccountId; }
     public void setLicenseAccountId(Long licenseAccountId) { this.licenseAccountId = licenseAccountId; }
 
