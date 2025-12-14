@@ -1,35 +1,72 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
     <title>Review Tool Upload</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
 
-<h2 th:text="${tool.toolName}"></h2>
+<!-- HEADER + SIDEBAR (ADMIN / MOD) -->
+<div th:replace="common/header :: header"></div>
 
-<p><strong>Description:</strong> <span th:text="${tool.description}"></span></p>
-<p><strong>Seller:</strong> <span th:text="${tool.seller.fullName}"></span></p>
-<p><strong>Status:</strong> <span th:text="${tool.status}"></span></p>
+<div th:fragment="content">
+<div class="container mt-4">
 
-<br/>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">Review Tool Upload</h3>
+        <a th:href="@{/tools/mod/uploads}" class="btn btn-outline-secondary">
+             Back
+        </a>
+    </div>
 
-<!-- APPROVE FORM -->
-<form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/approve'}" method="post">
-    <button type="submit">Approve</button>
-</form>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h4 class="fw-bold" th:text="${tool.toolName}"></h4>
 
-<br/>
+            <p><strong>Seller:</strong>
+                <span th:text="${tool.seller.fullName}"></span>
+            </p>
 
-<!-- REJECT FORM -->
-<form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/reject'}" method="post">
-    <textarea name="note" placeholder="Reason for rejection..." required></textarea>
-    <br/>
-    <button type="submit">Reject</button>
-</form>
+            <p><strong>Status:</strong>
+                <span th:text="${tool.status}"></span>
+            </p>
 
-<br/>
+            <hr>
 
-<a href="/tools/mod/uploads">Back to list</a>
+            <p><strong>Description</strong></p>
+            <p th:text="${tool.description}"></p>
+        </div>
+    </div>
 
+    <div class="row">
+        <!-- APPROVE -->
+        <div class="col-md-6">
+            <form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/approve'}"
+                  method="post">
+                <button class="btn btn-success w-100">
+                    Approve
+                </button>
+            </form>
+        </div>
+
+        <!-- REJECT -->
+        <div class="col-md-6">
+            <form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/reject'}"
+                  method="post">
+                <textarea class="form-control mb-2"
+                          name="note"
+                          placeholder="Reason for rejection..."
+                          required></textarea>
+                <button class="btn btn-danger w-100">
+                    Reject
+                </button>
+            </form>
+        </div>
+    </div>
+
+</div>
+</div>
 </body>
 </html>

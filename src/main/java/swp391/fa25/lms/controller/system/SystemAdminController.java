@@ -115,9 +115,6 @@ public class SystemAdminController {
 
 
 
-
-
-
     @GetMapping("/accounts/delete/{id}")
     public String deleteAccount(@PathVariable Long id) {
         accountService.delete(id);
