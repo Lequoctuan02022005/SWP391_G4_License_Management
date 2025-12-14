@@ -66,6 +66,11 @@
                                 <li><a class="dropdown-item" th:href="@{/profile}">Thông tin tài khoản</a></li>
                                 <li><a class="dropdown-item" th:href="@{/change-password}">Đổi mật khẩu</a></li>
                                 <li><a class="dropdown-item" th:href="@{/orders}">Đơn hàng đã mua</a></li>
+                                <li th:if="${account.role.roleName.name() == 'SELLER'}">
+                                    <a class="dropdown-item fw-semibold" th:href="@{/seller/dashboard}">
+                                        Seller Dashboard
+                                    </a>
+                                </li>
                                 <li th:if="${account.sellerActive}">
                                     <a class="dropdown-item" th:href="@{/seller/renew}">Gia hạn Seller</a>
                                 </li>
@@ -90,6 +95,7 @@
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Dashboard</a></li>
                     <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Users</a></li>
+                    <li class="nav-item mb-2"><a th:href="@{/renew-history}" class="nav-link text-white">Lịch sử gia hạn</a></li>
                     <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Tools</a></li>
                     <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Orders</a></li>
                     <li class="nav-item mt-4"><a th:href="@{/logout}" class="nav-link text-danger">Logout</a></li>
