@@ -39,7 +39,9 @@
         <!-- FILTER SIDEBAR -->
 
         <aside class="tl-filter-sidebar">
-          <h2 class="tl-filter-title">Bộ lọc</h2>
+
+
+            <h2 class="tl-filter-title">Bộ lọc</h2>
 
           <form th:action="@{/toollist}" method="get" class="tl-filter-form">
             <!-- KEYWORDS -->
@@ -369,7 +371,18 @@
                   Xem chi tiết
                 </a>
 
-                <!-- CUSTOMER ADD TO CART -->
+                  <!-- REPORT TOOL (USER) -->
+                  <a
+                          sec:authorize="hasRole('CUSTOMER')"
+                          th:href="@{'/tools/reports/tool/' + ${tool.toolId}}"
+                          class="tl-btn tl-btn-outline tl-btn-sm"
+                          style="border-color:#dc3545;color:#dc3545"
+                  >
+                      <i class="bi bi-flag"></i> Báo cáo
+                  </a>
+
+
+                  <!-- CUSTOMER ADD TO CART -->
                 <!-- Chỉ hiện nếu:
                              - Không phải tool của chính seller
                              - Còn hàng (availableQuantity > 0)

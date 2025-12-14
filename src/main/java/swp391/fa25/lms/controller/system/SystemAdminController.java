@@ -101,21 +101,19 @@ public class SystemAdminController {
     @PostMapping("/accounts/edit/{id}")
     public String editAccount(
             @PathVariable Long id,
-            @ModelAttribute("account") Account account,
-            BindingResult bindingResult,
-            Model model) {
-
-        // Không validate password khi edit → Không cần rejectValue
-        // Không dùng clear() → vì sẽ lỗi unmodifiable list
-
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("roles", roleRepository.findAll());
-            return "admin/account-edit";
-        }
-
-        accountService.update(id, account);
+            @RequestParam String fullName,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String address,
+            @RequestParam Account.AccountStatus status,
+            @RequestParam Integer roleId
+    ) {
+        accountService.updateWithRoleFields(
+                id, fullName, phone, address, status, roleId
+        );
         return "redirect:/admin/accounts";
     }
+
+
 
 
 
