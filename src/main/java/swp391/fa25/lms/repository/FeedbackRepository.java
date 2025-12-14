@@ -44,4 +44,9 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     Page<Feedback> findByToolAndStatusOrNull(@Param("tool") Tool tool,
                                              @Param("status") Feedback.Status status,
                                              Pageable pageable);
+
+    Optional<Feedback> findTopByAccount_AccountIdAndTool_ToolIdOrderByCreatedAtDesc(Long accountId, Long toolId);
+
+    @Query("select avg(f.rating) from Feedback f where f.tool.toolId = :toolId")
+    Double avgRatingByToolId(@Param("toolId") Long toolId);
 }

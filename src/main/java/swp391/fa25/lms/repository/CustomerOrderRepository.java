@@ -41,6 +41,7 @@ public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Lo
             Pageable pageable
     );
 
-    @EntityGraph(attributePaths = {"tool", "license", "transaction", "licenseAccount"})
+    @EntityGraph(attributePaths = {"tool", "license", "transaction", "licenseAccount", "account"})
     Optional<CustomerOrder> findByOrderIdAndAccount_AccountId(Long orderId, Long accountId);
+
 }

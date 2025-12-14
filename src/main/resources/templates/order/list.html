@@ -6,101 +6,14 @@
 
     <title>Lịch sử đơn hàng</title>
 
-    <!-- Bootstrap cho HEADER (giữ nguyên header, không sửa) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- KHÔNG load style.css nếu nó có .container/.btn/... global (nó sẽ làm vỡ header)
-         Nếu bắt buộc phải load thì để sau cùng + nhưng vẫn dễ đè nhau.
-         => Tốt nhất bỏ ở trang này. -->
-    <!-- <link rel="stylesheet" th:href="@{/css/style.css}"> -->
-
-    <style>
-        /* Nếu bên nào đó (home.css/style.css) set body flex, mình chặn lại để list không bị ảnh hưởng */
-        body { margin: 0 !important; display: block !important; }
-
-        /* ===================== ORDERS PAGE (CLASS RIÊNG, KHÔNG TRÙNG BOOTSTRAP) ===================== */
-        .orders-page {
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-            background:#f6f7fb;
-            color:#111;
-            padding: 24px 0;
-        }
-
-        .orders-container { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
-
-        .orders-card {
-            background:#fff;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0,0,0,.06);
-            padding: 16px;
-        }
-
-        .orders-title { margin: 0 0 12px; font-size: 22px; font-weight: 700; }
-
-        .orders-sub { margin: 0 0 16px; color:#555; font-size: 14px; }
-
-        .orders-row { display:flex; gap: 12px; flex-wrap: wrap; align-items: end; }
-
-        .orders-field { display:flex; flex-direction: column; gap: 6px; }
-
-        .orders-label { font-size: 12px; color:#444; }
-
-        .orders-input, .orders-select {
-            padding: 10px 10px;
-            border: 1px solid #d7d9e0;
-            border-radius: 10px;
-            outline: none;
-            min-width: 180px;
-            background:#fff;
-        }
-
-        .o-btn {
-            cursor:pointer;
-            border:0;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-weight: 700;
-            display:inline-block;
-            text-decoration:none;
-            text-align:center;
-            user-select: none;
-        }
-        .o-btn-primary { background:#1f6feb; color:#fff; }
-        .o-btn-ghost { background:#eef2ff; color:#1f3a8a; }
-
-        .orders-table { width:100%; border-collapse: collapse; margin-top: 14px; }
-        .orders-th, .orders-td { text-align:left; padding: 12px 10px; border-bottom: 1px solid #edf0f5; vertical-align: top; }
-        .orders-th { font-size: 12px; color:#555; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
-        .orders-td { font-size: 14px; }
-
-        .o-badge { display:inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; }
-        .o-b-pending { background:#fff7ed; color:#9a3412; }
-        .o-b-success { background:#ecfdf5; color:#065f46; }
-        .o-b-failed  { background:#fef2f2; color:#991b1b; }
-        .o-b-null    { background:#f3f4f6; color:#374151; }
-
-        .orders-muted { color:#666; font-size: 13px; }
-
-        .orders-actions a { text-decoration:none; font-weight: 800; color:#1f6feb; }
-
-        .orders-pager { display:flex; gap: 8px; align-items: center; justify-content: space-between; margin-top: 16px; flex-wrap: wrap; }
-        .orders-page-links { display:flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .o-pill { padding: 8px 10px; border-radius: 10px; background:#f3f4f6; color:#111; text-decoration: none; font-weight: 800; display:inline-block; }
-        .o-pill.disabled { opacity: .5; pointer-events:none; }
-        .o-pill.active { background:#111; color:#fff; }
-
-        .orders-empty { padding: 18px; border: 1px dashed #d7d9e0; border-radius: 12px; background:#fbfcff; margin-top: 14px; }
-
-        .orders-sortlink{ color:#555; text-decoration:none; font-weight:900; display:inline-flex; gap:6px; align-items:center; }
-        .orders-sortlink:hover{ color:#111; }
-        .orders-arrow{ font-size:12px; opacity:.85; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/orders.css}">
 </head>
 
 <body>
-<!-- Header giữ nguyên -->
 <div th:replace="~{common/header :: header}"></div>
 
 <main class="orders-page">
@@ -110,13 +23,15 @@
         <div class="orders-card">
             <h1 class="orders-title">Lịch sử đơn hàng</h1>
 
-            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+            <div class="orders-top-links">
                 <a class="o-btn o-btn-ghost" th:href="@{/customer/license-accounts}">
                     → License Accounts
                 </a>
             </div>
 
-            <p class="orders-sub">Xem các đơn hàng/transaction của bạn. Có thể tìm kiếm, lọc và sắp xếp theo nhiều tiêu chí.</p>
+            <p class="orders-sub">
+                Xem các đơn hàng/transaction của bạn. Có thể tìm kiếm, lọc và sắp xếp theo nhiều tiêu chí.
+            </p>
 
             <form th:action="@{/customer/orders}" method="get" class="orders-row">
                 <div class="orders-field">
@@ -199,35 +114,40 @@
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='orderId',dir=${sort=='orderId' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
-                                #Order <span class="orders-arrow" th:text="${sort=='orderId' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                                #Order <span class="orders-arrow"
+                                             th:text="${sort=='orderId' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
                         </th>
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='toolName',dir=${sort=='toolName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
-                                Tool <span class="orders-arrow" th:text="${sort=='toolName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                                Tool <span class="orders-arrow"
+                                           th:text="${sort=='toolName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
                         </th>
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='licenseName',dir=${sort=='licenseName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
-                                License <span class="orders-arrow" th:text="${sort=='licenseName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                                License <span class="orders-arrow"
+                                              th:text="${sort=='licenseName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
                         </th>
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='price',dir=${sort=='price' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
-                                Giá <span class="orders-arrow" th:text="${sort=='price' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                                Giá <span class="orders-arrow"
+                                          th:text="${sort=='price' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
                         </th>
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='orderStatus',dir=${sort=='orderStatus' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
-                                Trạng thái <span class="orders-arrow" th:text="${sort=='orderStatus' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                                Trạng thái <span class="orders-arrow"
+                                                 th:text="${sort=='orderStatus' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
                         </th>
 
@@ -236,16 +156,19 @@
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='createdAt',dir=${sort=='createdAt' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
-                                Ngày tạo <span class="orders-arrow" th:text="${sort=='createdAt' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                                Ngày tạo <span class="orders-arrow"
+                                               th:text="${sort=='createdAt' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
                         </th>
 
-                        <th class="orders-th"></th>
+                        <th class="orders-th">Hành động</th>
                     </tr>
                     </thead>
 
                     <tbody>
-                    <tr th:each="o : ${pageData.content}">
+                    <tr th:each="o : ${pageData.content}"
+                        th:with="paidOk=${o.transaction != null and o.transaction.status != null and o.transaction.status.toString() == 'SUCCESS'}">
+
                         <td class="orders-td">
                             <div><b th:text="${o.orderId}">1</b></div>
                             <div class="orders-muted" th:if="${o.lastTxnRef != null}">
@@ -291,8 +214,43 @@
                             <div th:text="${o.createdAt != null ? #temporals.format(o.createdAt,'dd/MM/yyyy HH:mm') : '(N/A)'}">--</div>
                         </td>
 
-                        <td class="orders-td orders-actions">
-                            <a th:href="@{/customer/orders/{id}(id=${o.orderId})}">Xem chi tiết →</a>
+                        <td class="orders-td actions-cell">
+                            <div class="o-actions">
+                                <!-- Xem detail: luôn có -->
+                                <a class="o-action o-action-view"
+                                   th:href="@{/customer/orders/{id}(id=${o.orderId})}"
+                                   title="Xem chi tiết">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+
+                                <a class="o-action o-action-primary"
+                                   th:if="${paidOk}"
+                                   th:href="@{/customer/orders/{id}/feedback(id=${o.orderId})}"
+                                   title="Feedback">
+                                    <i class="fa-regular fa-star"></i> Feedback
+                                </a>
+
+                                <a class="o-action o-action-danger"
+                                   th:if="${paidOk}"
+                                   th:href="@{/support/create(orderId=${o.orderId})}"
+                                   title="Báo cáo">
+                                    <i class="fa-regular fa-flag"></i> Báo cáo
+                                </a>
+
+                                <a class="o-action o-action-success"
+                                   th:if="${paidOk}"
+                                   th:href="@{/customer/orders/{id}(id=${o.orderId})}"
+                                   title="Dùng dịch vụ">
+                                    <i class="fa-solid fa-play"></i> Dùng
+                                </a>
+
+                                <a class="o-action o-action-danger"
+                                   th:if="${!paidOk}"
+                                   th:href="@{/payment/retry(orderId=${o.orderId})}"
+                                   title="Thanh toán lại">
+                                    <i class="fa-solid fa-rotate-right"></i> Thanh toán lại
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     </tbody>
@@ -331,7 +289,6 @@
                 </div>
 
             </div>
-
         </div>
     </div>
 </main>

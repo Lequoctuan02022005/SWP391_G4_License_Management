@@ -7,7 +7,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.CustomerOrder;
+import swp391.fa25.lms.model.Feedback;
 import swp391.fa25.lms.repository.AccountRepository;
+import swp391.fa25.lms.repository.FeedbackRepository;
 import swp391.fa25.lms.service.CustomerOrderService;
 
 import java.time.LocalDateTime;
@@ -18,10 +20,14 @@ public class CustomerOrderController {
 
     private final CustomerOrderService orderService;
     private final AccountRepository accountRepo;
+    private final FeedbackRepository feedbackRepo;
 
-    public CustomerOrderController(CustomerOrderService orderService, AccountRepository accountRepo) {
+    public CustomerOrderController(CustomerOrderService orderService,
+                                   AccountRepository accountRepo,
+                                   FeedbackRepository feedbackRepo) {
         this.orderService = orderService;
         this.accountRepo = accountRepo;
+        this.feedbackRepo = feedbackRepo;
     }
 
     private Long currentAccountId(Authentication auth) {
@@ -63,7 +69,6 @@ public class CustomerOrderController {
         return "order/list";
     }
 
-
     @GetMapping("/{orderId}")
     public String orderDetail(@PathVariable Long orderId,
                               Authentication auth,
@@ -75,6 +80,20 @@ public class CustomerOrderController {
 
         if (order.getTransaction() != null) {
             model.addAttribute("paymentMsg", order.getTransaction().getVnpayResponseMessage());
+        }
+
+        // ====== Rating (của user + trung bình tool) ======
+        if (order.getTool() != null) {
+            Long toolId = order.getTool().getToolId();
+
+            Feedback myFeedback = feedbackRepo
+                    .findTopByAccount_AccountIdAndTool_ToolIdOrderByCreatedAtDesc(accountId, toolId)
+                    .orElse(null);
+
+            Double avgRating = feedbackRepo.avgRatingByToolId(toolId);
+
+            model.addAttribute("myFeedback", myFeedback);
+            model.addAttribute("avgRating", avgRating);
         }
 
         return "order/detail";
@@ -93,7 +112,6 @@ public class CustomerOrderController {
             return "license/account/error";
         }
 
-        // Redirect sang view license account (UC45)
         return "redirect:/customer/license-accounts/" + order.getLicenseAccount().getLicenseAccountId()
                 + "?backOrderId=" + orderId;
     }
