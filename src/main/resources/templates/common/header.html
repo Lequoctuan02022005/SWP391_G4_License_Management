@@ -71,11 +71,17 @@
                                         Seller Dashboard
                                     </a>
                                 </li>
-                                <li th:if="${account.sellerActive}">
+                                <!-- Nếu đã là SELLER và còn hạn -->
+                                <li th:if="${account.role != null and account.role.roleName.toString() == 'SELLER' and account.sellerActive}">
                                     <a class="dropdown-item" th:href="@{/seller/renew}">Gia hạn Seller</a>
                                 </li>
-                                <li th:if="${!account.sellerActive}">
-                                    <a class="dropdown-item" th:href="@{/seller/renew}">Đăng ký làm Seller</a>
+                                <!-- Nếu đã là SELLER nhưng hết hạn -->
+                                <li th:if="${account.role != null and account.role.roleName.toString() == 'SELLER' and !account.sellerActive}">
+                                    <a class="dropdown-item" th:href="@{/seller/renew}">Gia hạn Seller</a>
+                                </li>
+                                <!-- Nếu chưa là SELLER (CUSTOMER) -->
+                                <li th:if="${account.role != null and account.role.roleName.toString() != 'SELLER'}">
+                                    <a class="dropdown-item" th:href="@{/seller/register}">Đăng ký làm Seller</a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" th:href="@{/logout}">Thoát</a></li>

@@ -199,7 +199,7 @@
           <!-- TOP BAR -->
           <div class="tl-top-bar">
             <!-- Nút ADD cho SELLER -->
-            <div class="tl-top-right" sec:authorize="hasRole('SELLER')">
+            <div class="tl-top-right"th:if="${account.role.roleName.name() == 'SELLER'}">
               <a th:href="@{/tools/seller/add}" class="tl-btn tl-btn-primary">
                 + Thêm Tool
               </a>
@@ -378,7 +378,7 @@
                   th:if="${tool.seller.accountId != currentUserId
                            and tool.availableQuantity != null
                            and tool.availableQuantity > 0}"
-                  th:href="@{'/tools/' + ${tool.toolId}}"
+                  th:href="@{'/tools/detail/' + ${tool.toolId}}"
                   class="tl-btn tl-btn-outline tl-btn-sm"
                   sec:authorize="hasRole('CUSTOMER')"
                 >
