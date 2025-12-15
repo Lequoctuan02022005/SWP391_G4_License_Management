@@ -1,0 +1,135 @@
+/* PREMIUM BACKGROUND */
+body {
+    background: linear-gradient(to bottom right, #eef2f7, #ffffff);
+    font-family: 'Inter', sans-serif;
+}
+
+.page-wrapper {
+    padding: 40px 0;
+}
+
+/* CONTAINER CHÍNH */
+.premium-container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 40px;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+/* TITLE */
+.title {
+    font-size: 32px;
+    color: #1f2d3d;
+}
+
+.subtitle {
+    color: #6b7280;
+    font-size: 16px;
+    margin-bottom: 25px;
+}
+
+/* ALERT */
+.alert-premium,
+.alert-warning-premium {
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 15px;
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.alert-premium {
+    background: #ffe2e2;
+    border: 1px solid #ffb3b3;
+    color: #d63031;
+}
+
+.alert-warning-premium {
+    background: #fff7d1;
+    border: 1px solid #f1d170;
+    color: #b58900;
+}
+
+/* PACKAGE CARD */
+.package-card {
+    padding: 25px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 2px solid #e5e7eb;
+    transition: 0.25s;
+    cursor: pointer;
+    min-height: 260px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.package-card:hover {
+    transform: translateY(-6px);
+    border-color: #3b82f6;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.package-card.selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+    box-shadow: 0 12px 30px rgba(37,99,235,0.25);
+}
+
+/* CARD TEXT */
+.package-header h4 {
+    margin-bottom: 10px;
+    color: #1e293b;
+}
+
+.price {
+    color: #2563eb;
+    margin-top: 15px;
+    font-size: 22px;
+}
+
+.duration {
+    font-size: 15px;
+    color: #6b7280;
+}
+
+.desc {
+    font-size: 14px;
+    color: #4b5563;
+    margin-top: 10px;
+}
+
+/* BUTTON PREMIUM */
+.btn-premium {
+    background: #2563eb;
+    color: #ffffff;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    transition: 0.25s;
+    font-size: 17px;
+    display: none; /* ẩn đến khi chọn gói */
+}
+
+.btn-premium:hover {
+    background: #1d4ed8;
+}
+
+/* BACK BUTTON */
+.btn-back {
+    display: block;
+    padding: 12px;
+    background: #6b7280;
+    color: white;
+    text-align: center;
+    border-radius: 12px;
+    text-decoration: none;
+}
+
+.btn-back:hover {
+    background: #4b5563;
+}

@@ -16,11 +16,11 @@
           method="post"
           class="card p-4 shadow-sm">
 
-        <input type="hidden" th:field="*{accountId}" />
+<!--        <input type="hidden" th:field="*{accountId}" />-->
 
         <div class="mb-3">
             <label>Email</label>
-            <input type="text" class="form-control" th:field="*{email}" required/>
+            <input type="text" class="form-control" th:field="*{email}" readonly />
         </div>
 
         <div class="mb-3">
@@ -53,7 +53,7 @@
 
         <div class="mb-3">
             <label>Role</label>
-            <select class="form-select" th:field="*{role.roleId}">
+            <select name="roleId" class="form-select">
                 <option th:each="r : ${roles}"
                         th:value="${r.roleId}"
                         th:text="${r.roleName}">

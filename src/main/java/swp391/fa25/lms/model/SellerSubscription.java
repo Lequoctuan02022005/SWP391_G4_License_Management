@@ -26,6 +26,10 @@ public class SellerSubscription {
 
     private boolean active;
 
+    @ManyToOne
+    @JoinColumn(name = "transaction_id", nullable = true)
+    private PaymentTransaction transaction;
+
     public SellerSubscription() {}
 
     public SellerSubscription(int id, Account account, SellerPackage sellerPackage, LocalDateTime startDate, LocalDateTime endDate, double priceAtPurchase, boolean active) {
@@ -94,5 +98,11 @@ public class SellerSubscription {
         this.active = active;
     }
 
+    public PaymentTransaction getTransaction() {
+        return transaction;
+    }
 
+    public void setTransaction(PaymentTransaction transaction) {
+        this.transaction = transaction;
+    }
 }

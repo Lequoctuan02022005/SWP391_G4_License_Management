@@ -57,6 +57,9 @@ public class Account {
     @Column(name = "code_expiry")
     private LocalDateTime codeExpiry;
 
+    @Column(name = "images", columnDefinition = "TEXT") // TEXT để lưu nhiều ký tự
+    private String images;
+
     @Transient  // Không lưu vào database
     private String confirmPassword;
 
@@ -97,7 +100,7 @@ public class Account {
     public Account() {
     }
 
-    public Account(Long accountId, String email, String password, String fullName, LocalDateTime createdAt, AccountStatus status, LocalDateTime updatedAt, String phone, String address, Boolean verified, String verificationCode, LocalDateTime codeExpiry, String confirmPassword, Role role, LocalDateTime sellerExpiryDate, Boolean sellerActive, SellerPackage sellerPackage, List<Tool> tools, List<Favorite> favorites, List<Feedback> feedbacks, List<CustomerOrder> orders) {
+    public Account(Long accountId, String email, String password, String fullName, LocalDateTime createdAt, AccountStatus status, LocalDateTime updatedAt, String phone, String address, Boolean verified, String verificationCode, LocalDateTime codeExpiry, String confirmPassword, Role role, LocalDateTime sellerExpiryDate, Boolean sellerActive, SellerPackage sellerPackage, List<Tool> tools, List<Favorite> favorites, List<Feedback> feedbacks, List<CustomerOrder> orders, String images) {
         this.accountId = accountId;
         this.email = email;
         this.password = password;
@@ -120,6 +123,7 @@ public class Account {
         this.favorites = favorites;
         this.feedbacks = feedbacks;
         this.orders = orders;
+        this.images = images;
     }
 
     public List<ToolFile> getUploadedFiles() {
@@ -192,6 +196,13 @@ public class Account {
 
     public void setPhone(@Pattern(regexp = "0\\d{9}", message = "Số điện thoại phải có 9 chữ số bắt đầu bằng số 0") String phone) {
         this.phone = phone;
+    }
+    public String getImages() {
+        return images;
+    }
+
+    public void setImages(String images) {
+        this.images = images;
     }
 
     public String getAddress() {
