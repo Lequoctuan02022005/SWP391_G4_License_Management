@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>License Account</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f6f7fb; color:#111; }
+        .container { max-width: 980px; margin:24px auto; padding:0 16px; }
+        .card { background:#fff; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.06); padding:16px; }
+        .top { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+        h1 { margin:0; font-size:22px; }
+        .muted { color:#666; font-size:13px; }
+        .btn { cursor:pointer; border:0; border-radius:10px; padding:10px 14px; font-weight:800; display:inline-block; text-decoration:none; }
+        .btn-ghost { background:#eef2ff; color:#1f3a8a; }
+        .btn-primary { background:#1f6feb; color:#fff; }
+        .btn-dark { background:#111; color:#fff; }
+        .btn-danger { background:#fee2e2; color:#991b1b; }
+        .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px; }
+        .box { border:1px solid #edf0f5; border-radius:12px; padding:12px; background:#fbfcff; }
+        .label { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
+        .value { font-size:14px; }
+        .value b { font-size:16px; }
+        .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:800; }
+        .b-active { background:#ecfdf5; color:#065f46; }
+        .b-expired { background:#fff7ed; color:#9a3412; }
+        .b-revoked { background:#fef2f2; color:#991b1b; }
+        .b-null { background:#f3f4f6; color:#374151; }
+        .full { grid-column: 1 / -1; }
+        .sep { height:1px; background:#edf0f5; margin:12px 0; }
+        .msg { padding:10px 12px; border-radius:10px; margin-top:10px; font-weight:800; }
+        .msg-ok { background:#ecfdf5; color:#065f46; }
+        .msg-err { background:#fef2f2; color:#991b1b; }
+
+        /* modal */
+        .overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:16px; }
+        .modal { width:min(560px, 100%); background:#fff; border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.2); padding:14px; }
+        .mhead { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+        .mhead h2 { margin:0; font-size:18px; }
+        .close { border:0; background:#f3f4f6; border-radius:10px; padding:8px 10px; cursor:pointer; font-weight:900; }
+        .form { margin-top:10px; display:grid; gap:10px; }
+        .field { display:flex; flex-direction:column; gap:6px; }
+        input, select { padding:10px; border:1px solid #d7d9e0; border-radius:10px; outline:none; background:#fff; }
+        .err { color:#b91c1c; font-size:12px; font-weight:800; }
+        .rowbtn { display:flex; gap:10px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; }
+        table { width:100%; border-collapse:collapse; margin-top:10px; }
+        th, td { text-align:left; padding:10px; border-bottom:1px solid #edf0f5; vertical-align:top; }
+        th { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:.04em; }
+        @media (max-width: 860px){ .grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="card">
+
+        <div class="top">
+            <h1>License Account #<span th:text="${la.licenseAccountId}">0</span></h1>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="btn btn-ghost" th:href="@{/customer/license-accounts}">← Danh sách</a>
+                <a class="btn btn-dark" th:if="${la.order != null}"
+                   th:href="@{/customer/orders/{id}(id=${la.order.orderId})}">
+                    ← Back to order
+                </a>
+            </div>
+        </div>
+
+        <div th:if="${successMsg != null}" class="msg msg-ok" th:text="${successMsg}">OK</div>
+        <div th:if="${errorMsg != null}" class="msg msg-err" th:text="${errorMsg}">ERR</div>
+
+        <div class="grid">
+
+            <div class="box">
+                <div class="label">Tool</div>
+                <div class="value">
+                    <b th:text="${la.license != null and la.license.tool != null ? la.license.tool.toolName : '(N/A)'}">Tool</b>
+                    <div class="muted" th:if="${la.license != null and la.license.tool != null}">
+                        Login method: <b th:text="${la.license.tool.loginMethod}">USER_PASSWORD</b>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="label">License package (latest)</div>
+                <div class="value">
+                    <b th:text="${la.license != null ? la.license.name : '(N/A)'}">License</b>
+                    <div class="muted" th:if="${la.license != null and la.license.durationDays != null}">
+                        Duration: <span th:text="${la.license.durationDays}">0</span> ngày
+                    </div>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="label">Status</div>
+                <div class="value">
+                    <span class="badge b-active" th:if="${la.status != null and la.status.name() == 'ACTIVE'}">ACTIVE</span>
+                    <span class="badge b-expired" th:if="${la.status != null and la.status.name() == 'EXPIRED'}">EXPIRED</span>
+                    <span class="badge b-revoked" th:if="${la.status != null and la.status.name() == 'REVOKED'}">REVOKED</span>
+                    <span class="badge b-null" th:if="${la.status == null}">N/A</span>
+
+                    <div class="muted" style="margin-top:6px;">
+                        Used: <b th:text="${la.used}">false</b>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="label">Validity</div>
+                <div class="value">
+                    <div class="muted">Start</div>
+                    <b th:text="${la.startDate != null ? #temporals.format(la.startDate,'dd/MM/yyyy HH:mm') : '(N/A)'}">--</b>
+                    <div class="sep"></div>
+                    <div class="muted">End</div>
+                    <b th:text="${la.endDate != null ? #temporals.format(la.endDate,'dd/MM/yyyy HH:mm') : '(N/A)'}">--</b>
+                </div>
+            </div>
+
+            <div class="box full">
+                <div class="label">Login info</div>
+                <div class="value">
+
+                    <!-- TOKEN -->
+                    <div th:if="${la.token != null}">
+                        <div class="muted">Token</div>
+                        <b th:text="${la.token}">token</b>
+                        <div class="muted" style="margin-top:6px;">(Tool TOKEN không cho edit credential)</div>
+                    </div>
+
+                    <!-- USER/PASS -->
+                    <div th:if="${la.token == null}">
+                        <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                            <div>
+                                <div class="muted">Username</div>
+                                <b th:text="${la.username != null ? la.username : '(N/A)'}">u</b>
+                            </div>
+                            <div>
+                                <div class="muted">Password</div>
+                                <b>••••••••</b>
+                            </div>
+                        </div>
+                        <div class="muted" style="margin-top:6px;">Password được ẩn — bấm “Edit” để cập nhật.</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="box full">
+                <div class="label">Actions</div>
+                <div class="value" style="display:flex; gap:10px; flex-wrap:wrap;">
+
+                    <!-- EDIT: chỉ khi USER_PASSWORD + ACTIVE -->
+                    <button class="btn btn-primary"
+                            type="button"
+                            th:if="${la.license != null and la.license.tool != null and la.license.tool.loginMethod.name() == 'USER_PASSWORD'
+                          and la.status != null and la.status.name() == 'ACTIVE'}"
+                            onclick="openModal('editModal')">
+                        Edit
+                    </button>
+
+                    <button class="btn btn-dark"
+                            type="button"
+                            th:if="${la.status == null or la.status.name() != 'REVOKED'}"
+                            onclick="openModal('renewModal')">
+                        Renew
+                    </button>
+
+                    <a class="btn btn-ghost" th:href="@{/customer/license-accounts/{id}/history(id=${la.licenseAccountId})}">
+                        History
+                    </a>
+                </div>
+
+                <div class="muted" style="margin-top:8px;">
+                    Nếu hết hạn: hệ thống có thể hiển thị EXPIRED và vẫn cho Renew (tuỳ rule backend).
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ================== EDIT MODAL ================== -->
+<div id="editModal" class="overlay" onclick="overlayClose(event,'editModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="mhead">
+            <h2>Edit License Account</h2>
+            <button class="close" type="button" onclick="closeModal('editModal')">✕</button>
+        </div>
+
+        <!-- editDto: LicenseAccountEditDTO -->
+        <form class="form"
+              th:action="@{/customer/license-accounts/{id}/edit(id=${la.licenseAccountId})}"
+              th:object="${editDto}"
+              method="post">
+
+            <div class="field">
+                <label>Username</label>
+                <input type="text" th:field="*{username}" placeholder="Nhập username" required minlength="3" maxlength="255">
+                <div class="err" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">err</div>
+            </div>
+
+            <div class="field">
+                <label>Password</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input id="pwd" type="password" th:field="*{password}" placeholder="Nhập mật khẩu mới"
+                           required minlength="4" maxlength="255" style="flex:1;">
+                    <button type="button" class="close" onclick="togglePwd()">👁</button>
+                </div>
+                <div class="err" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">err</div>
+            </div>
+
+            <div class="rowbtn">
+                <button class="btn btn-ghost" type="button" onclick="closeModal('editModal')">Cancel</button>
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ================== RENEW MODAL ================== -->
+<div id="renewModal" class="overlay" onclick="overlayClose(event,'renewModal')">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="mhead">
+            <h2>Renew License</h2>
+            <button class="close" type="button" onclick="closeModal('renewModal')">✕</button>
+        </div>
+
+        <!-- renewDto: dto chứa licenseAccountId + licenseId (hoặc anh dùng param licenseId) -->
+        <form class="form"
+              th:action="@{/customer/license-accounts/{id}/renew(id=${la.licenseAccountId})}"
+              th:object="${renewForm}"
+              method="post">
+
+            <input type="hidden" name="licenseAccountId" th:value="${la.licenseAccountId}"/>
+
+            <div class="field">
+                <label>Chọn gói gia hạn</label>
+                <select name="licenseId" required>
+                    <option value="" selected>-- Chọn gói --</option>
+                    <!-- renewPackages: List<License> -->
+                    <option th:each="p : ${renewPackages}"
+                            th:value="${p.licenseId}"
+                            th:text="${p.name + ' · ' + (p.durationDays != null ? p.durationDays : 0) + ' ngày · ' + (p.price != null ? p.price : 0) + ' VND'}">
+                    </option>
+                </select>
+                <div class="err" th:if="${renewError != null}" th:text="${renewError}">err</div>
+            </div>
+
+            <div class="muted">
+                Bấm “Pay via VNPay” để đi tới flow thanh toán (backend sẽ init transaction).
+            </div>
+
+            <div class="rowbtn">
+                <button class="btn btn-ghost" type="button" onclick="closeModal('renewModal')">Close</button>
+                <button class="btn btn-dark" type="submit">Pay via VNPay</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openModal(id){ document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id){ document.getElementById(id).style.display = 'none'; }
+    function overlayClose(e, id){ if(e.target && e.target.id === id) closeModal(id); }
+    function togglePwd(){
+        const el = document.getElementById('pwd');
+        if(!el) return;
+        el.type = (el.type === 'password') ? 'text' : 'password';
+    }
+
+
+    const openEdit = /*[[${openEditModal}]]*/ false;
+    if(openEdit){ openModal('editModal'); }
+
+    const openRenew = /*[[${openRenewModal}]]*/ false;
+    if(openRenew){ openModal('renewModal'); }
+</script>
+
+</body>
+</html>
