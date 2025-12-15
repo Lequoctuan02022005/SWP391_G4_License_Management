@@ -44,16 +44,30 @@ public class ToolController {
     @Autowired
     private ToolFlowService toolFlowService;
 
+    /* ===========================================================
+         CHECK SELLER EXPIRED
+     ============================================================ */
+    private boolean isExpiredSeller(Account acc) {
+        return acc == null
+                || !Boolean.TRUE.equals(acc.getSellerActive())
+                || acc.getSellerExpiryDate() == null
+                || acc.getSellerExpiryDate().isBefore(LocalDateTime.now());
+    }
+
     private Account requireActiveSeller(HttpSession session, RedirectAttributes redirectAttrs) {
+
         Account seller = (Account) session.getAttribute("loggedInAccount");
+
         if (seller == null) {
             redirectAttrs.addFlashAttribute("error", "Please login again.");
             return null;
         }
-//        if (!accountService.isSellerActive(seller)) {
-//            redirectAttrs.addFlashAttribute("error", "Your seller package has expired. Please renew before continuing.");
-//            return null;
-//        }
+
+        if (isExpiredSeller(seller)) {
+            redirectAttrs.addFlashAttribute("error", "Your seller package has expired. Please renew before continuing.");
+            return null;
+        }
+
         return seller;
     }
     /**
@@ -68,6 +82,9 @@ public class ToolController {
             HttpSession session,
             RedirectAttributes redirectAttrs
     ) {
+        Account seller = requireActiveSeller(session, redirectAttrs);
+        if (seller == null) return "redirect:/seller/renew";
+
         if (cancel != null && cancel) {
             toolFlowService.cancelToolCreation(session);
             redirectAttrs.addFlashAttribute("info", "Creation canceled.");
@@ -107,7 +124,7 @@ public class ToolController {
     ) {
         Account seller = requireActiveSeller(session, redirectAttrs);
         if (seller == null) {
-            return "redirect:/login";
+            return "redirect:/seller/renew";
         }
 
         if (result.hasErrors()) {
@@ -154,7 +171,7 @@ public class ToolController {
     ) {
         Account seller = requireActiveSeller(session, redirectAttrs);
         if (seller == null) {
-            return "redirect:/login";
+            return "redirect:/seller/renew";
         }
 
         Tool tool = toolService.getToolByIdAndSeller(id, seller);
@@ -184,18 +201,12 @@ public class ToolController {
     ) {
 
         Account seller = requireActiveSeller(session, redirectAttrs);
-        if (seller == null) return "redirect:/login";
+        if (seller == null) return "redirect:/seller/renew";
 
         try {
             Tool existing = toolService.getToolByIdAndSeller(id, seller);
             if (existing == null)
                 throw new IllegalArgumentException("Tool not found.");
-
-            // LOG — kiểm tra action & login method
-            System.out.println("ACTION = " + action);
-            System.out.println("UPDATED LOGIN METHOD = " + updatedTool.getLoginMethod());
-            System.out.println("EXISTING LOGIN METHOD = " + existing.getLoginMethod());
-
             // ======== MERGE DATA BẮT BUỘC — TRÁNH NULL ========
             updatedTool.setToolId(existing.getToolId());
             updatedTool.setSeller(existing.getSeller());
@@ -214,13 +225,10 @@ public class ToolController {
                         )
                 );
             }
-
             // DESCRIPTION (TOKEN MODE gửi hidden → không bao giờ null)
             if (updatedTool.getDescription() == null || updatedTool.getDescription().isBlank()) {
                 updatedTool.setDescription(existing.getDescription());
             }
-
-            // NOTE
             if (updatedTool.getNote() == null)
                 updatedTool.setNote(existing.getNote());
 
@@ -345,7 +353,7 @@ public class ToolController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("status", status != null ? status.name() : "");
 
-        return "moderator/tool-upload-list";
+        return "tool/tool-upload-list";
     }
 
 
@@ -359,7 +367,7 @@ public class ToolController {
                 .orElseThrow(() -> new RuntimeException("Tool not found"));
 
         model.addAttribute("tool", tool);
-        return "moderator/tool-upload-detail";
+        return "tool/tool-upload-detail";
     }
 
 
@@ -430,7 +438,7 @@ public class ToolController {
         model.addAttribute("reports", reports);
         model.addAttribute("status", status);
 
-        return "moderator/tool-report-list";
+        return "tool/tool-report-list";
     }
 
 
@@ -443,7 +451,7 @@ public class ToolController {
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
         model.addAttribute("report", report);
-        return "moderator/tool-report-detail";
+        return "tool/tool-report-detail";
     }
 
 

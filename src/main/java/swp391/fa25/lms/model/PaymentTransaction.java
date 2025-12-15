@@ -27,8 +27,8 @@ public class PaymentTransaction {
 
     public enum TransactionType {
         ORDER_PAYMENT,          // Thanh toán mua license
-        LICENSE_RENEWAL,        // Thanh toán gia hạn license
-        SELLER_SUBSCRIPTION     // Thanh toán gói seller
+        SELLER_SUBSCRIPTION,    // Thanh toán gói seller (gia hạn)
+        SELLER_REGISTRATION     // Thanh toán đăng ký làm seller lần đầu
     }
 
     @Enumerated(EnumType.STRING)
@@ -79,10 +79,6 @@ public class PaymentTransaction {
     @OneToMany(mappedBy = "transaction")
     @JsonIgnoreProperties({"transaction", "licenseAccount"})
     private List<LicenseRenewLog> renewLogs;
-
-    @OneToOne(mappedBy = "transaction", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties({"transaction"})
-    private VNPayPaymentDetail vnpayDetail;
 
     // Timestamps
     @Column(nullable = false)
@@ -291,14 +287,6 @@ public class PaymentTransaction {
 
     public void setRenewLogs(List<LicenseRenewLog> renewLogs) {
         this.renewLogs = renewLogs;
-    }
-
-    public VNPayPaymentDetail getVnpayDetail() {
-        return vnpayDetail;
-    }
-
-    public void setVnpayDetail(VNPayPaymentDetail vnpayDetail) {
-        this.vnpayDetail = vnpayDetail;
     }
 
     public LocalDateTime getCreatedAt() {

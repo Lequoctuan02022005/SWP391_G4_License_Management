@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Seller Package Management</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-4">
+    <h3 class="mb-3 text-center">Seller Package Management</h3>
+
+    <!-- FILTER -->
+    <form method="get" class="row g-2 mb-3">
+        <div class="col">
+            <input name="packageName" class="form-control" placeholder="Package name">
+        </div>
+        <div class="col">
+            <input name="minPrice" class="form-control" placeholder="Min price">
+        </div>
+        <div class="col">
+            <input name="maxPrice" class="form-control" placeholder="Max price">
+        </div>
+        <div class="col">
+            <input name="minDuration" class="form-control" placeholder="Min duration">
+        </div>
+        <div class="col">
+            <input name="maxDuration" class="form-control" placeholder="Max duration">
+        </div>
+        <div class="col">
+            <select name="status" class="form-select">
+                <option value="">All Status</option>
+                <option th:each="s : ${statusList}"
+                        th:value="${s}"
+                        th:text="${s}">
+                </option>
+            </select>
+        </div>
+        <div class="col">
+            <button class="btn btn-primary w-100">Filter</button>
+        </div>
+    </form>
+
+    <!-- CREATE -->
+    <a href="/seller-packages/create" class="btn btn-success mb-3">Create</a>
+
+    <!-- TABLE -->
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Package Name</th>
+            <th>Duration</th>
+            <th>Price</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th width="100">Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${packages}">
+            <td th:text="${p.id}"></td>
+            <td th:text="${p.packageName}"></td>
+            <td th:text="${p.durationInMonths}"></td>
+            <td th:text="${p.price} + ' VND'"></td>
+            <td th:text="${p.description}"></td>
+            <td th:text="${p.status}"></td>
+            <td>
+                <a th:href="@{/seller-packages/edit/{id}(id=${p.id})}"
+                   class="btn btn-sm btn-success">Edit</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

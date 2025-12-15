@@ -32,10 +32,17 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService)
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers( "/home", "/home/**","/verify",
-                                "/css/**", "/js/**", "/images/**","/uploads/**",
+                        .requestMatchers(
+                                "/home", "/home/**",
+                                "/verify", "/verify-reset",
+                                "/forgot-password",     // ⭐ đúng URL
+                                "/reset-password",
+                                "/change-password",
+                                "/css/**", "/js/**", "/images/**", "/uploads/**",
                                 "/toollist", "/toollist/**",
-                                "/login", "/register", "/error").permitAll()
+                                "/login", "/register", "/error"
+                        ).permitAll()
+
 
                         // Blog public pages
                         .requestMatchers("/blog", "/blog/**").permitAll()

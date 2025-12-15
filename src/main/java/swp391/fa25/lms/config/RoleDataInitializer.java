@@ -52,6 +52,9 @@ public class RoleDataInitializer implements CommandLineRunner {
             seller.setPassword(passwordEncoder.encode("123456"));
             seller.setStatus(Account.AccountStatus.ACTIVE);
             seller.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());
+            seller.setSellerActive(false);
+            seller.setSellerExpiryDate(null);
+            seller.setSellerPackage(null);
             accountRepo.save(seller);
             System.out.println("⭐ Seller created");
         }
@@ -79,38 +82,35 @@ public class RoleDataInitializer implements CommandLineRunner {
             accountRepo.save(manager);
             System.out.println("⭐ Manager created");
         }
+            // ===== CREATE MODERATOR USER =====
+            if (!accountRepo.existsByEmail("mod@gmail.com")) {
+                Account mod = new Account();
+                mod.setEmail("mod@gmail.com");
+                mod.setFullName("Moderator User");
+                mod.setPassword(passwordEncoder.encode("123456"));
+                mod.setStatus(Account.AccountStatus.ACTIVE);
+                mod.setRole(roleRepo.findByRoleName(Role.RoleName.MOD).get());
+                accountRepo.save(mod);
+                System.out.println("⭐ Moderator created");
+            }
+            if (!accountRepo.existsByEmail("selleractive@gmail.com")) {
+                Account activeSeller = new Account();
+                activeSeller.setEmail("selleractive@gmail.com");
+                activeSeller.setFullName("Seller Active");
+                activeSeller.setPassword(passwordEncoder.encode("123456"));
+                activeSeller.setStatus(Account.AccountStatus.ACTIVE);
+                activeSeller.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());
 
-        // ===== CREATE MODERATOR USER =====
-        if (!accountRepo.existsByEmail("mod@gmail.com")) {
-            Account mod = new Account();
-            mod.setEmail("mod@gmail.com");
-            mod.setFullName("Moderator User");
-            mod.setPassword(passwordEncoder.encode("123456"));
-            mod.setStatus(Account.AccountStatus.ACTIVE);
-            mod.setRole(roleRepo.findByRoleName(Role.RoleName.MOD).get());
-            accountRepo.save(mod);
-            System.out.println("⭐ Moderator created");
+                activeSeller.setSellerActive(true);
+                activeSeller.setSellerExpiryDate(LocalDateTime.now().plusDays(30));
+
+                accountRepo.save(activeSeller);
+
+                System.out.println("⭐ Seller còn hạn được tạo");
+            }
+            System.out.println("✅ Initialization completed!");
         }
-        if (!accountRepo.existsByEmail("expiredseller@gmail.com")) {
 
-            Account expired = new Account();
-            expired.setEmail("expiredseller@gmail.com");
-            expired.setFullName("Seller Hết Hạn");
-            expired.setPassword(passwordEncoder.encode("123456"));
-            expired.setStatus(Account.AccountStatus.ACTIVE);
-            expired.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());
-
-            // 🔥 Đánh dấu seller nhưng đã hết hạn
-            expired.setSellerActive(false);
-            expired.setSellerExpiryDate(LocalDateTime.now().minusDays(10));
-            expired.setSellerPackage(null);
-
-            accountRepo.save(expired);
-
-            System.out.println("⭐ Expired seller created");
-        }
-        System.out.println("✅ Initialization completed!");
-    }
 
     private void createRoleIfMissing(Integer id, Role.RoleName name, String note) {
         if (!roleRepo.existsById(id)) {

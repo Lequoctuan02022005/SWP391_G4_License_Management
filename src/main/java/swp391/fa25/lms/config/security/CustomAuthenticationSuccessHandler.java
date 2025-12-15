@@ -54,6 +54,7 @@ public class CustomAuthenticationSuccessHandler
         request.getSession().setAttribute("loggedInAccount", account);
 
         if (role != Role.RoleName.SELLER) {
+            request.getSession().setAttribute("loggedInAccount", account);
             redirectByRole(role, response);
             return;
         }
@@ -66,18 +67,26 @@ public class CustomAuthenticationSuccessHandler
                 .orElse(null);
 
         if (activeSub == null) {
+
+            account.setSellerActive(false);
+            account.setSellerExpiryDate(null);
+            accountRepository.save(account);
+            request.getSession().setAttribute("loggedInAccount", account);
             response.sendRedirect("/seller/renew");
             return;
         }
-
+        // ========== SELLER CÒN HẠN ==========
+        account.setSellerActive(true);
+        account.setSellerExpiryDate(activeSub.getEndDate());
+        accountRepository.save(account);
+        request.getSession().setAttribute("loggedInAccount", account);
         response.sendRedirect("/home");
     }
 
     private void redirectByRole(Role.RoleName role, HttpServletResponse response) throws IOException {
         switch (role) {
-            case ADMIN -> response.sendRedirect("/admin/dashboard");
-            case MANAGER -> response.sendRedirect("/manager/blogs");
-            case MOD -> response.sendRedirect("/moderator/dashboard");
+            case ADMIN, MANAGER -> response.sendRedirect("/dashboard");
+            case MOD-> response.sendRedirect("/moderator/dashboard");
             case CUSTOMER -> response.sendRedirect("/home");
             default -> response.sendRedirect("/");
         }

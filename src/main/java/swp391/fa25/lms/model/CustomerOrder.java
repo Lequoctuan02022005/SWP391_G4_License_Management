@@ -46,7 +46,7 @@ public class CustomerOrder {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id")
-    @JsonIgnoreProperties({"orders", "renewLogs", "account", "vnpayDetail"})
+    @JsonIgnoreProperties({"orders", "renewLogs", "account"})
     private PaymentTransaction transaction;
 
     @Column(name = "created_at")
