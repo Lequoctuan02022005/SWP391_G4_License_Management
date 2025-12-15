@@ -353,7 +353,7 @@ public class ToolController {
         model.addAttribute("keyword", keyword);
         model.addAttribute("status", status != null ? status.name() : "");
 
-        return "moderator/tool-upload-list";
+        return "tool/tool-upload-list";
     }
 
 
@@ -367,7 +367,7 @@ public class ToolController {
                 .orElseThrow(() -> new RuntimeException("Tool not found"));
 
         model.addAttribute("tool", tool);
-        return "moderator/tool-upload-detail";
+        return "tool/tool-upload-detail";
     }
 
 
@@ -438,7 +438,7 @@ public class ToolController {
         model.addAttribute("reports", reports);
         model.addAttribute("status", status);
 
-        return "moderator/tool-report-list";
+        return "tool/tool-report-list";
     }
 
 
@@ -451,7 +451,7 @@ public class ToolController {
                 .orElseThrow(() -> new RuntimeException("Report not found"));
 
         model.addAttribute("report", report);
-        return "moderator/tool-report-detail";
+        return "tool/tool-report-detail";
     }
 
 

@@ -653,27 +653,32 @@ public class AccountService {
         return accountRepo.save(account);
     }
 
-    public Account update(Long id, Account updated) {
-        Account acc = accountRepo.findById(id).orElse(null);
-        if (acc == null) return null;
+    @Transactional
+    public void updateWithRoleFields(
+            Long id,
+            String fullName,
+            String phone,
+            String address,
+            Account.AccountStatus status,
+            Integer roleId
+    ) {
+        Account acc = accountRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
 
-        acc.setEmail(updated.getEmail());
-        acc.setFullName(updated.getFullName());
-        acc.setPhone(updated.getPhone());
-        acc.setAddress(updated.getAddress());
-        acc.setStatus(updated.getStatus());
+        acc.setFullName(fullName);
+        acc.setPhone(phone);
+        acc.setAddress(address);
+        acc.setStatus(status);
         acc.setUpdatedAt(LocalDateTime.now());
 
-        // FIX: Load role FROM DB thay vì gán object rỗng
-        if (updated.getRole() != null && updated.getRole().getRoleId() != null) {
-            Role role = roleRepository.findById(updated.getRole().getRoleId())
-                    .orElse(null);
-            acc.setRole(role);
-        }
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role not found"));
 
-        // KHÔNG update password tại đây
-        return accountRepo.save(acc);
+        acc.setRole(role);
     }
+
+
+
 
     public void delete(Long id) {
         accountRepo.deleteById(id);

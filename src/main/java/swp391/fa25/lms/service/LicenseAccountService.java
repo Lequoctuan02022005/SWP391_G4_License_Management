@@ -1,7 +1,7 @@
 package swp391.fa25.lms.service;
 
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import swp391.fa25.lms.dto.LicenseAccountFormDTO;
 import swp391.fa25.lms.dto.LicenseRenewDTO;
@@ -33,12 +33,13 @@ public class LicenseAccountService {
         this.renewLogRepo = renewLogRepo;
     }
 
-    // ====== GIỮ NGUYÊN API CŨ ======
-    public List<LicenseAccount> getActiveLicenses(long toolId) {
+    @Transactional(readOnly = true)
+    public List<LicenseAccount> getActiveLicenses(Long toolId) {
+        if (toolId == null) return List.of();
         return accRepo.findByStatusAndLicense_Tool_ToolId(LicenseAccount.Status.ACTIVE, toolId);
     }
 
-    // ====== ADMIN: LIST ======
+    @Transactional(readOnly = true)
     public List<LicenseAccount> adminList(Long toolId, String q, LicenseAccount.Status status, Boolean used) {
         List<LicenseAccount> base = (toolId != null)
                 ? accRepo.findByLicense_Tool_ToolId(toolId)
@@ -66,15 +67,18 @@ public class LicenseAccountService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<License> getAllLicenses() {
         return licenseRepo.findAll();
     }
 
+    @Transactional(readOnly = true)
     public LicenseAccount getById(Long id) {
         return accRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy LicenseAccount id=" + id));
     }
 
+    @Transactional(readOnly = true)
     public List<LicenseRenewLog> getRenewLogs(Long licenseAccountId) {
         return renewLogRepo.findByLicenseAccount_LicenseAccountIdOrderByRenewDateDesc(licenseAccountId);
     }
@@ -88,7 +92,7 @@ public class LicenseAccountService {
                 .orElseThrow(() -> new IllegalArgumentException("License không tồn tại"));
 
         Tool tool = license.getTool();
-        validateByLoginMethod(tool, dto, null);
+        validateByLoginMethod(tool, dto, null); // create
 
         LicenseAccount la = new LicenseAccount();
         la.setLicense(license);
@@ -97,7 +101,7 @@ public class LicenseAccountService {
         la.setStatus(dto.getStatus());
         la.setUsed(Boolean.TRUE.equals(dto.getUsed()));
 
-        applyCredentialsByMethod(tool, dto, la);
+        applyCredentialsByMethod(tool, dto, la, true); // create
 
         accRepo.save(la);
     }
@@ -112,7 +116,7 @@ public class LicenseAccountService {
                 .orElseThrow(() -> new IllegalArgumentException("License không tồn tại"));
 
         Tool tool = license.getTool();
-        validateByLoginMethod(tool, dto, existing);
+        validateByLoginMethod(tool, dto, existing); // edit
 
         existing.setLicense(license);
         existing.setStartDate(dto.getStartDate());
@@ -120,7 +124,7 @@ public class LicenseAccountService {
         existing.setStatus(dto.getStatus());
         existing.setUsed(Boolean.TRUE.equals(dto.getUsed()));
 
-        applyCredentialsByMethod(tool, dto, existing);
+        applyCredentialsByMethod(tool, dto, existing, false); // edit
 
         accRepo.save(existing);
     }
@@ -137,7 +141,6 @@ public class LicenseAccountService {
         if (la.getStartDate() != null && dto.getNewEndDate().isBefore(la.getStartDate())) {
             throw new IllegalArgumentException("Ngày hết hạn mới không được < ngày bắt đầu");
         }
-        // khuyến nghị: renew phải tăng, không lùi
         if (la.getEndDate() != null && dto.getNewEndDate().isBefore(la.getEndDate())) {
             throw new IllegalArgumentException("Ngày hết hạn mới phải >= ngày hết hạn hiện tại");
         }
@@ -150,8 +153,8 @@ public class LicenseAccountService {
         log.setLicenseAccount(la);
         log.setRenewDate(now);
         log.setNewEndDate(dto.getNewEndDate());
-        log.setAmountPaid(dto.getAmountPaid()); // optional
-        log.setTransaction(null);               // admin renew thủ công => có thể null
+        log.setAmountPaid(dto.getAmountPaid());
+        log.setTransaction(null);
 
         renewLogRepo.save(log);
     }
@@ -162,17 +165,12 @@ public class LicenseAccountService {
         if (end.isBefore(start)) throw new IllegalArgumentException("Ngày kết thúc phải >= ngày bắt đầu");
     }
 
-    private String loginMethodOf(Tool tool) {
-        if (tool == null || tool.getLoginMethod() == null) return "";
-        return String.valueOf(tool.getLoginMethod()).toUpperCase();
-    }
-
     private boolean isTokenMethod(Tool tool) {
-        return "TOKEN".equalsIgnoreCase(loginMethodOf(tool));
+        return tool != null && tool.getLoginMethod() == Tool.LoginMethod.TOKEN;
     }
 
     private boolean isUserPassMethod(Tool tool) {
-        return "USER_PASSWORD".equalsIgnoreCase(loginMethodOf(tool));
+        return tool != null && tool.getLoginMethod() == Tool.LoginMethod.USER_PASSWORD;
     }
 
     private void validateByLoginMethod(Tool tool, LicenseAccountFormDTO dto, LicenseAccount editing) {
@@ -185,32 +183,47 @@ public class LicenseAccountService {
             String token = dto.getToken().trim();
             boolean exists = accRepo.existsByToken(token);
             if (exists) {
-                // edit: cho phép giữ token cũ
                 if (editing == null || editing.getToken() == null || !token.equals(editing.getToken())) {
                     throw new IllegalArgumentException("Token đã tồn tại, vui lòng chọn token khác");
                 }
             }
+            return;
         }
 
         if (isUserPassMethod(tool)) {
-            if (!StringUtils.hasText(dto.getUsername()) || !StringUtils.hasText(dto.getPassword()))
-                throw new IllegalArgumentException("Tool login_method=USER_PASSWORD => Username/Password không được trống");
+            if (!StringUtils.hasText(dto.getUsername()))
+                throw new IllegalArgumentException("Username không được trống");
+
+            // CREATE: bắt buộc password
+            if (editing == null && !StringUtils.hasText(dto.getPassword()))
+                throw new IllegalArgumentException("Password không được trống");
+
+            // EDIT: password cho phép trống (không đổi)
+            return;
         }
 
-        if (!isTokenMethod(tool) && !isUserPassMethod(tool)) {
-            throw new IllegalArgumentException("Login method của Tool không hợp lệ (chỉ TOKEN hoặc USER_PASSWORD)");
-        }
+        throw new IllegalArgumentException("Login method của Tool không hợp lệ (chỉ TOKEN hoặc USER_PASSWORD)");
     }
 
-    private void applyCredentialsByMethod(Tool tool, LicenseAccountFormDTO dto, LicenseAccount target) {
+    private void applyCredentialsByMethod(Tool tool, LicenseAccountFormDTO dto, LicenseAccount target, boolean isCreate) {
         if (isTokenMethod(tool)) {
             target.setToken(dto.getToken().trim());
             target.setUsername(null);
             target.setPassword(null);
+            return;
+        }
+
+        // USER_PASSWORD
+        target.setUsername(dto.getUsername() == null ? null : dto.getUsername().trim());
+        target.setToken(null);
+
+        if (isCreate) {
+            target.setPassword(dto.getPassword() == null ? null : dto.getPassword().trim());
         } else {
-            target.setUsername(dto.getUsername().trim());
-            target.setPassword(dto.getPassword().trim());
-            target.setToken(null);
+            // EDIT: chỉ set nếu người dùng nhập password mới
+            if (StringUtils.hasText(dto.getPassword())) {
+                target.setPassword(dto.getPassword().trim());
+            }
         }
     }
 }

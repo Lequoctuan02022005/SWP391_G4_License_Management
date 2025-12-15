@@ -36,7 +36,7 @@ public class ToolReport {
     private LocalDate reportedAt = LocalDate.now();
 
     public enum Status {
-        PENDING, APPROVED, REJECTED
+        PENDING, APPROVED, REJECTED, PROCESSING, AGREED, DISAGREED
     }
 
     public enum Reason {
