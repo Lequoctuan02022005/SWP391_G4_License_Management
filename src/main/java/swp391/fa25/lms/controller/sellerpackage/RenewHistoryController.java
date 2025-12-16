@@ -28,7 +28,7 @@ public class RenewHistoryController {
             Pageable pageable,
             Model model
     ) {
-        Account acc = (Account) session.getAttribute("account");
+        Account acc = (Account) session.getAttribute("loggedInAccount");
         if (acc == null) {
             return "redirect:/login";
         }

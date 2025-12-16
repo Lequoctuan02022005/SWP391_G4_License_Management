@@ -15,9 +15,8 @@ public class SellerPackageService {
 
     private final SellerPackageRepository packageRepo;
 
-    // ========== LIST + FILTER + PAGINATION ==========
-    public Page<SellerPackage> filterPackages(
-            String packageName,
+    public Page<SellerPackage> filter(
+            String name,
             Double minPrice,
             Double maxPrice,
             Integer minDuration,
@@ -25,35 +24,28 @@ public class SellerPackageService {
             SellerPackage.Status status,
             Pageable pageable
     ) {
-        List<SellerPackage> filtered = packageRepo.findAll().stream()
-                .filter(p -> packageName == null || p.getPackageName()
-                        .toLowerCase().contains(packageName.toLowerCase()))
-                .filter(p -> minPrice == null || p.getPrice() >= minPrice)
-                .filter(p -> maxPrice == null || p.getPrice() <= maxPrice)
-                .filter(p -> minDuration == null || p.getDurationInMonths() >= minDuration)
-                .filter(p -> maxDuration == null || p.getDurationInMonths() <= maxDuration)
-                .filter(p -> status == null || p.getStatus() == status)
-                .toList();
-
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), filtered.size());
-
-        List<SellerPackage> pageContent =
-                start > filtered.size()
-                        ? List.of()
-                        : filtered.subList(start, end);
-
-        return new PageImpl<>(pageContent, pageable, filtered.size());
+        return packageRepo.filter(name, minPrice, maxPrice,
+                minDuration, maxDuration, status, pageable);
     }
 
-    // ========== FIND BY ID ==========
+    // FIND
     public SellerPackage getById(int id) {
         return packageRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Seller package not found"));
     }
 
-    // ========== CREATE / UPDATE ==========
-    public SellerPackage save(SellerPackage pkg) {
-        return packageRepo.save(pkg);
+    // SAVE (ADD + EDIT)
+    public void save(SellerPackage pkg) {
+        if (pkg.getId() == 0) {
+            // ADD
+            pkg.setStatus(SellerPackage.Status.ACTIVE);
+        } else {
+            // EDIT → giữ status cũ nếu null
+            SellerPackage old = getById(pkg.getId());
+            if (pkg.getStatus() == null) {
+                pkg.setStatus(old.getStatus());
+            }
+        }
+        packageRepo.save(pkg);
     }
 }
