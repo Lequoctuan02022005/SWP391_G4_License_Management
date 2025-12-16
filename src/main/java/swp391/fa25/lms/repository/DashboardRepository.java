@@ -87,16 +87,17 @@ public interface DashboardRepository extends JpaRepository<Account, Long> {
 
     // ===== REVENUE LAST 5 MONTHS =====
     // SELLER - revenue last 5 months (SQL Server compatible)
+    // ===== SELLER REVENUE LAST 5 MONTHS (FROM CUSTOMER_ORDER) =====
     @Query("""
-    SELECT 
-        YEAR(p.createdAt),
-        MONTH(p.createdAt),
-        SUM(p.amount)
-    FROM PaymentTransaction p
-    WHERE p.account.accountId = :sellerId
-      AND p.status = swp391.fa25.lms.model.PaymentTransaction.TransactionStatus.SUCCESS
-    GROUP BY YEAR(p.createdAt), MONTH(p.createdAt)
-    ORDER BY YEAR(p.createdAt) DESC, MONTH(p.createdAt) DESC
+    SELECT
+        YEAR(o.createdAt),
+        MONTH(o.createdAt),
+        SUM(o.price)
+    FROM CustomerOrder o
+    WHERE o.tool.seller.accountId = :sellerId
+      AND o.orderStatus = swp391.fa25.lms.model.CustomerOrder.OrderStatus.SUCCESS
+    GROUP BY YEAR(o.createdAt), MONTH(o.createdAt)
+    ORDER BY YEAR(o.createdAt) DESC, MONTH(o.createdAt) DESC
 """)
     List<Object[]> sumSellerRevenueByMonth(@Param("sellerId") Long sellerId);
 

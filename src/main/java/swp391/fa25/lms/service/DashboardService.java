@@ -69,6 +69,7 @@ public class DashboardService {
         data.put("pendingRejectedTools",
                 dashboardRepository.countSellerPendingRejectedTools(sellerId));
 
+        // Tổng doanh thu (ALL TIME) – từ CustomerOrder
         data.put("revenue",
                 dashboardRepository.sumSellerRevenue(sellerId));
 
@@ -76,7 +77,7 @@ public class DashboardService {
         List<Object[]> statusCounts =
                 dashboardRepository.countSellerToolsByStatus(sellerId);
 
-        // mặc định = 0 để chart KHÔNG BAO GIỜ bị trắng
+        // mặc định = 0 để dashboard KHÔNG BAO GIỜ bị trắng
         Map<Tool.Status, Long> statusMap = new EnumMap<>(Tool.Status.class);
         for (Tool.Status s : Tool.Status.values()) {
             statusMap.put(s, 0L);
@@ -95,7 +96,7 @@ public class DashboardService {
         data.put("suspectCount", statusMap.get(Tool.Status.SUSPECT));
         data.put("deactivatedCount", statusMap.get(Tool.Status.DEACTIVATED));
 
-        // ===== REVENUE LAST 5 MONTHS =====
+        // ===== REVENUE LAST 5 MONTHS (FROM CUSTOMER_ORDER) =====
         List<Object[]> revenueRows =
                 dashboardRepository.sumSellerRevenueByMonth(sellerId);
 
@@ -104,13 +105,20 @@ public class DashboardService {
 
         revenueRows.stream()
                 .limit(5)
-                .sorted(Comparator.comparing(o -> o[0].toString()))
                 .forEach(r -> {
-                    revenueMonths.add(r[0].toString());          // yyyy-MM
-                    Number n = (Number) r[1]; // Integer / Long / BigDecimal đều OK
-                    revenueValues.add(
-                            n == null ? BigDecimal.ZERO : BigDecimal.valueOf(n.doubleValue())
+
+                    // r[0] = YEAR(o.createdAt)
+                    // r[1] = MONTH(o.createdAt)
+                    // r[2] = SUM(o.price)
+                    Integer year = (Integer) r[0];
+                    Integer month = (Integer) r[1];
+                    Double totalDouble = (Double) r[2];
+                    BigDecimal total = BigDecimal.valueOf(totalDouble);
+
+                    revenueMonths.add(
+                            year + "-" + String.format("%02d", month)
                     );
+                    revenueValues.add(total);
                 });
 
         data.put("revenueMonths", revenueMonths);
