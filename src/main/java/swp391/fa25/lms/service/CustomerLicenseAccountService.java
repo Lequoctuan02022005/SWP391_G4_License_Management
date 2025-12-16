@@ -111,9 +111,8 @@ public class CustomerLicenseAccountService {
         if (la.getStatus() != LicenseAccount.Status.ACTIVE) {
             throw new IllegalArgumentException("Chỉ License ACTIVE mới được chỉnh sửa");
         }
-
         la.setUsername(username == null ? null : username.trim());
-        la.setPassword(password == null ? null : password.trim()); // tuỳ bạn có encode hay không
+        la.setPassword(password == null ? null : password.trim());
         laRepo.save(la);
     }
 
