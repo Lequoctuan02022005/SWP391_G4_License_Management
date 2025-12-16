@@ -107,7 +107,10 @@ public class DashboardService {
                 .sorted(Comparator.comparing(o -> o[0].toString()))
                 .forEach(r -> {
                     revenueMonths.add(r[0].toString());          // yyyy-MM
-                    revenueValues.add((BigDecimal) r[1]);
+                    Number n = (Number) r[1]; // Integer / Long / BigDecimal đều OK
+                    revenueValues.add(
+                            n == null ? BigDecimal.ZERO : BigDecimal.valueOf(n.doubleValue())
+                    );
                 });
 
         data.put("revenueMonths", revenueMonths);

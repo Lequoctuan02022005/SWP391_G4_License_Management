@@ -14,8 +14,8 @@ public class SellerPackage {
     @NotBlank(message = "Package name cannot be blank")
     @Size(min = 3, max = 100, message = "Package name must be between 3 and 100 characters")
     @Pattern(
-            regexp = "^(?!.* {2,}).+$",
-            message = "Package name must not contain consecutive spaces"
+            regexp = "^(?!.* {2,})(?=.*[a-zA-Z]).+$",
+            message = "Package name must contain at least one letter and must not contain consecutive spaces"
     )
     private String packageName;
 
@@ -25,8 +25,8 @@ public class SellerPackage {
     private int durationInMonths;
 
     @Column(nullable = false)
-    @DecimalMin(value = "0.01", inclusive = true, message = "Price must be at least 0.01")
-    @DecimalMax(value = "100000000", inclusive = true, message = "Price must not exceed 100000000")
+    @DecimalMin(value = "10000", inclusive = true, message = "Price must be at least 10.000")
+    @DecimalMax(value = "100000000", inclusive = true, message = "Price must not exceed 100.000.000")
     private double price;
 
     @Column(nullable = true, columnDefinition = "NVARCHAR(100)")
