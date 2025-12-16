@@ -2,31 +2,48 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Seller Package Management</title>
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          rel="stylesheet">
 </head>
+<style>
+    body {
+        background-color: #2b2b2b;
+    }
+    .page-wrapper {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 10px 25px rgba(0,0,0,.15);
+    }
+    .table thead th {
+        background-color: #1f2937;
+        color: #fff;
+    }
+</style>
 <body>
 
-<div class="container mt-4">
+<div class="container py-5">
+    <div class="page-wrapper">
     <h3 class="mb-3 text-center">Seller Package Management</h3>
 
     <!-- FILTER -->
     <form method="get" class="row g-2 mb-3">
-        <div class="col">
+        <div class="col-md-2 col-sm-6">
             <input name="packageName" class="form-control" placeholder="Package name">
         </div>
-        <div class="col">
+        <div class="col-md-2 col-sm-6">
             <input name="minPrice" class="form-control" placeholder="Min price">
         </div>
-        <div class="col">
+        <div class="col-md-2 col-sm-6">
             <input name="maxPrice" class="form-control" placeholder="Max price">
         </div>
-        <div class="col">
+        <div class="col-md-2 col-sm-6">
             <input name="minDuration" class="form-control" placeholder="Min duration">
         </div>
-        <div class="col">
+        <div class="col-md-2 col-sm-6">
             <input name="maxDuration" class="form-control" placeholder="Max duration">
         </div>
-        <div class="col">
+        <div class="col-md-2 col-sm-6">
             <select name="status" class="form-select">
                 <option value="">All Status</option>
                 <option th:each="s : ${statusList}"
@@ -35,13 +52,13 @@
                 </option>
             </select>
         </div>
-        <div class="col">
+        <div class="col-md-2 col-sm-6">
             <button class="btn btn-primary w-100">Filter</button>
         </div>
     </form>
 
     <!-- CREATE -->
-    <a href="/seller-packages/create" class="btn btn-success mb-3">Create</a>
+    <a href="/seller-packages/form" class="btn btn-success mb-3">Create</a>
 
     <!-- TABLE -->
     <table class="table table-bordered table-hover">
@@ -63,7 +80,10 @@
             <td th:text="${p.durationInMonths}"></td>
             <td th:text="${p.price} + ' VND'"></td>
             <td th:text="${p.description}"></td>
-            <td th:text="${p.status}"></td>
+            <td>
+                <span class="badge bg-success" th:if="${p.status.name() == 'ACTIVE'}">ACTIVE</span>
+                <span class="badge bg-secondary" th:if="${p.status.name() == 'DEACTIVATED'}">DEACTIVATED</span>
+            </td>
             <td>
                 <a th:href="@{/seller-packages/edit/{id}(id=${p.id})}"
                    class="btn btn-sm btn-success">Edit</a>
@@ -71,6 +91,64 @@
         </tr>
         </tbody>
     </table>
+
+
+    <nav th:if="${page.totalPages > 1}">
+        <ul class="pagination justify-content-center">
+
+            <li class="page-item" th:classappend="${page.first} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/seller-packages(
+                   page=${page.number - 1},
+                   size=${page.size},
+                   packageName=${param.packageName},
+                   minPrice=${param.minPrice},
+                   maxPrice=${param.maxPrice},
+                   minDuration=${param.minDuration},
+                   maxDuration=${param.maxDuration},
+                   status=${param.status}
+               )}">
+                    Previous
+                </a>
+            </li>
+
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+                th:classappend="${i == page.number} ? 'active'">
+                <a class="page-link"
+                   th:text="${i + 1}"
+                   th:href="@{/seller-packages(
+                   page=${i},
+                   size=${page.size},
+                   packageName=${param.packageName},
+                   minPrice=${param.minPrice},
+                   maxPrice=${param.maxPrice},
+                   minDuration=${param.minDuration},
+                   maxDuration=${param.maxDuration},
+                   status=${param.status}
+               )}">
+                </a>
+            </li>
+
+            <li class="page-item" th:classappend="${page.last} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/seller-packages(
+                   page=${page.number + 1},
+                   size=${page.size},
+                   packageName=${param.packageName},
+                   minPrice=${param.minPrice},
+                   maxPrice=${param.maxPrice},
+                   minDuration=${param.minDuration},
+                   maxDuration=${param.maxDuration},
+                   status=${param.status}
+               )}">
+                    Next
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+</div>
 </div>
 
 </body>

@@ -1,5 +1,6 @@
 package swp391.fa25.lms.controller.sellerpackage;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.SellerPackage;
 import swp391.fa25.lms.repository.SellerPackageRepository;
 import swp391.fa25.lms.service.SellerPackageService;
@@ -33,19 +35,15 @@ public class SellerPackageManagementController {
             @RequestParam(required = false) Integer maxDuration,
             @RequestParam(required = false) SellerPackage.Status status,
             Pageable pageable,
+            HttpSession session,
             Model model
     ) {
-        Page<SellerPackage> page =
-                sellerPackageService.filterPackages(
-                        packageName,
-                        minPrice,
-                        maxPrice,
-                        minDuration,
-                        maxDuration,
-                        status,
-                        pageable
-                );
-
+        Account acc = (Account) session.getAttribute("account");
+        if (acc == null) {
+            return "redirect:/login";
+        }
+        var page = sellerPackageService.filter(packageName, minPrice, maxPrice,
+                minDuration, maxDuration, status, pageable);
         model.addAttribute("page", page);
         model.addAttribute("packages", page.getContent());
         model.addAttribute("statusList", SellerPackage.Status.values());
@@ -53,18 +51,21 @@ public class SellerPackageManagementController {
         return "sellerpackage/package-list";
     }
 
-    // ================= CREATE =================
-    @GetMapping("/create")
-    public String create(Model model) {
-        model.addAttribute("pkg", new SellerPackage());
-        model.addAttribute("statusList", SellerPackage.Status.values());
-        return "sellerpackage/package-form";
-    }
+    @GetMapping("/form")
+    public String form(
+            @RequestParam(required = false) Integer id,
+            HttpSession session,
+            Model model
+    ) {
+        Account acc = (Account) session.getAttribute("account");
+        if (acc == null) {
+            return "redirect:/login";
+        }
+        SellerPackage pkg =
+                (id == null)
+                        ? new SellerPackage()
+                        : sellerPackageService.getById(id);
 
-    // ================= EDIT =================
-    @GetMapping("/edit/{id}")
-    public String edit(@PathVariable int id, Model model) {
-        SellerPackage pkg = sellerPackageService.getById(id);
         model.addAttribute("pkg", pkg);
         model.addAttribute("statusList", SellerPackage.Status.values());
         return "sellerpackage/package-form";
@@ -74,7 +75,12 @@ public class SellerPackageManagementController {
     @PostMapping("/save")
     public String save(@Valid @ModelAttribute("pkg") SellerPackage pkg,
                        BindingResult result,
+                       HttpSession session,
                        Model model) {
+        Account acc = (Account) session.getAttribute("account");
+        if (acc == null) {
+            return "redirect:/login";
+        }
 
         if (result.hasErrors()) {
             model.addAttribute("statusList", SellerPackage.Status.values());
