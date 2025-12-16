@@ -80,7 +80,7 @@ public class CustomAuthenticationSuccessHandler
         account.setSellerExpiryDate(activeSub.getEndDate());
         accountRepository.save(account);
         request.getSession().setAttribute("loggedInAccount", account);
-        response.sendRedirect("/home");
+        response.sendRedirect("/dashboard");
     }
 
     private void redirectByRole(

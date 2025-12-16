@@ -38,7 +38,7 @@ public class SellerPackageManagementController {
             HttpSession session,
             Model model
     ) {
-        Account acc = (Account) session.getAttribute("account");
+        Account acc = (Account) session.getAttribute("loggedInAccount");
         if (acc == null) {
             return "redirect:/login";
         }
@@ -57,7 +57,7 @@ public class SellerPackageManagementController {
             HttpSession session,
             Model model
     ) {
-        Account acc = (Account) session.getAttribute("account");
+        Account acc = (Account) session.getAttribute("loggedInAccount");
         if (acc == null) {
             return "redirect:/login";
         }
@@ -77,7 +77,7 @@ public class SellerPackageManagementController {
                        BindingResult result,
                        HttpSession session,
                        Model model) {
-        Account acc = (Account) session.getAttribute("account");
+        Account acc = (Account) session.getAttribute("loggedInAccount");
         if (acc == null) {
             return "redirect:/login";
         }

@@ -115,7 +115,7 @@ public class PaymentController {
 
                 redirectAttrs.addFlashAttribute("success",
                         "Thanh toán thành công! Gói Seller đã được kích hoạt. Bạn có thể bắt đầu bán tool ngay bây giờ!");
-                return "redirect:/home";
+                return "redirect:/dashboard";
 
             } else {
                 transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
@@ -229,7 +229,7 @@ public class PaymentController {
 
                 redirectAttrs.addFlashAttribute("success",
                         "Chúc mừng! Bạn đã đăng ký thành công làm Seller. Bạn có thể bắt đầu bán tool ngay bây giờ!");
-                return "redirect:/home";
+                return "redirect:/dashboard";
 
             } else {
                 // Thanh toán thất bại
