@@ -1,80 +1,101 @@
-/* ================= RESET + BASE ================= */
-html, body {
+/* RESET */
+* {
     margin: 0;
     padding: 0;
-    width: 100%;
+    box-sizing: border-box;
+}
+
+html, body {
     height: 100%;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f5f6fa;
 }
 
-body {
-    font-family: "Segoe UI", Arial, sans-serif;
-    background: #f4f6f9;
-}
-
-/* ================= LAYOUT ================= */
+/* LAYOUT */
 .layout-wrapper {
     display: flex;
-    width: 100vw;
     min-height: 100vh;
-    overflow-x: hidden;
 }
 
-/* ================= SIDEBAR ================= */
+/* SIDEBAR */
 .sidebar {
-    width: 260px;
-    min-height: 100vh;
-    background: linear-gradient(180deg, #1e1e2f, #111827);
-    color: #ffffff;
-    padding: 22px 16px;
-    box-shadow: 2px 0 14px rgba(0,0,0,.35);
-    flex-shrink: 0;
+    width: 270px;
+    background: linear-gradient(180deg, #0f172a, #020617);
+    color: #fff;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
 }
 
-/* ================= PROFILE ================= */
+/* PROFILE */
 .sidebar-profile {
-    margin-bottom: 30px;
-}
-
-.profile-toggle {
     display: flex;
     align-items: center;
-    text-decoration: none;
-    color: #ffffff;
-}
-
-.profile-toggle:hover {
-    opacity: .95;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
 }
 
 .avatar {
-    width: 46px;
-    height: 46px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #3b82f6;
+    border: 2px solid #38bdf8;
 }
 
-.name {
+.profile-info .name {
     font-weight: 600;
-    font-size: 15px;
-    line-height: 1.2;
 }
 
-.role {
+.profile-info .role {
     font-size: 12px;
-    color: #9ca3af;
+    color: #94a3b8;
 }
 
+/* ACTIONS */
+.sidebar-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
 
-/* ================= MENU ================= */
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #cbd5f5;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.action-item i {
+    font-size: 16px;
+}
+
+.action-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.action-item.logout {
+    margin-top: 6px;
+    color: #f87171;
+}
+
+.action-item.logout:hover {
+    background: rgba(248,113,113,0.15);
+}
+
+/* MENU */
 .menu {
     list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.menu li {
-    margin-bottom: 6px;
+    margin-top: 24px;
+    flex-grow: 1;
 }
 
 .menu li a {
@@ -82,11 +103,11 @@ body {
     align-items: center;
     gap: 12px;
     padding: 12px 14px;
-    color: #d1d5db;
+    color: #e5e7eb;
     text-decoration: none;
     border-radius: 10px;
-    transition: all .25s ease;
-    font-size: 14.5px;
+    transition: all 0.2s ease;
+    font-size: 15px;
 }
 
 .menu li a i {
@@ -94,26 +115,13 @@ body {
 }
 
 .menu li a:hover {
-    background: rgba(59,130,246,.25);
-    color: #ffffff;
+    background: rgba(255,255,255,0.12);
+    transform: translateX(4px);
 }
 
-/* ================= CONTENT ================= */
+/* CONTENT */
 .content {
     flex: 1;
-    padding: 28px 32px;
-    background: transparent; /* QUAN TRỌNG */
-}
-.sidebar .dropdown-menu {
-    position: static !important;        /* QUAN TRỌNG: không absolute */
-    float: none;
-    width: 100%;
-    margin-top: 10px;
-    padding: 8px 0;
-
-    background: rgba(255, 255, 255, 0.08);
-    border: none;
-    border-radius: 10px;
-
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    padding: 28px;
+    background: #f8fafc;
 }
