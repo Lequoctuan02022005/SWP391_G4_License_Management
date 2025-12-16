@@ -114,7 +114,7 @@ public class PaymentController {
                 session.setAttribute("loggedInAccount", seller);
 
                 redirectAttrs.addFlashAttribute("success",
-                    "Thanh toán thành công! Gói Seller đã được kích hoạt. Bạn có thể bắt đầu bán tool ngay bây giờ!");
+                        "Thanh toán thành công! Gói Seller đã được kích hoạt. Bạn có thể bắt đầu bán tool ngay bây giờ!");
                 return "redirect:/home";
 
             } else {
@@ -126,7 +126,6 @@ public class PaymentController {
                 redirectAttrs.addFlashAttribute("error", "Thanh toán thất bại: " + errorMsg);
                 return "redirect:/seller/renew";
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttrs.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
@@ -194,10 +193,16 @@ public class PaymentController {
                     return "redirect:/seller/register";
                 }
 
-                // Chuyển role thành SELLER
+                // Chuyển role thành SELLER và SAVE NGAY
                 Role sellerRole = roleRepo.findByRoleName(Role.RoleName.SELLER)
                         .orElseThrow(() -> new RuntimeException("Role SELLER không tồn tại!"));
+
                 user.setRole(sellerRole);
+                user.setSellerActive(true);
+                user.setSellerPackage(pkg);
+
+                // SAVE ACCOUNT NGAY ĐỂ COMMIT ROLE VÀO DB
+                accountRepo.saveAndFlush(user);
 
                 // Cập nhật transaction status
                 transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
@@ -215,17 +220,15 @@ public class PaymentController {
                 newSub.setTransaction(transaction);
                 subscriptionRepo.save(newSub);
 
-                // Kích hoạt seller
-                user.setSellerActive(true);
+                // Cập nhật seller expiry date
                 user.setSellerExpiryDate(newSub.getEndDate());
-                user.setSellerPackage(pkg);
-                accountRepo.save(user);
+                accountRepo.saveAndFlush(user);
 
                 // Cập nhật session
                 session.setAttribute("loggedInAccount", user);
 
                 redirectAttrs.addFlashAttribute("success",
-                    "Chúc mừng! Bạn đã đăng ký thành công làm Seller. Bạn có thể bắt đầu bán tool ngay bây giờ!");
+                        "Chúc mừng! Bạn đã đăng ký thành công làm Seller. Bạn có thể bắt đầu bán tool ngay bây giờ!");
                 return "redirect:/home";
 
             } else {

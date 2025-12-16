@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>License Accounts</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#f6f7fb; color:#111; }
+        .container { max-width: 1200px; margin: 24px auto; padding: 0 16px; }
+        .card { background:#fff; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.06); padding: 16px; }
+        h1 { margin:0 0 8px; font-size: 22px; }
+        .sub { margin:0 0 14px; color:#555; font-size:14px; }
+        .row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+        .field { display:flex; flex-direction:column; gap:6px; }
+        label { font-size:12px; color:#444; }
+        input, select { padding:10px; border:1px solid #d7d9e0; border-radius:10px; outline:none; min-width: 180px; background:#fff; }
+        .btn { cursor:pointer; border:0; border-radius:10px; padding:10px 14px; font-weight:700; display:inline-block; text-decoration:none; text-align:center; }
+        .btn-primary { background:#1f6feb; color:#fff; }
+        .btn-ghost { background:#eef2ff; color:#1f3a8a; }
+        .btn-dark { background:#111; color:#fff; }
+        table { width:100%; border-collapse:collapse; margin-top: 14px; }
+        th, td { text-align:left; padding: 12px 10px; border-bottom:1px solid #edf0f5; vertical-align:top; }
+        th { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:.04em; white-space: nowrap; }
+        td { font-size:14px; }
+        .muted { color:#666; font-size:13px; }
+        .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:800; }
+        .b-active { background:#ecfdf5; color:#065f46; }
+        .b-expired { background:#fff7ed; color:#9a3412; }
+        .b-revoked { background:#fef2f2; color:#991b1b; }
+        .b-null { background:#f3f4f6; color:#374151; }
+        .actions a { text-decoration:none; font-weight:800; color:#1f6feb; }
+        .pager { display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:16px; flex-wrap:wrap; }
+        .page-links { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .pill { padding:8px 10px; border-radius:10px; background:#f3f4f6; color:#111; text-decoration:none; font-weight:800; display:inline-block; }
+        .pill.disabled { opacity:.5; pointer-events:none; }
+        .pill.active { background:#111; color:#fff; }
+        .empty { padding:18px; border:1px dashed #d7d9e0; border-radius:12px; background:#fbfcff; margin-top:14px; }
+        .sortlink{ color:#555; text-decoration:none; font-weight:800; display:inline-flex; gap:6px; align-items:center; }
+        .sortlink:hover{ color:#111; }
+        .arrow{ font-size:12px; opacity:.85; }
+        .msg { padding:10px 12px; border-radius:10px; margin: 10px 0 0; font-weight:700; }
+        .msg-ok { background:#ecfdf5; color:#065f46; }
+        .msg-err { background:#fef2f2; color:#991b1b; }
+    </style>
+</head>
+
+<body>
+<div class="container"
+     th:with="safeSize=${pageData != null ? pageData.size : (size != null ? size : 10)}">
+    <div class="card">
+
+        <h1>License Accounts</h1>
+        <p class="sub">Quản lý các tài khoản license bạn đã mua. Có tìm kiếm, lọc, sắp xếp và phân trang.</p>
+
+        <div th:if="${successMsg != null}" class="msg msg-ok" th:text="${successMsg}">OK</div>
+        <div th:if="${errorMsg != null}" class="msg msg-err" th:text="${errorMsg}">ERR</div>
+
+        <!-- FILTER FORM -->
+        <form th:action="@{/customer/license-accounts}" method="get" class="row">
+
+            <div class="field">
+                <label>Tìm kiếm</label>
+                <input type="text" name="q"
+                       placeholder="Tool / License / Username / Token / OrderId..."
+                       th:value="${q}">
+            </div>
+
+            <div class="field">
+                <label>Trạng thái</label>
+                <select name="status">
+                    <option value="" th:selected="${statusStr == ''}">Tất cả</option>
+                    <option value="ACTIVE" th:selected="${statusStr == 'ACTIVE'}">ACTIVE</option>
+                    <option value="EXPIRED" th:selected="${statusStr == 'EXPIRED'}">EXPIRED</option>
+                    <option value="REVOKED" th:selected="${statusStr == 'REVOKED'}">REVOKED</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Tool</label>
+                <select name="toolId">
+                    <option value="" th:selected="${toolId == null}">Tất cả</option>
+                    <!-- tools: List<Tool> -->
+                    <option th:each="t : ${tools}"
+                            th:value="${t.toolId}"
+                            th:text="${t.toolName}"
+                            th:selected="${toolId != null and toolId == t.toolId}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Login method</label>
+                <select name="loginMethod">
+                    <option value="" th:selected="${loginMethodStr == ''}">Tất cả</option>
+                    <option value="USER_PASSWORD" th:selected="${loginMethodStr == 'USER_PASSWORD'}">USER_PASSWORD</option>
+                    <option value="TOKEN" th:selected="${loginMethodStr == 'TOKEN'}">TOKEN</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Từ (endDate)</label>
+                <input type="datetime-local" name="from"
+                       th:value="${from != null ? #temporals.format(from, 'yyyy-MM-dd''T''HH:mm') : ''}">
+            </div>
+
+            <div class="field">
+                <label>Đến (endDate)</label>
+                <input type="datetime-local" name="to"
+                       th:value="${to != null ? #temporals.format(to, 'yyyy-MM-dd''T''HH:mm') : ''}">
+            </div>
+
+            <div class="field">
+                <label>Sắp xếp theo</label>
+                <select name="sort">
+                    <option value="endDate" th:selected="${sort == 'endDate'}">Hạn dùng</option>
+                    <option value="startDate" th:selected="${sort == 'startDate'}">Ngày bắt đầu</option>
+                    <option value="status" th:selected="${sort == 'status'}">Trạng thái</option>
+                    <option value="toolName" th:selected="${sort == 'toolName'}">Tên Tool</option>
+                    <option value="licenseName" th:selected="${sort == 'licenseName'}">Tên License</option>
+                    <option value="price" th:selected="${sort == 'price'}">Giá gói</option>
+                    <option value="orderId" th:selected="${sort == 'orderId'}">Order ID</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Chiều</label>
+                <select name="dir">
+                    <option value="desc" th:selected="${dir == 'desc'}">Giảm dần</option>
+                    <option value="asc" th:selected="${dir == 'asc'}">Tăng dần</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Kích thước trang</label>
+                <select name="size">
+                    <option value="5" th:selected="${safeSize == 5}">5</option>
+                    <option value="10" th:selected="${safeSize == 10}">10</option>
+                    <option value="20" th:selected="${safeSize == 20}">20</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>&nbsp;</label>
+                <button class="btn btn-primary" type="submit">Áp dụng</button>
+            </div>
+
+            <div class="field">
+                <label>&nbsp;</label>
+                <a class="btn btn-ghost" th:href="@{/customer/license-accounts(size=${safeSize})}">Reset</a>
+            </div>
+        </form>
+
+        <!-- EMPTY -->
+        <div th:if="${pageData == null or pageData.totalElements == 0}" class="empty">
+            <b>Chưa có license account nào.</b>
+            <div class="muted">Sau khi mua tool thành công và hệ thống cấp license, danh sách sẽ xuất hiện ở đây.</div>
+            <div style="margin-top:10px;">
+                <a class="btn btn-dark" th:href="@{/customer/orders}">← Về Order history</a>
+            </div>
+        </div>
+        <!-- TABLE -->
+        <div th:if="${pageData != null and pageData.totalElements > 0}">
+            <table>
+                <thead>
+                <tr th:with="baseSize=${safeSize}">
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/license-accounts(page=0,size=${baseSize},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort='toolName',dir=${sort=='toolName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            Tool <span class="arrow" th:text="${sort=='toolName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/license-accounts(page=0,size=${baseSize},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort='licenseName',dir=${sort=='licenseName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            License <span class="arrow" th:text="${sort=='licenseName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <th>Login info</th>
+
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/license-accounts(page=0,size=${baseSize},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort='status',dir=${sort=='status' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            Status <span class="arrow" th:text="${sort=='status' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/license-accounts(page=0,size=${baseSize},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort='startDate',dir=${sort=='startDate' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            Start <span class="arrow" th:text="${sort=='startDate' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/license-accounts(page=0,size=${baseSize},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort='endDate',dir=${sort=='endDate' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            End <span class="arrow" th:text="${sort=='endDate' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <th>
+                        <a class="sortlink"
+                           th:href="@{/customer/license-accounts(page=0,size=${baseSize},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort='orderId',dir=${sort=='orderId' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                            Order <span class="arrow" th:text="${sort=='orderId' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
+                        </a>
+                    </th>
+
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="la : ${pageData.content}">
+                    <td>
+                        <b th:text="${la.license != null and la.license.tool != null ? la.license.tool.toolName : '(N/A)'}">Tool</b>
+                        <div class="muted" th:if="${la.license != null and la.license.tool != null}">
+                            Login: <span th:text="${la.license.tool.loginMethod}">USER_PASSWORD</span>
+                        </div>
+                    </td>
+
+                    <td>
+                        <div th:text="${la.license != null ? la.license.name : '(N/A)'}">License</div>
+                        <div class="muted" th:if="${la.license != null and la.license.durationDays != null}">
+                            Duration: <span th:text="${la.license.durationDays}">0</span> ngày
+                        </div>
+                    </td>
+
+                    <td>
+                        <!-- token -->
+                        <div th:if="${la.token != null}">
+                            Token: <b th:text="${#strings.abbreviate(la.token, 18)}">token</b>
+                        </div>
+                        <!-- user/pass -->
+                        <div th:if="${la.token == null}">
+                            User: <b th:text="${la.username != null ? la.username : '(N/A)'}">u</b>
+                            <div class="muted">Password: <b>••••••••</b></div>
+                        </div>
+                    </td>
+
+                    <td>
+                        <span class="badge b-active" th:if="${la.status != null and la.status.name() == 'ACTIVE'}">ACTIVE</span>
+                        <span class="badge b-expired" th:if="${la.status != null and la.status.name() == 'EXPIRED'}">EXPIRED</span>
+                        <span class="badge b-revoked" th:if="${la.status != null and la.status.name() == 'REVOKED'}">REVOKED</span>
+                        <span class="badge b-null" th:if="${la.status == null}">N/A</span>
+
+                        <div class="muted" th:if="${la.used != null}">
+                            Used: <b th:text="${la.used}">false</b>
+                        </div>
+                    </td>
+
+                    <td th:text="${la.startDate != null ? #temporals.format(la.startDate,'dd/MM/yyyy HH:mm') : '(N/A)'}">--</td>
+                    <td th:text="${la.endDate != null ? #temporals.format(la.endDate,'dd/MM/yyyy HH:mm') : '(N/A)'}">--</td>
+
+                    <td>
+                        <a th:if="${la.order != null}" class="pill" style="padding:6px 10px;"
+                           th:href="@{/customer/orders/{id}(id=${la.order.orderId})}">
+                            #<span th:text="${la.order.orderId}">0</span>
+                        </a>
+                        <span class="badge b-null" th:if="${la.order == null}">N/A</span>
+                    </td>
+
+                    <td class="actions">
+                        <a th:href="@{/customer/license-accounts/{id}(id=${la.licenseAccountId})}">Xem →</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- PAGINATION -->
+            <div class="pager"
+                 th:if="${pageData != null and pageData.totalPages > 1}"
+                 th:with="cur=${pageData.number}, total=${pageData.totalPages}, sizeVal=${pageData.size}">
+                <div class="muted">
+                    Tổng: <b th:text="${pageData.totalElements}">0</b> ·
+                    Trang <b th:text="${cur + 1}">1</b>/<b th:text="${total}">1</b>
+                </div>
+
+                <div class="page-links">
+                    <a class="pill"
+                       th:classappend="${pageData.first} ? ' disabled' : ''"
+                       th:href="@{/customer/license-accounts(page=${cur > 0 ? cur - 1 : 0},size=${sizeVal},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
+                        ← Trước
+                    </a>
+
+                    <a th:each="i : ${#numbers.sequence(0, total - 1)}"
+                       class="pill"
+                       th:classappend="${i == cur} ? ' active' : ''"
+                       th:text="${i + 1}"
+                       th:href="@{/customer/license-accounts(page=${i},size=${sizeVal},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
+                        1
+                    </a>
+
+                    <a class="pill"
+                       th:classappend="${pageData.last} ? ' disabled' : ''"
+                       th:href="@{/customer/license-accounts(page=${cur + 1 < total ? cur+1 : cur},size=${sizeVal},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
+                        Sau →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
