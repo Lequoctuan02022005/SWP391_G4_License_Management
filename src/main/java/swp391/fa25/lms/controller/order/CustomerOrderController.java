@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.CustomerOrder;
 import swp391.fa25.lms.model.Feedback;
@@ -13,6 +14,9 @@ import swp391.fa25.lms.repository.FeedbackRepository;
 import swp391.fa25.lms.service.CustomerOrderService;
 
 import java.time.LocalDateTime;
+import java.util.Set;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Controller
 @RequestMapping("/customer/orders")
@@ -21,6 +25,10 @@ public class CustomerOrderController {
     private final CustomerOrderService orderService;
     private final AccountRepository accountRepo;
     private final FeedbackRepository feedbackRepo;
+
+    private static final Set<String> ALLOWED_SORT = Set.of(
+            "createdAt", "price", "toolName", "licenseName", "orderId", "orderStatus"
+    );
 
     public CustomerOrderController(CustomerOrderService orderService,
                                    AccountRepository accountRepo,
@@ -42,8 +50,8 @@ public class CustomerOrderController {
                            Model model,
                            @RequestParam(defaultValue = "0") int page,
                            @RequestParam(defaultValue = "10") int size,
-                           @RequestParam(required = false) String q,
-                           @RequestParam(required = false) String status,
+                           @RequestParam(defaultValue = "") String q,
+                           @RequestParam(defaultValue = "") String status,
                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
                            @RequestParam(defaultValue = "createdAt") String sort,
@@ -51,15 +59,34 @@ public class CustomerOrderController {
 
         Long accountId = currentAccountId(auth);
 
+        q = (q == null) ? "" : q.trim();
+
         CustomerOrder.OrderStatus st = null;
-        if (org.springframework.util.StringUtils.hasText(status)) {
-            st = CustomerOrder.OrderStatus.valueOf(status);
+        if (status != null && !status.trim().isEmpty()) {
+            try {
+                st = CustomerOrder.OrderStatus.valueOf(status.trim());
+            } catch (IllegalArgumentException ex) {
+                throw new ResponseStatusException(BAD_REQUEST, "Invalid status: " + status);
+            }
         }
 
-        model.addAttribute("pageData", orderService.getMyOrders(accountId, q, st, from, to, page, size, sort, dir));
+        if (from != null && to != null && from.isAfter(to)) {
+            LocalDateTime tmp = from;
+            from = to;
+            to = tmp;
+        }
 
+        page = Math.max(page, 0);
+        size = Math.min(Math.max(size, 5), 50);
+
+        if (sort == null || !ALLOWED_SORT.contains(sort)) sort = "createdAt";
+        dir = (dir != null && dir.equalsIgnoreCase("asc")) ? "asc" : "desc";
+
+        var pageData = orderService.getMyOrders(accountId, q, st, from, to, page, size, sort, dir);
+
+        model.addAttribute("pageData", pageData);
         model.addAttribute("q", q);
-        model.addAttribute("statusStr", status == null ? "" : status);
+        model.addAttribute("statusStr", status == null ? "" : status.trim());
         model.addAttribute("from", from);
         model.addAttribute("to", to);
         model.addAttribute("sort", sort);
@@ -82,7 +109,6 @@ public class CustomerOrderController {
             model.addAttribute("paymentMsg", order.getTransaction().getVnpayResponseMessage());
         }
 
-        // ====== Rating (của user + trung bình tool) ======
         if (order.getTool() != null) {
             Long toolId = order.getTool().getToolId();
 

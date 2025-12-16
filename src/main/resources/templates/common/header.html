@@ -65,7 +65,7 @@
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                 <li><a class="dropdown-item" th:href="@{/profile}">Thông tin tài khoản</a></li>
                                 <li><a class="dropdown-item" th:href="@{/change-password}">Đổi mật khẩu</a></li>
-                                <li><a class="dropdown-item" th:href="@{/orders}">Đơn hàng đã mua</a></li>
+                                <li><a class="dropdown-item" th:href="@{/customer/orders}">Đơn hàng đã mua</a></li>
                                 <li th:if="${account.role.roleName.name() == 'SELLER'}">
                                     <a class="dropdown-item fw-semibold" th:href="@{/seller/dashboard}">
                                         Seller Dashboard

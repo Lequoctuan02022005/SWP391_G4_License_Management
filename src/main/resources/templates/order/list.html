@@ -18,7 +18,9 @@
 
 <main class="orders-page">
     <div class="orders-container"
-         th:with="safeSize=${pageData != null ? pageData.size : (size != null ? size : 10)}">
+         th:with="safeSize=${pageData != null ? pageData.size : (size != null ? size : 10)},
+                  fromParam=${from != null ? #temporals.format(from, 'yyyy-MM-dd''T''HH:mm') : ''},
+                  toParam=${to != null ? #temporals.format(to, 'yyyy-MM-dd''T''HH:mm') : ''}">
 
         <div class="orders-card">
             <h1 class="orders-title">Lịch sử đơn hàng</h1>
@@ -53,13 +55,13 @@
                 <div class="orders-field">
                     <label class="orders-label">Từ thời điểm</label>
                     <input class="orders-input" type="datetime-local" name="from"
-                           th:value="${from != null ? #temporals.format(from, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                           th:value="${fromParam}">
                 </div>
 
                 <div class="orders-field">
                     <label class="orders-label">Đến thời điểm</label>
                     <input class="orders-input" type="datetime-local" name="to"
-                           th:value="${to != null ? #temporals.format(to, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                           th:value="${toParam}">
                 </div>
 
                 <div class="orders-field">
@@ -98,7 +100,10 @@
 
                 <div class="orders-field">
                     <label class="orders-label">&nbsp;</label>
-                    <a class="o-btn o-btn-ghost" th:href="@{/customer/orders(size=${safeSize})}">Reset</a>
+                    <a class="o-btn o-btn-ghost"
+                       th:href="@{/customer/orders(page=0,size=${safeSize},q='',status='',sort='createdAt',dir='desc')}">
+                        Reset
+                    </a>
                 </div>
             </form>
 
@@ -113,7 +118,7 @@
                     <tr th:with="baseSize=${safeSize}">
                         <th class="orders-th">
                             <a class="orders-sortlink"
-                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='orderId',dir=${sort=='orderId' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort='orderId',dir=${sort=='orderId' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
                                 #Order <span class="orders-arrow"
                                              th:text="${sort=='orderId' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
@@ -121,7 +126,7 @@
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
-                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='toolName',dir=${sort=='toolName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort='toolName',dir=${sort=='toolName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
                                 Tool <span class="orders-arrow"
                                            th:text="${sort=='toolName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
@@ -129,7 +134,7 @@
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
-                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='licenseName',dir=${sort=='licenseName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort='licenseName',dir=${sort=='licenseName' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
                                 License <span class="orders-arrow"
                                               th:text="${sort=='licenseName' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
@@ -137,7 +142,7 @@
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
-                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='price',dir=${sort=='price' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort='price',dir=${sort=='price' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
                                 Giá <span class="orders-arrow"
                                           th:text="${sort=='price' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
@@ -145,7 +150,7 @@
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
-                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='orderStatus',dir=${sort=='orderStatus' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort='orderStatus',dir=${sort=='orderStatus' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
                                 Trạng thái <span class="orders-arrow"
                                                  th:text="${sort=='orderStatus' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
@@ -155,7 +160,7 @@
 
                         <th class="orders-th">
                             <a class="orders-sortlink"
-                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${from},to=${to},sort='createdAt',dir=${sort=='createdAt' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
+                               th:href="@{/customer/orders(page=0,size=${baseSize},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort='createdAt',dir=${sort=='createdAt' ? (dir=='asc'?'desc':'asc') : 'asc'})}">
                                 Ngày tạo <span class="orders-arrow"
                                                th:text="${sort=='createdAt' ? (dir=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
@@ -216,8 +221,9 @@
 
                         <td class="orders-td actions-cell">
                             <div class="o-actions">
-                                <!-- Xem detail: luôn có -->
+                                <!-- ✅ ẩn mắt nếu chưa thanh toán success -->
                                 <a class="o-action o-action-view"
+                                   th:if="${paidOk}"
                                    th:href="@{/customer/orders/{id}(id=${o.orderId})}"
                                    title="Xem chi tiết">
                                     <i class="fa-solid fa-eye"></i>
@@ -268,7 +274,7 @@
                     <div class="orders-page-links">
                         <a class="o-pill"
                            th:classappend="${pageData.first} ? ' disabled' : ''"
-                           th:href="@{/customer/orders(page=${cur > 0 ? cur - 1 : 0},size=${sizeVal},q=${q},status=${statusStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
+                           th:href="@{/customer/orders(page=${cur > 0 ? cur - 1 : 0},size=${sizeVal},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort=${sort},dir=${dir})}">
                             ← Trước
                         </a>
 
@@ -276,13 +282,13 @@
                            class="o-pill"
                            th:classappend="${i == cur} ? ' active' : ''"
                            th:text="${i + 1}"
-                           th:href="@{/customer/orders(page=${i},size=${sizeVal},q=${q},status=${statusStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
+                           th:href="@{/customer/orders(page=${i},size=${sizeVal},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort=${sort},dir=${dir})}">
                             1
                         </a>
 
                         <a class="o-pill"
                            th:classappend="${pageData.last} ? ' disabled' : ''"
-                           th:href="@{/customer/orders(page=${cur + 1 < total ? cur + 1 : cur},size=${sizeVal},q=${q},status=${statusStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
+                           th:href="@{/customer/orders(page=${cur + 1 < total ? cur + 1 : cur},size=${sizeVal},q=${q},status=${statusStr},from=${fromParam},to=${toParam},sort=${sort},dir=${dir})}">
                             Sau →
                         </a>
                     </div>
