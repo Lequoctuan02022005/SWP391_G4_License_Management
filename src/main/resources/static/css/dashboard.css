@@ -1,0 +1,387 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 20px;
+}
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.role-badge {
+    background: #1e88e5;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.dashboard-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.card h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.card p {
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.full-card {
+    grid-column: 1 / -1;
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.full-card h2 {
+    margin-top: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table td, table th {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    text-align: left;
+    background: #f0f2f5;
+}
+
+ul {
+    padding-left: 18px;
+}
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 24px;
+}
+
+.dashboard-container {
+    max-width: 1300px;
+    margin: auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+}
+
+.role-badge {
+    background: #1e88e5;
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.card.full {
+    grid-column: 1 / -1;
+}
+
+.kpi span {
+    color: #777;
+    font-size: 14px;
+}
+
+.kpi strong {
+    display: block;
+    font-size: 28px;
+    margin-top: 6px;
+}
+
+.kpi.blue { border-left: 6px solid #1e88e5; }
+.kpi.green { border-left: 6px solid #2ecc71; }
+.kpi.purple { border-left: 6px solid #9b59b6; }
+.kpi.red { border-left: 6px solid #e74c3c; }
+.kpi.success { border-left: 6px solid #2ecc71; }
+.kpi.warning { border-left: 6px solid #f39c12; }
+.kpi.danger { border-left: 6px solid #e74c3c; }
+.kpi.money { border-left: 6px solid #16a085; }
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.status-grid div {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.badge.success { background: #2ecc71; }
+.badge.warning { background: #f39c12; }
+.badge.danger { background: #e74c3c; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table td, table th {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.right {
+    text-align: right;
+}
+
+ul {
+    margin: 0;
+    padding-left: 18px;
+}
+/* Khi dùng sidebar */
+.main-content .dashboard-container {
+    max-width: 100%;
+    margin: 0;
+}
+/*==================== Root Variables ====================*/
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --text-dark: #2c3e50;
+    --text-light: #7f8c8d;
+    --border-color: #e0e0e0;
+    --text-muted: #7f8c8d;
+}
+
+/*==================== Body Base ====================*/
+body {
+    background-color: #f8f9fa;
+    color: var(--text-dark);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+}
+
+/*==================== Header User/Seller Wrapper ====================*/
+.user-seller-header {
+
+    /*==================== Top Bar ====================*/
+    .top-bar {
+        background-color: #4a4a4a;
+        color: white;
+        padding: 10px 20px;
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .top-bar i {
+        margin-right: 5px;
+    }
+
+    .top-bar a {
+        color: white;
+        text-decoration: none;
+    }
+
+    /*==================== Navbar ====================*/
+    .navbar {
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 15px 0;
+    }
+
+    .navbar-brand {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--primary-color) !important;
+    }
+
+    .nav-link {
+        color: var(--primary-color) !important;
+        font-weight: 500;
+        margin: 0 15px;
+        transition: color 0.3s;
+    }
+
+    .nav-link:hover {
+        color: var(--secondary-color) !important;
+    }
+
+    /*==================== Wishlist & Cart ====================*/
+    .wishlist-icon,
+    .cart-icon {
+        position: relative;
+        font-size: 24px;
+        color: var(--primary-color);
+        margin-right: 20px;
+    }
+
+    .wishlist-badge,
+    .cart-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background-color: #e74c3c;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /*==================== Buttons ====================*/
+    .btn-login {
+        background-color: white;
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        padding: 8px 25px;
+        border-radius: 4px;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+
+    .btn-login:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    /*==================== Dropdown User ====================*/
+    .dropdown-toggle::after {
+        margin-left: 0.5rem;
+    }
+
+    .dropdown-menu {
+        min-width: 180px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .dropdown-item {
+        font-size: 14px;
+    }
+
+    .dropdown-item.text-danger:hover {
+        background-color: #842029;
+        color: white !important;
+    }
+}
+
+/*==================== Hero Section (Linebar Demo) ====================*/
+.hero-section {
+    position: relative;
+    padding: 80px 0;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    text-align: center;
+}
+
+.hero-section h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: #1e293b;
+}
+
+.hero-section p {
+    font-size: 1.1rem;
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.hero-btn-primary {
+    display: inline-block;
+    background-color: #212529;
+    color: white !important;
+    padding: 14px 36px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-decoration: none !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(33, 37, 41, 0.3);
+    margin: 0 10px;
+}
+
+.hero-btn-primary:hover {
+    background-color: #000000;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(33, 37, 41, 0.4);
+    color: white;
+}
+
+.hero-btn-secondary {
+    display: inline-block;
+    background-color: transparent;
+    color: #212529 !important;
+    border: 2.5px solid #212529;
+    padding: 12px 34px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    text-decoration: none !important;
+    transition: all 0.3s ease;
+    margin: 0 10px;
+}
+
+.hero-btn-secondary:hover {
+    background-color: #212529;
+    color: white !important;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(33, 37, 41, 0.3);
+}

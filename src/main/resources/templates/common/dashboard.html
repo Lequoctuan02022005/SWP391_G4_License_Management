@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+
+</head>
+<body>
+
+<div th:replace="common/header :: header"></div>
+
+
+<div class="dashboard-container">
+    <!-- ================= ROLE HEADER ================= -->
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <span class="role-badge" th:text="${role}"></span>
+    </div>
+
+    <!-- ================= ADMIN ================= -->
+    <section th:if="${role == 'ADMIN'}" class="dashboard-grid">
+
+        <div class="card kpi blue">
+            <span>Total Accounts</span>
+            <strong th:text="${totalAccounts}"></strong>
+        </div>
+
+        <div class="card kpi green">
+            <span>Total Sellers</span>
+            <strong th:text="${totalSellers}"></strong>
+        </div>
+
+        <div class="card kpi purple">
+            <span>Total Tools</span>
+            <strong th:text="${totalTools}"></strong>
+        </div>
+
+        <div class="card kpi red">
+            <span>Total Reports</span>
+            <strong th:text="${totalReports}"></strong>
+        </div>
+
+    </section>
+    <!-- ================= SELLER ================= -->
+    <div th:if="${role == 'SELLER'}" class="dashboard-section">
+
+        <!-- KPI -->
+        <div class="card">
+            <h3>Total Tools</h3>
+            <p th:text="${totalTools}"></p>
+        </div>
+
+        <div class="card">
+            <h3>Published Tools</h3>
+            <p th:text="${publishedTools}"></p>
+        </div>
+
+        <div class="card">
+            <h3>Pending / Rejected</h3>
+            <p th:text="${pendingRejectedTools}"></p>
+        </div>
+
+        <div class="card">
+            <h3>Total Revenue</h3>
+            <p>
+                <span th:text="${#numbers.formatDecimal(revenue, 0, 'COMMA', 0, 'POINT')}"></span> ₫
+            </p>
+        </div>
+
+        <!-- TOOL STATUS -->
+        <div class="full-card">
+            <h2>Tool Status Breakdown</h2>
+            <table>
+                <tr><td>Pending</td><td th:text="${pendingCount}"></td></tr>
+                <tr><td>Approved</td><td th:text="${approvedCount}"></td></tr>
+                <tr><td>Published</td><td th:text="${publishedCount}"></td></tr>
+                <tr><td>Rejected</td><td th:text="${rejectedCount}"></td></tr>
+                <tr><td>Suspect</td><td th:text="${suspectCount}"></td></tr>
+                <tr><td>Deactivated</td><td th:text="${deactivatedCount}"></td></tr>
+            </table>
+        </div>
+
+        <!-- REVENUE -->
+        <div class="full-card">
+            <h2>Revenue Last 5 Months</h2>
+
+            <table>
+                <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Revenue</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="m, i : ${revenueMonths}">
+                    <td th:text="${m}"></td>
+                    <td th:text="${revenueValues[i.index]}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PACKAGE -->
+        <div class="full-card">
+            <h2>Seller Package</h2>
+
+            <p>
+                Status:
+                <strong th:text="${packageStatus}"></strong>
+            </p>
+
+            <p>
+                Days Left:
+                <strong th:text="${packageDaysLeft}"></strong>
+            </p>
+        </div>
+
+    </div>
+
+    <!-- ================= MANAGER ================= -->
+    <section th:if="${role == 'MANAGER'}" class="dashboard-grid">
+
+        <div class="card kpi warning">
+            <span>Pending Tools</span>
+            <strong th:text="${pendingTools}"></strong>
+        </div>
+
+        <div class="card kpi danger">
+            <span>Suspect Tools</span>
+            <strong th:text="${suspectTools}"></strong>
+        </div>
+
+        <div class="card kpi success">
+            <span>Published Blogs</span>
+            <strong th:text="${publishedBlogs}"></strong>
+        </div>
+
+        <div class="card full">
+            <h2>Top Blogs</h2>
+            <table>
+                <tr th:each="b : ${topBlogs}">
+                    <td th:text="${b.title}"></td>
+                    <td class="right" th:text="${b.viewCount}"></td>
+                </tr>
+            </table>
+        </div>
+
+    </section>
+
+    <!-- ================= MOD ================= -->
+    <section th:if="${role == 'MOD'}" class="dashboard-grid">
+
+        <div class="card kpi danger">
+            <span>Total Pending Reports</span>
+            <strong th:text="${totalPendingReports}"></strong>
+        </div>
+
+        <div class="card full">
+            <h2>Tool Reports</h2>
+            <ul>
+                <li th:each="r : ${pendingToolReports}">
+                    #<span th:text="${r.toolReportId}"></span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card full">
+            <h2>Feedback Reports</h2>
+            <ul>
+                <li th:each="r : ${pendingFeedbackReports}">
+                    #<span th:text="${r.feedbackReportId}"></span>
+                </li>
+            </ul>
+        </div>
+
+    </section>
+</div>
+
+</body>
+</html>
