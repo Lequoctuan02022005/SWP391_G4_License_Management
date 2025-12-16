@@ -5,10 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.service.AccountService;
@@ -19,31 +16,32 @@ public class RegisterController {
     @Autowired
     private AccountService accountService;
 
-    // Hiển thị form đăng ký
+    // ================== REGISTER ==================
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
-        if (!model.containsAttribute("account")) {
-            model.addAttribute("account", new Account());
-        }
+        model.addAttribute("account", new Account());
         return "auth/register";
     }
 
-    // Xử lý đăng ký
     @PostMapping("/register")
-    public String handleRegister(@Valid @ModelAttribute("account") Account account,
-                                 BindingResult result,
-                                 Model model,
-                                 RedirectAttributes redirectAttributes) {
+    public String handleRegister(
+            @Valid @ModelAttribute("account") Account account,
+            BindingResult result,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
-        //  Lỗi xác nhận mật khẩu
+        // Check confirm password
         if (account.getConfirmPassword() == null ||
                 !account.getPassword().equals(account.getConfirmPassword())) {
-            result.rejectValue("confirmPassword", "error.confirmPassword", "Mật khẩu không khớp.");
+            result.rejectValue(
+                    "confirmPassword",
+                    "error.confirmPassword",
+                    "Mật khẩu không khớp."
+            );
         }
 
         boolean success = accountService.registerAccount(account, result);
 
-        //  Nếu có lỗi ở lại trang đăng ký
         if (result.hasErrors() || !success) {
             model.addAttribute("showAlert", true);
             model.addAttribute("alertType", "danger");
@@ -51,10 +49,6 @@ public class RegisterController {
             return "auth/register";
         }
 
-        // ✅ Nếu đăng ký OK:
-        // - Account đã được lưu với status = DEACTIVATED, verified = false
-        // - Mã verify đã được gửi email
-        // → Chuyển sang trang /verify để nhập mã
         redirectAttributes.addFlashAttribute(
                 "infoMessage",
                 "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã xác minh."
@@ -62,25 +56,24 @@ public class RegisterController {
         return "redirect:/verify";
     }
 
-    // Hiển thị form nhập mã code
+    // ================== VERIFY ==================
     @GetMapping("/verify")
-    public String showVerifyPage(Model model) {
-        // infoMessage có thể được set từ redirectAttributes
+    public String showVerifyPage() {
         return "auth/verify-code";
     }
 
-    // Xử lý mã code
     @PostMapping("/verify")
-    public String verifyCode(@RequestParam("code") String code,
-                             Model model) {
+    public String verifyCode(@RequestParam("code") String code, Model model) {
         try {
             accountService.verifyCode(code);
-            model.addAttribute("successMessage", "Xác minh thành công! Cảm ơn bạn đã đăng kí! Xin mời bạn đăng nhập lại sau 4 giây.");
-            model.addAttribute("redirectUrl", "/login");  // verify-code.html sẽ tự redirect sau 2s
+            model.addAttribute(
+                    "successMessage",
+                    "Xác minh thành công! Bạn sẽ được chuyển đến trang đăng nhập sau 4 giây."
+            );
+            model.addAttribute("redirectUrl", "/login");
         } catch (RuntimeException e) {
             model.addAttribute("errorMessage", e.getMessage());
         }
         return "auth/verify-code";
     }
-
 }

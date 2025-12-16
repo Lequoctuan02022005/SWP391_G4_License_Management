@@ -83,12 +83,31 @@ public class CustomAuthenticationSuccessHandler
         response.sendRedirect("/home");
     }
 
-    private void redirectByRole(Role.RoleName role, HttpServletResponse response) throws IOException {
+    private void redirectByRole(
+            Role.RoleName role,
+            HttpServletResponse response
+    ) throws IOException {
+
         switch (role) {
-            case ADMIN, MANAGER -> response.sendRedirect("/dashboard");
-            case MOD-> response.sendRedirect("/moderator/dashboard");
-            case CUSTOMER -> response.sendRedirect("/home");
-            default -> response.sendRedirect("/");
+
+            case ADMIN ->
+                    response.sendRedirect("/dashboard");
+
+            case MANAGER ->
+                    response.sendRedirect("/dashboard");
+
+            case MOD ->
+                    response.sendRedirect("/dashboard");
+
+            case CUSTOMER ->
+                    response.sendRedirect("/home");
+
+            case GUEST ->
+                    response.sendRedirect("/home");
+
+            default ->
+                    response.sendRedirect("/");
         }
     }
+
 }
