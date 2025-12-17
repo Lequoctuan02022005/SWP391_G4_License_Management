@@ -19,8 +19,8 @@
 
                 <img class="avatar"
                      th:src="${account.images != null
-                     ? account.images
-                     : 'https://cdn-icons-png.flaticon.com/512/147/147144.png'}"/>
+                             ? '/uploads/avatar/' + account.images
+                             : 'https://cdn-icons-png.flaticon.com/512/147/147144.png'}"/>
 
                 <div class="profile-info">
                     <div class="name" th:text="${account.fullName}"></div>

@@ -12,6 +12,7 @@
     <!-- Custom CSS -->
     <link th:href="@{/css/toollist.css}" rel="stylesheet" />
         <link th:href="@{/css/home.css}" rel="stylesheet" />
+    <link th:href="@{/css/sidebar-header.css}" rel="stylesheet" />
 
 </head>
 <body>
@@ -199,13 +200,13 @@
 
             </section>
         </main>
-
+        </th:block>
     </div>
-</div>
 
 <!-- Non-seller: render header then the content fragment once -->
-<div th:if="${account.role.roleName.name() != 'SELLER'}" th:fragment="content">
-    <div th:if="${account.role.roleName.name() == 'CUSTOMER'}"
+<div th:if="${account == null or account.role.roleName.name() != 'SELLER'}"
+     th:fragment="content">
+    <div th:if="${account.role.roleName.name() == 'CUSTOMER'} || ${account.role.roleName.name() == 'GUEST'}"
          th:replace="common/header :: header"></div>
     <main class="tl-page">
 
@@ -301,7 +302,8 @@
 
                 <!-- TOP BAR -->
                 <div class="tl-top-bar">
-                    <div class="tl-top-right" th:if="${account.role.roleName.name() == 'SELLER'}">
+                    <div class="tl-top-right"
+                         th:if="${account != null and account.role.roleName.name() == 'SELLER'}">
                         <a th:href="@{/tools/seller/add}" class="tl-btn tl-btn-primary">+ Thêm Tool</a>
                     </div>
                 </div>
