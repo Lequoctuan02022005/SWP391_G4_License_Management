@@ -16,13 +16,11 @@
 </head>
 <body>
 
-<div th:if="${account.role.roleName.name() == 'CUSTOMER'}"
-     th:replace="common/header :: header"></div>
+
 
 <!-- Seller: replace entire wrapper and provide the content fragment inside the replaced element -->
 <div th:if="${account.role.roleName.name() == 'SELLER'}" th:replace="common/sidebar-header :: role-sidebar">
-    <div th:fragment="content">
-
+        <th:block th:fragment="content">
         <main class="tl-page">
 
             <!-- PAGE HEADER -->
@@ -38,14 +36,14 @@
                       class="tl-filter-bar d-flex flex-wrap align-items-center justify-content-start gap-3 mb-3">
                     <!-- KEYWORDS -->
                     <div class="tl-filter-group tl-filter-inline">
-                        <label for="keyword">Từ khóa:</label>
-                        <input id="keyword" type="text" name="keyword" placeholder="Tên / mô tả" th:value="${keyword}" />
+                        <label for="keyword-seller">Từ khóa:</label>
+                        <input id="keyword-seller" type="text" name="keyword" placeholder="Tên / mô tả" th:value="${keyword}" />
                     </div>
 
                     <!-- CATEGORY -->
                     <div class="tl-filter-group tl-filter-inline">
-                        <label for="categoryId">Danh mục:</label>
-                        <select id="categoryId" name="categoryId">
+                        <label for="categoryId-seller">Danh mục:</label>
+                        <select id="categoryId-seller" name="categoryId">
                             <option value="">Tất cả</option>
                             <option th:each="c : ${categories}" th:value="${c.categoryId}" th:text="${c.categoryName}"
                                     th:selected="${categoryId != null and categoryId == c.categoryId}"></option>
@@ -54,8 +52,8 @@
 
                     <!-- STATUS (SELLER) -->
                     <div class="tl-filter-group tl-filter-inline" th:if="${isSeller}">
-                        <label for="status">Trạng thái:</label>
-                        <select id="status" name="status">
+                        <label for="status-seller">Trạng thái:</label>
+                        <select id="status-seller" name="status">
                             <option value="" th:selected="${status == null or status == ''}">Tất cả</option>
                             <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
                             <option value="APPROVED" th:selected="${status == 'APPROVED'}">APPROVED</option>
@@ -67,8 +65,8 @@
 
                     <!-- AUTHOR (USER) -->
                     <div class="tl-filter-group tl-filter-inline" th:if="${!isSeller}">
-                        <label for="author">Author:</label>
-                        <select id="author" name="author">
+                        <label for="author-seller">Author:</label>
+                        <select id="author-seller" name="author">
                             <option value="" th:selected="${author == null}">Tất cả</option>
                             <option th:each="s : ${sellers}" th:value="${s.accountId}" th:text="${s.fullName}"
                                     th:selected="${author != null and author == s.accountId}"></option>
@@ -77,8 +75,8 @@
 
                     <!-- LOGIN METHOD -->
                     <div class="tl-filter-group tl-filter-inline">
-                        <label for="loginMethod">Đăng nhập:</label>
-                        <select id="loginMethod" name="loginMethod">
+                        <label for="loginMethod-seller">Đăng nhập:</label>
+                        <select id="loginMethod-seller" name="loginMethod">
                             <option value="" th:selected="${loginMethod == null or loginMethod == ''}">Tất cả</option>
                             <option value="USER_PASSWORD" th:selected="${loginMethod == 'USER_PASSWORD'}">USER_PASSWORD</option>
                             <option value="TOKEN" th:selected="${loginMethod == 'TOKEN'}">TOKEN</option>
@@ -95,8 +93,8 @@
 
                     <!-- SORT -->
                     <div class="tl-filter-group tl-filter-inline">
-                        <label for="sort">Sắp xếp:</label>
-                        <select id="sort" name="sort">
+                        <label for="sort-seller">Sắp xếp:</label>
+                        <select id="sort-seller" name="sort">
                             <option value="" th:selected="${sort == null or sort == ''}">Mặc định</option>
                             <option value="date_desc" th:selected="${sort == 'date_desc'}">Ngày mới nhất</option>
                             <option value="date_asc" th:selected="${sort == 'date_asc'}">Ngày cũ nhất</option>
@@ -207,7 +205,8 @@
 
 <!-- Non-seller: render header then the content fragment once -->
 <div th:if="${account.role.roleName.name() != 'SELLER'}" th:fragment="content">
-
+    <div th:if="${account.role.roleName.name() == 'CUSTOMER'}"
+         th:replace="common/header :: header"></div>
     <main class="tl-page">
 
         <!-- PAGE HEADER -->
@@ -223,14 +222,14 @@
                   class="tl-filter-bar d-flex flex-wrap align-items-center justify-content-start gap-3 mb-3">
                 <!-- KEYWORDS -->
                 <div class="tl-filter-group tl-filter-inline">
-                    <label for="keyword">Từ khóa:</label>
-                    <input id="keyword" type="text" name="keyword" placeholder="Tên / mô tả" th:value="${keyword}" />
+                    <label for="keyword-customer">Từ khóa:</label>
+                    <input id="keyword-customer" type="text" name="keyword" placeholder="Tên / mô tả" th:value="${keyword}" />
                 </div>
 
                 <!-- CATEGORY -->
                 <div class="tl-filter-group tl-filter-inline">
-                    <label for="categoryId">Danh mục:</label>
-                    <select id="categoryId" name="categoryId">
+                    <label for="categoryId-customer">Danh mục:</label>
+                    <select id="categoryId-customer" name="categoryId">
                         <option value="">Tất cả</option>
                         <option th:each="c : ${categories}" th:value="${c.categoryId}" th:text="${c.categoryName}"
                                 th:selected="${categoryId != null and categoryId == c.categoryId}"></option>
@@ -239,8 +238,8 @@
 
                 <!-- STATUS (SELLER) -->
                 <div class="tl-filter-group tl-filter-inline" th:if="${isSeller}">
-                    <label for="status">Trạng thái:</label>
-                    <select id="status" name="status">
+                    <label for="status-customer">Trạng thái:</label>
+                    <select id="status-customer" name="status">
                         <option value="" th:selected="${status == null or status == ''}">Tất cả</option>
                         <option value="PENDING" th:selected="${status == 'PENDING'}">PENDING</option>
                         <option value="APPROVED" th:selected="${status == 'APPROVED'}">APPROVED</option>
@@ -252,8 +251,8 @@
 
                 <!-- AUTHOR (USER) -->
                 <div class="tl-filter-group tl-filter-inline" th:if="${!isSeller}">
-                    <label for="author">Author:</label>
-                    <select id="author" name="author">
+                    <label for="author-customer">Author:</label>
+                    <select id="author-customer" name="author">
                         <option value="" th:selected="${author == null}">Tất cả</option>
                         <option th:each="s : ${sellers}" th:value="${s.accountId}" th:text="${s.fullName}"
                                 th:selected="${author != null and author == s.accountId}"></option>
@@ -262,8 +261,8 @@
 
                 <!-- LOGIN METHOD -->
                 <div class="tl-filter-group tl-filter-inline">
-                    <label for="loginMethod">Đăng nhập:</label>
-                    <select id="loginMethod" name="loginMethod">
+                    <label for="loginMethod-customer">Đăng nhập:</label>
+                    <select id="loginMethod-customer" name="loginMethod">
                         <option value="" th:selected="${loginMethod == null or loginMethod == ''}">Tất cả</option>
                         <option value="USER_PASSWORD" th:selected="${loginMethod == 'USER_PASSWORD'}">USER_PASSWORD</option>
                         <option value="TOKEN" th:selected="${loginMethod == 'TOKEN'}">TOKEN</option>
@@ -280,8 +279,8 @@
 
                 <!-- SORT -->
                 <div class="tl-filter-group tl-filter-inline">
-                    <label for="sort">Sắp xếp:</label>
-                    <select id="sort" name="sort">
+                    <label for="sort-customer">Sắp xếp:</label>
+                    <select id="sort-customer" name="sort">
                         <option value="" th:selected="${sort == null or sort == ''}">Mặc định</option>
                         <option value="date_desc" th:selected="${sort == 'date_desc'}">Ngày mới nhất</option>
                         <option value="date_asc" th:selected="${sort == 'date_asc'}">Ngày cũ nhất</option>
