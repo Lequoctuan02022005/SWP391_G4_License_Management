@@ -18,32 +18,43 @@ public interface ToolRepository extends JpaRepository<Tool, Long> {
 
     boolean existsByToolName(String toolName);
 
-    //mod
-    // MODERATOR – find pending tools
-    @Query("SELECT t FROM Tool t " +
-            "WHERE t.status = swp391.fa25.lms.model.Tool.Status.PENDING " +
-            "AND (:keyword IS NULL OR t.toolName LIKE %:keyword%)")
-    Page<Tool> findPendingUploads(
-            @Param("keyword") String keyword, Pageable pageable
-    );
-
-    // MANAGER – filter tools
-    @Query("SELECT t FROM Tool t " +
-            "WHERE (:sellerId IS NULL OR t.seller.accountId = :sellerId) " +
-            "AND (:categoryId IS NULL OR t.category.categoryId = :categoryId) " +
-            "AND (:status IS NULL OR t.status = :status) " +
-            "AND (:name IS NULL OR t.toolName LIKE %:name%) " +
-            "AND (:from IS NULL OR t.createdAt >= :from) " +
-            "AND (:to IS NULL OR t.createdAt <= :to)")
-    Page<Tool> filterToolsForManager(
+    // ========================= MODERATOR: PENDING LIST =========================
+    @Query(""" 
+        SELECT t FROM Tool t
+        WHERE t.status = swp391.fa25.lms.model.Tool.Status.PENDING
+          AND (:sellerId IS NULL OR t.seller.accountId = :sellerId)
+          AND (:categoryId IS NULL OR t.category.categoryId = :categoryId)
+          AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+          AND (:uploadFrom IS NULL OR t.createdAt >= :uploadFrom)
+          AND (:uploadTo IS NULL OR t.createdAt <= :uploadTo)
+        """)
+    Page<Tool> findModeratorPendingTools(
             @Param("sellerId") Long sellerId,
             @Param("categoryId") Long categoryId,
-            @Param("status") Tool.Status status,
-            @Param("name") String name,
-            @Param("from") LocalDateTime fromDate,
-            @Param("to") LocalDateTime toDate,
+            @Param("keyword") String keyword,
+            @Param("uploadFrom") LocalDateTime uploadFrom,
+            @Param("uploadTo") LocalDateTime uploadTo,
             Pageable pageable
     );
+    // ========================= MANAGER: APPROVED LIST =========================
+    @Query("""
+        SELECT t FROM Tool t
+        WHERE t.status = swp391.fa25.lms.model.Tool.Status.APPROVED
+          AND (:sellerId IS NULL OR t.seller.accountId = :sellerId)
+          AND (:categoryId IS NULL OR t.category.categoryId = :categoryId)
+          AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+          AND (:uploadFrom IS NULL OR t.createdAt >= :uploadFrom)
+          AND (:uploadTo IS NULL OR t.createdAt <= :uploadTo)
+        """)
+    Page<Tool> findManagerApprovedTools(
+            @Param("sellerId") Long sellerId,
+            @Param("categoryId") Long categoryId,
+            @Param("keyword") String keyword,
+            @Param("uploadFrom") LocalDateTime uploadFrom,
+            @Param("uploadTo") LocalDateTime uploadTo,
+            Pageable pageable
+    );
+    // =================
 
     // Home page for customers
     @Query("SELECT t FROM Tool t " +
@@ -54,8 +65,6 @@ public interface ToolRepository extends JpaRepository<Tool, Long> {
     );
 
     List<Tool> findBySellerAccountId(Long sellerId);
-
-    Page<Tool> findByStatus(Tool.Status status, Pageable pageable);
 
     @Query("SELECT t.toolName FROM Tool t WHERE t.toolName LIKE %:keyword%")
     List<String> searchNames(@Param("keyword") String keyword);
@@ -87,6 +96,7 @@ public interface ToolRepository extends JpaRepository<Tool, Long> {
             WHERE t.status = 'PUBLISHED'
               AND t.seller.sellerActive = true
               AND (t.seller.sellerExpiryDate IS NULL OR t.seller.sellerExpiryDate >= CURRENT_TIMESTAMP)
+              AND t.availableQuantity > 0
             """)
     List<Tool> findAllPublishedAndSellerActive();
 

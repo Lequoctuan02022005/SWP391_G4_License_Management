@@ -84,6 +84,7 @@
                 <!-- MOD -->
                 <th:block th:if="${account.role.roleName.name() == 'MOD'}">
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
+                    <li><a href="/moderator/upload-requests"><i class="bi bi-cloud-upload"></i> Upload Tool Requests</a></li>
                     <li><a href="/mod/tools"><i class="bi bi-check2-circle"></i> Duyệt Tools</a></li>
                     <li><a href="/mod/reports"><i class="bi bi-flag"></i> Reports</a></li>
                     <li><a href="/logout" class="action-item logout">
@@ -95,6 +96,7 @@
                 <!-- MANAGER -->
                 <th:block th:if="${account.role.roleName.name() == 'MANAGER'}">
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
+                    <li><a href="/manager/upload-tools"><i class="bi bi-cloud-upload"></i><span>Upload Tool Requests</span></a></li>
                     <li><a href="/manager/statistics"><i class="bi bi-bar-chart"></i> Statistics</a></li>
                     <li><a href="/seller-packages"><i class="bi bi-box-seam"></i><span>Seller Packages</span></a></li>
                     <li><a href="/logout" class="action-item logout"><i class="bi bi-box-arrow-right"></i><span>Thoát</span></a></li>

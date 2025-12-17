@@ -65,7 +65,7 @@ public class FileStorageService {
         Path target = uploadDir.resolve(newFilename);
         Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
-        return dir + "/" + newFilename;
+        return "/" + dir + "/" + newFilename;
     }
 
 }

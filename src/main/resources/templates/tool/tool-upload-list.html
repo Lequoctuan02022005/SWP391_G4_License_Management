@@ -1,167 +1,141 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Tool Upload Management</title>
-
+    <title>Upload Tool Requests</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <style>
-        body {
-            background: #f5f7fa;
-        }
-        .sidebar {
-            width: 240px;
-        }
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
 <body>
 
-<div class="d-flex">
+<div th:replace="common/sidebar-header :: role-sidebar">
 
-    <nav class="sidebar bg-dark text-white vh-100 p-3">
-        <h4 class="text-white mb-4"
-            th:text="'Hello ' + ${account.fullName}">
-            Hello Moderator
-        </h4>
+    <div th:fragment="content">
+        <div class="container-fluid px-4 py-4">
 
-        <ul class="nav flex-column">
-            <li class="nav-item mb-2">
-                <a th:href="@{/admin/dashboard}"
-                   class="nav-link text-white">Dashboard</a>
-            </li>
+            <div class="card shadow-sm">
 
-            <li class="nav-item mb-2">
-                <a th:href="@{/admin/accounts}"
-                   class="nav-link text-white">Quản lý Users</a>
-            </li>
+                <!-- HEADER -->
+                <div class="card-header bg-white d-flex justify-content-between">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-upload"></i>
+                        Upload Tool Requests
+                    </h5>
 
-            <li class="nav-item mb-2">
+                    <span class="badge bg-info"
+                          th:text="${account.role.roleName}">
+    </span>
+                </div>
 
-                <a th:href="@{/tools/mod/uploads}"
-                   class="nav-link text-white fw-bold">
-                    Quản lý Tools
-                </a>
-            </li>
+                <!-- FILTER -->
+                <div class="card-body border-bottom">
+                    <form method="get" class="row g-2">
 
-            <li class="nav-item mb-2">
-                <a href="#" class="nav-link text-white">Quản lý Orders</a>
-            </li>
+                        <div class="col-md-3">
+                            <input name="keyword" class="form-control"
+                                   placeholder="Tool name"
+                                   th:value="${keyword}">
+                        </div>
 
-            <li class="nav-item mt-4">
-                <a th:href="@{/logout}" class="nav-link text-danger">Logout</a>
-            </li>
-        </ul>
-    </nav>
+                        <div class="col-md-2">
+                            <select name="categoryId" class="form-select">
+                                <option value="">All Category</option>
+                                <option th:each="c : ${categories}"
+                                        th:value="${c.categoryId}"
+                                        th:text="${c.categoryName}"
+                                        th:selected="${categoryId == c.categoryId}">
+                                </option>
+                            </select>
+                        </div>
 
-    <!-- ===== MAIN CONTENT ===== -->
-    <main class="flex-grow-1 p-4">
+                        <div class="col-md-2">
+                            <input type="datetime-local" name="uploadFrom"
+                                   class="form-control" th:value="${uploadFrom}">
+                        </div>
 
-        <h3 class="fw-bold mb-3">Tool Upload Management</h3>
+                        <div class="col-md-2">
+                            <input type="datetime-local" name="uploadTo"
+                                   class="form-control" th:value="${uploadTo}">
+                        </div>
 
-        <!-- SEARCH + FILTER -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100">
+                                <i class="bi bi-funnel"></i> Filter
+                            </button>
+                        </div>
 
-                    <div class="col-md-4">
-                        <input type="text"
-                               name="keyword"
-                               class="form-control"
-                               placeholder="Search by tool name..."
-                               th:value="${keyword}">
+                    </form>
+                </div>
+
+                <!-- TABLE -->
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Tool</th>
+                            <th>Seller</th>
+                            <th>Category</th>
+                            <th>Qty</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="t, i : ${toolPage.content}">
+                            <td th:text="${i.count}"></td>
+                            <td th:text="${t.toolName}"></td>
+                            <td th:text="${t.seller.fullName}"></td>
+                            <td th:text="${t.category.categoryName}"></td>
+                            <td th:text="${t.quantity}"></td>
+                            <td th:text="${#temporals.format(t.createdAt,'dd/MM/yyyy HH:mm')}"></td>
+                            <td>
+                                <a th:if="${account.role.roleName.name() == 'MOD'}"
+                                   th:href="@{/moderator/tool/{id}(id=${t.toolId})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+
+                                <a th:if="${account.role.roleName.name() == 'MANAGER'}"
+                                   th:href="@{/manager/tool/{id}(id=${t.toolId})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+
+                        <tr th:if="${toolPage.totalElements == 0}">
+                            <td colspan="7" class="text-center text-muted py-4">
+                                No data
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION -->
+                <div class="card-footer bg-white d-flex justify-content-between">
+    <span>
+        Page <b th:text="${toolPage.number + 1}"></b> /
+        <b th:text="${toolPage.totalPages}"></b>
+    </span>
+
+                    <div class="btn-group">
+                        <a class="btn btn-outline-secondary"
+                           th:if="${toolPage.hasPrevious()}"
+                           th:href="@{?page=${toolPage.number - 1}}">«</a>
+
+                        <a class="btn btn-outline-secondary"
+                           th:if="${toolPage.hasNext()}"
+                           th:href="@{?page=${toolPage.number + 1}}">»</a>
                     </div>
+                </div>
 
-                    <div class="col-md-3">
-                        <select name="status" class="form-select">
-                            <option value=""
-                                    th:selected="${status == null or status == ''}">
-                                All Status
-                            </option>
-                            <option value="PENDING" th:selected="${status == 'PENDING'}">Pending</option>
-                            <option value="APPROVED" th:selected="${status == 'APPROVED'}">Approved</option>
-                            <option value="REJECTED" th:selected="${status == 'REJECTED'}">Rejected</option>
-                            <option value="PUBLISHED" th:selected="${status == 'PUBLISHED'}">Published</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-2">
-                        <button class="btn btn-dark w-100">Search</button>
-                    </div>
-                </form>
             </div>
         </div>
+    </div>
 
-        <!-- TABLE -->
-        <div class="card shadow-sm">
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0 text-center">
-                    <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Tool Name</th>
-                        <th>Seller</th>
-                        <th>Created At</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    <tr th:each="t : ${tools.content}">
-                        <td th:text="${t.toolId}"></td>
-                        <td th:text="${t.toolName}"></td>
-                        <td th:text="${t.seller.fullName}"></td>
-                        <td th:text="${#temporals.format(t.createdAt,'yyyy-MM-dd HH:mm')}"></td>
-
-                        <td>
-                            <span class="badge bg-warning text-dark"
-                                  th:if="${t.status.name() == 'PENDING'}">Pending</span>
-                            <span class="badge bg-success"
-                                  th:if="${t.status.name() == 'APPROVED'}">Approved</span>
-                            <span class="badge bg-danger"
-                                  th:if="${t.status.name() == 'REJECTED'}">Rejected</span>
-                            <span class="badge bg-primary"
-                                  th:if="${t.status.name() == 'PUBLISHED'}">Published</span>
-                        </td>
-
-                        <td>
-                            <a class="btn btn-sm btn-outline-primary"
-                               th:href="@{/tools/mod/uploads/{id}(id=${t.toolId})}">
-                                Review
-                            </a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- PAGINATION -->
-        <div class="mt-3 d-flex justify-content-between align-items-center">
-            <span class="text-muted">
-                Page <b th:text="${tools.number + 1}"></b>
-                of <b th:text="${tools.totalPages}"></b>
-            </span>
-
-            <div>
-                <a th:if="${tools.hasPrevious()}"
-                   class="btn btn-outline-secondary btn-sm"
-                   th:href="@{/tools/mod/uploads(page=${tools.number - 1}, keyword=${keyword}, status=${status})}">
-                    Previous
-                </a>
-
-                <a th:if="${tools.hasNext()}"
-                   class="btn btn-outline-secondary btn-sm"
-                   th:href="@{/tools/mod/uploads(page=${tools.number + 1}, keyword=${keyword}, status=${status})}">
-                    Next
-                </a>
-            </div>
-        </div>
-
-    </main>
 </div>
-
 </body>
 </html>
