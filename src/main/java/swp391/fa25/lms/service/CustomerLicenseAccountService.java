@@ -162,4 +162,26 @@ public class CustomerLicenseAccountService {
         getMyLicenseAccountDetail(accountId, licenseAccountId);
         return renewLogRepo.findByLicenseAccount_LicenseAccountIdOrderByRenewDateDesc(licenseAccountId);
     }
+
+    @Transactional
+    public void useLicenseAccount(Long accountId, Long licenseAccountId) {
+        LicenseAccount la = getMyLicenseAccountDetail(accountId, licenseAccountId);
+
+        if (la.getStatus() == LicenseAccount.Status.REVOKED) {
+            throw new IllegalArgumentException("License đã bị REVOKED.");
+        }
+        if (la.getStatus() != LicenseAccount.Status.ACTIVE) {
+            throw new IllegalArgumentException("Chỉ License ACTIVE mới được dùng dịch vụ.");
+        }
+        if (Boolean.TRUE.equals(la.getUsed())) {
+            throw new IllegalArgumentException("License Account này đã được dùng rồi.");
+        }
+
+        la.setUsed(true);
+        // nếu model có field usedAt thì set thêm:
+        // la.setUsedAt(LocalDateTime.now());
+
+        laRepo.save(la);
+    }
+
 }

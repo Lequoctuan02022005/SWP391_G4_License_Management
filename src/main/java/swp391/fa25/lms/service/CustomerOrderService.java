@@ -23,7 +23,8 @@ public class CustomerOrderService {
             "price", "price",
             "createdAt", "createdAt",
             "toolName", "tool.toolName",
-            "licenseName", "license.name"
+            "licenseName", "license.name",
+            "orderStatus", "orderStatus"
     );
 
     private String normalizeSort(String sort) {
@@ -43,11 +44,21 @@ public class CustomerOrderService {
                                            int page, int size,
                                            String sort, String dir) {
 
+        q = (q == null) ? "" : q.trim();
+
+        if (from != null && to != null && from.isAfter(to)) {
+            LocalDateTime tmp = from; from = to; to = tmp;
+        }
+
+        page = Math.max(page, 0);
+        size = Math.min(Math.max(size, 5), 50);
+
         String sortProp = normalizeSort(sort);
         Sort.Direction direction = normalizeDir(dir);
 
-        // tie-breaker để stable
-        Sort sortObj = Sort.by(direction, sortProp).and(Sort.by(Sort.Direction.DESC, "orderId"));
+        Sort sortObj = Sort.by(direction, sortProp)
+                .and(Sort.by(Sort.Direction.DESC, "orderId"));
+
         Pageable pageable = PageRequest.of(page, size, sortObj);
 
         Page<CustomerOrder> rs = orderRepo.findMyOrders(accountId, q, status, from, to, pageable);
