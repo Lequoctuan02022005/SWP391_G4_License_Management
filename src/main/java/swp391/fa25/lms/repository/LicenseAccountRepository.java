@@ -6,10 +6,9 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
 import swp391.fa25.lms.model.LicenseAccount;
 import swp391.fa25.lms.model.Tool;
-import org.springframework.data.jpa.repository.Query;
-
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +16,7 @@ import java.util.Optional;
 
 @Repository
 public interface LicenseAccountRepository extends JpaRepository<LicenseAccount, Long> {
+
     boolean existsByToken(String token);
 
     LicenseAccount findByToken(String token);
@@ -38,7 +38,7 @@ public interface LicenseAccountRepository extends JpaRepository<LicenseAccount, 
           AND (:status IS NULL OR la.status = :status)
           AND (:toolId IS NULL OR t.toolId = :toolId)
           AND (:loginMethod IS NULL OR t.loginMethod = :loginMethod)
-          AND (:from IS NULL OR la.startDate >= :from)
+          AND (:from IS NULL OR la.endDate >= :from)
           AND (:to IS NULL OR la.endDate <= :to)
           AND (
               :q IS NULL OR :q = '' OR
@@ -60,12 +60,9 @@ public interface LicenseAccountRepository extends JpaRepository<LicenseAccount, 
             Pageable pageable
     );
 
-
     @EntityGraph(attributePaths = {"license", "license.tool", "license.tool.files", "order", "order.transaction"})
     Optional<LicenseAccount> findByLicenseAccountIdAndOrder_Account_AccountId(Long licenseAccountId, Long accountId);
 
-
     @EntityGraph(attributePaths = {"license", "license.tool", "license.tool.files", "order", "order.transaction"})
     Optional<LicenseAccount> findByOrder_OrderIdAndOrder_Account_AccountId(Long orderId, Long accountId);
-
 }

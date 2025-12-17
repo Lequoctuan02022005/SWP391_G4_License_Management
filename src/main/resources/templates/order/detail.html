@@ -133,19 +133,6 @@
                                 </div>
                             </div>
 
-<<<<<<< HEAD
-                            <!-- Rating -->
-<!--                            <div style="text-align:right;" th:with="myR=${myFeedback != null ? myFeedback.rating : 0}">-->
-<!--                                <div class="muted">Đánh giá của bạn</div>-->
-<!--                                <div class="stars">-->
-<!--                                    <span th:each="i : ${#numbers.sequence(1,5)}"-->
-<!--                                          th:text="${i <= myR ? '★' : '☆'}">★</span>-->
-<!--                                </div>-->
-<!--                                <div class="muted" th:if="${avgRating != null}">-->
-<!--                                    Trung bình: <b th:text="${#numbers.formatDecimal(avgRating,1,'POINT',1,'POINT')}">0.0</b>/5-->
-<!--                                </div>-->
-<!--                            </div>-->
-=======
                             <!-- ACTIONS -->
                             <div class="actions">
 
@@ -197,7 +184,6 @@
                             <div class="muted" th:if="${myFeedback != null and myFeedback.comment != null}">
                                 Nhận xét: <span th:text="${myFeedback.comment}">comment</span>
                             </div>
->>>>>>> 2663297e31c64619f54956de599f54933442ddc8
                         </div>
                     </div>
                 </div>
@@ -258,49 +244,7 @@
                     </div>
                 </div>
 
-                <!-- LICENSE ACCOUNT -->
-                <div class="box full" th:if="${order.licenseAccount != null}">
-                    <div class="label">License Account được cấp</div>
-                    <div class="value">
-                        <div>ID: <b th:text="${order.licenseAccount.licenseAccountId}">0</b></div>
 
-                        <div class="muted" style="margin-top:8px;">
-                            Used: <b th:text="${order.licenseAccount.used}">false</b>
-                        </div>
-
-                        <div class="muted" th:if="${order.licenseAccount.status != null}">
-                            Status: <b th:text="${order.licenseAccount.status}">ACTIVE</b>
-                        </div>
-
-                        <!-- ✅ Username/Password + nút xem/che -->
-                        <div class="sep"></div>
-
-                        <div class="muted" th:if="${order.licenseAccount.username != null}">
-                            Username: <b th:text="${order.licenseAccount.username}">user</b>
-                        </div>
-
-                        <div class="pwd-wrap" th:if="${order.licenseAccount.password != null}">
-                            <input class="pwd-input"
-                                   th:id="'pwd_' + ${order.licenseAccount.licenseAccountId}"
-                                   type="password"
-                                   th:value="${order.licenseAccount.password}"
-                                   readonly />
-                            <button class="btn-eye"
-                                    type="button"
-                                    th:attr="data-target=${'pwd_' + order.licenseAccount.licenseAccountId}"
-                                    onclick="togglePwdByBtn(this)">👁</button>
-                            <span class="muted">Xem/Che mật khẩu</span>
-                        </div>
-
-                        <div class="muted" th:if="${order.licenseAccount.password == null}">
-                            Password: <b>(N/A)</b>
-                        </div>
-                    </div>
-                </div>
-
-<<<<<<< HEAD
-
-=======
                 <div class="box full" th:if="${order.licenseAccount == null}">
                     <div class="label">License Account được cấp</div>
                     <div class="value">
@@ -308,7 +252,6 @@
                         <div class="muted">Chỉ bật “Dùng dịch vụ” khi đơn SUCCESS và đã cấp LicenseAccount.</div>
                     </div>
                 </div>
->>>>>>> 2663297e31c64619f54956de599f54933442ddc8
 
             </div>
         </th:block>

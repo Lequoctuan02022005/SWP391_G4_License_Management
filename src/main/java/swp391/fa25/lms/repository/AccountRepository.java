@@ -15,17 +15,15 @@ import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
-    // --- Tra cứu cơ bản ---
     Optional<Account> findByEmail(String email);
-
-
-    boolean findAccountByEmail(String email);
 
     boolean existsByEmail(String email);
 
     Page<Account> findByEmailContainingIgnoreCaseOrFullNameContainingIgnoreCase(
             String email, String fullName, Pageable pageable);
+
     boolean existsByEmailAndVerifiedTrue(String email);
+
     Optional<Account> findByVerificationCode(String code);
 
     long countByRole_RoleName(RoleName roleName);
@@ -33,11 +31,11 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Page<Account> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     Page<Account> findByStatusOrderByUpdatedAtDesc(AccountStatus status, Pageable pageable);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Account a SET a.status = :status, a.updatedAt = CURRENT_TIMESTAMP WHERE a.accountId = :id")
     int updateStatus(@Param("id") long id, @Param("status") AccountStatus status);
 
-    // Search có filter status
     @Query("""
            SELECT a FROM Account a
            WHERE (:q IS NULL OR :q = '' 
@@ -50,15 +48,16 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
                          Pageable pageable);
 
     List<Account> findTop8ByStatusOrderByUpdatedAtDesc(AccountStatus status);
+
     @Query("""
            select a.accountId
            from Account a
            where lower(a.email) = lower(:email)
            """)
     Optional<Long> findIdByEmail(@Param("email") String email);
+
     Optional<Account> findByEmailIgnoreCase(String email);
+
     @Query("SELECT a FROM Account a JOIN a.role r WHERE r.roleId = 2 or r.roleId = 1")
     List<Account> findAllSellers();
-
 }
-

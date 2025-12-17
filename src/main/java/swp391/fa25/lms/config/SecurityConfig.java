@@ -41,7 +41,12 @@ public class SecurityConfig {
                                 "/change-password",
                                 "/css/**", "/js/**", "/images/**", "/uploads/**",
                                 "/toollist", "/toollist/**",
-                                "/login", "/register", "/error"
+                                "/login", "/register", "/error",
+                                "/payment/checkout-return",
+                                "/payment/repay-return",
+                                "/payment/seller-return",
+                                "/payment/seller-registration-return",
+                                "/payment/license-renew-return"
                         ).permitAll()
 
 
