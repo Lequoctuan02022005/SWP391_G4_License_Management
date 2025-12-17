@@ -40,5 +40,19 @@ public class SellerSubscriptionService {
     public Page<SellerSubscription> findAll(Pageable pageable) {
         return repo.findAll(pageable);
     }
-
+    public Long sumRevenue(
+            String seller,
+            Long packageId,
+            String status,
+            LocalDate fromDate,
+            LocalDate toDate
+    ) {
+        return repo.sumRevenue(
+                seller == null || seller.isBlank() ? null : seller,
+                packageId,
+                status == null || status.isBlank() ? null : status,
+                fromDate != null ? fromDate.atStartOfDay() : null,
+                toDate != null ? toDate.atTime(23, 59, 59) : null
+        );
+    }
 }

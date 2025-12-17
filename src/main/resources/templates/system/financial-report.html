@@ -22,7 +22,21 @@
                         Tổng bản ghi: <b th:text="${page.totalElements}">0</b>
                     </span>
                 </div>
-
+                <div class="card-body border-bottom">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card border-success shadow-sm">
+                                <div class="card-body">
+                                    <div class="text-muted small">Tổng doanh thu</div>
+                                    <h4 class="fw-bold text-success mb-0"
+                                        th:text="${#numbers.formatDecimal(totalRevenue,0,'COMMA',0,'POINT')} + ' VND'">
+                                        0 VND
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <!-- FILTER -->
                 <div class="card-body border-bottom">
                     <form method="get" class="row g-3 align-items-end">

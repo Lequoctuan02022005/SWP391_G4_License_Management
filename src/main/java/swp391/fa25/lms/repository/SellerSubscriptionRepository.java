@@ -40,4 +40,25 @@ public interface SellerSubscriptionRepository extends JpaRepository<SellerSubscr
             @Param("toDate") LocalDateTime toDate,
             Pageable pageable
     );
+    @Query("""
+    SELECT COALESCE(SUM(s.priceAtPurchase), 0)
+    FROM SellerSubscription s
+    WHERE
+        (:seller IS NULL OR LOWER(s.account.fullName) LIKE LOWER(CONCAT('%', :seller, '%')))
+    AND (:packageId IS NULL OR s.sellerPackage.id = :packageId)
+    AND (
+        :status IS NULL OR
+        (:status = 'ACTIVE' AND s.active = true) OR
+        (:status = 'EXPIRED' AND s.active = false)
+    )
+    AND (:fromDate IS NULL OR s.startDate >= :fromDate)
+    AND (:toDate IS NULL OR s.endDate <= :toDate)
+""")
+    Long sumRevenue(
+            String seller,
+            Long packageId,
+            String status,
+            LocalDateTime fromDate,
+            LocalDateTime toDate
+    );
 }

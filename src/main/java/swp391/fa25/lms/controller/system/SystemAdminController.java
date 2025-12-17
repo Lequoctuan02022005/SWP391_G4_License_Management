@@ -224,8 +224,12 @@ public class SystemAdminController {
                 sellerSubscriptionService.filter(
                         seller, packageId, status, fromDate, toDate, pageable
                 );
-
+        Long totalRevenue =
+                sellerSubscriptionService.sumRevenue(
+                        seller, packageId, status, fromDate, toDate
+                );
         model.addAttribute("page", result);
+        model.addAttribute("totalRevenue", totalRevenue);
 
         return "system/financial-report";
     }
