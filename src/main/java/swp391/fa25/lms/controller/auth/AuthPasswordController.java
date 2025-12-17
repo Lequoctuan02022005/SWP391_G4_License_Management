@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.service.AccountService;
+import swp391.fa25.lms.model.Account;
 
 @Controller
 public class AuthPasswordController {
@@ -147,9 +148,15 @@ public class AuthPasswordController {
                                        HttpSession session,
                                        RedirectAttributes redirectAttributes) {
 
-        // Ở đây mình giả định sau khi login bạn có lưu account vào session
-        // với tên "loggedInAccountEmail". Nếu nhóm bạn dùng tên khác thì sửa lại cho khớp.
-        String email = (String) session.getAttribute("loggedInAccountEmail");
+        // Lấy email từ session. Most controllers save the Account object
+        // under "loggedInAccount". Fall back to "loggedInAccountEmail" if present.
+        Account logged = (Account) session.getAttribute("loggedInAccount");
+        String email = null;
+        if (logged != null) {
+            email = logged.getEmail();
+        } else {
+            email = (String) session.getAttribute("loggedInAccountEmail");
+        }
 
         if (email == null) {
             redirectAttributes.addFlashAttribute("errorMessage",
