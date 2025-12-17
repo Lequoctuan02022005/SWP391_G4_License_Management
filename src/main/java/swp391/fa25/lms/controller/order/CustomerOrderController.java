@@ -113,7 +113,7 @@ public class CustomerOrderController {
             Long toolId = order.getTool().getToolId();
 
             Feedback myFeedback = feedbackRepo
-                    .findTopByAccount_AccountIdAndTool_ToolIdOrderByCreatedAtDesc(accountId, toolId)
+                    .findByOrder_OrderId(orderId)
                     .orElse(null);
 
             Double avgRating = feedbackRepo.avgRatingByToolId(toolId);
