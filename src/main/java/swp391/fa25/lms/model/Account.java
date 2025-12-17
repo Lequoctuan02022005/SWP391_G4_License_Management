@@ -21,11 +21,15 @@ public class Account {
     private Long accountId;
 
     @NotBlank(message = "Email không được để trống")
-    @Email(message = "Định dạng email không hợp lệ")
+    @Pattern(
+            regexp = "^[a-zA-Z0-9._%+-]+@gmail\\.com$",
+            message = "Email phải có đuôi @gmail.com"
+    )
     @Column(unique = true, nullable = false)
     private String email;
 
     @NotBlank(message = "Mật khẩu không được để trống")
+    @Column(nullable = false)
     private String password;
 
     @NotBlank(message = "Họ và tên không được để trống")
