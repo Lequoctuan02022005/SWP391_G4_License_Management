@@ -51,7 +51,7 @@
 
         /* login info toggle */
         .pwd-row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
-        .pwd-actions { display:flex; align-items:center; gap:8px; margin-top:4px; }
+        .pwd-actions { display:flex; align-items:center; gap:10px; margin-top:4px; flex-wrap:wrap; }
         .pwd-btn { padding:6px 10px; border-radius:10px; background:#f3f4f6; border:0; cursor:pointer; font-weight:900; }
         .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
@@ -71,7 +71,7 @@
 
                 <a class="btn btn-dark"
                    th:if="${la.order != null}"
-                   th:href="@{/customer/orders/{id}(id=${la.order.orderId})}">
+                   th:href="@{/customer/orders/}">
                     ← Back to order
                 </a>
             </div>
@@ -151,18 +151,24 @@
                             <div>
                                 <div class="muted">Password</div>
 
-                                <!-- masked + plain -->
-                                <span id="laPwdMask" class="mono" style="font-weight:900;">••••••••</span>
-                                <span id="laPwdPlain" class="mono" style="font-weight:900; display:none;"
-                                      th:text="${la.password != null ? la.password : '(N/A)'}">p</span>
-
                                 <div class="pwd-actions">
-                                    <button type="button" class="pwd-btn" onclick="toggleLaPwd()">
-                                        <span id="laPwdIcon">👁</span>
-                                        <span id="laPwdText">Xem</span>
+                                    <input
+                                            id="laPwdInput"
+                                            class="mono"
+                                            type="password"
+                                            th:value="${la.password != null ? la.password : ''}"
+                                            readonly
+                                            style="min-width:240px;"
+                                    />
+
+                                    <button type="button"
+                                            class="pwd-btn"
+                                            onclick="togglePwdField('laPwdInput', this)">
+                                        👁 <span class="muted" style="font-weight:900;">Xem</span>
                                     </button>
-                                    <span class="muted">(Ẩn/Hiện mật khẩu)</span>
                                 </div>
+
+                                <div class="muted" style="margin-top:6px;">(Ẩn/Hiện mật khẩu)</div>
                             </div>
                         </div>
 
@@ -236,9 +242,9 @@
 
             <div class="field">
                 <label>Password</label>
-                <div style="display:flex; gap:10px; align-items:center;">
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                     <input id="pwd" type="password" th:field="*{password}" placeholder="Nhập mật khẩu mới"
-                           required minlength="4" maxlength="255" style="flex:1;">
+                           required minlength="4" maxlength="255" style="flex:1; min-width:240px;">
                     <button type="button" class="close" onclick="togglePwd()">👁</button>
                 </div>
                 <div class="err" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">err</div>
@@ -307,22 +313,22 @@
         el.type = (el.type === 'password') ? 'text' : 'password';
     }
 
-    // Toggle password in VIEW (Login info)
-    function toggleLaPwd(){
-        const mask = document.getElementById('laPwdMask');
-        const plain = document.getElementById('laPwdPlain');
-        const icon = document.getElementById('laPwdIcon');
-        const text = document.getElementById('laPwdText');
-        if(!mask || !plain) return;
+    // Toggle password field (Login info)
+    function togglePwdField(inputId, btn){
+        const el = document.getElementById(inputId);
+        if(!el) return;
 
-        const showing = plain.style.display !== 'none';
-        plain.style.display = showing ? 'none' : 'inline';
-        mask.style.display = showing ? 'inline' : 'none';
+        const isHidden = el.type === 'password';
+        el.type = isHidden ? 'text' : 'password';
 
-        if(icon) icon.textContent = showing ? '👁' : '🙈';
-        if(text) text.textContent = showing ? 'Xem' : 'Che';
+        if(btn){
+            btn.innerHTML = isHidden
+                ? '🙈 <span class="muted" style="font-weight:900;">Che</span>'
+                : '👁 <span class="muted" style="font-weight:900;">Xem</span>';
+        }
     }
 
+    // Auto open modal from server flags
     const openEdit = /*[[${openEditModal}]]*/ false;
     if(openEdit){ openModal('editModal'); }
 

@@ -18,7 +18,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final LicenseAccountRepository licenseAccountRepository;
-    
+
     @Autowired
     private ToolRepository toolRepository;
 
@@ -28,7 +28,7 @@ public class OrderService {
     @Transactional
     public List<CustomerOrder> createOrdersFromCart(Cart cart, PaymentTransaction transaction) {
         List<CustomerOrder> orders = new ArrayList<>();
-        
+
         for (CartItem item : cart.getItems()) {
             CustomerOrder order = new CustomerOrder();
             order.setAccount(cart.getAccount());
@@ -40,10 +40,10 @@ public class OrderService {
             order.setTransaction(transaction);
             order.setCreatedAt(LocalDateTime.now());
             order.setUpdatedAt(LocalDateTime.now());
-            
+
             orders.add(orderRepository.save(order));
         }
-        
+
         return orders;
     }
 
@@ -71,8 +71,6 @@ public class OrderService {
         return orders;
     }
 
-
-
     @Transactional
     public List<CustomerOrder> createOrderFromBuyNow(Account account,
                                                      Tool tool,
@@ -88,10 +86,7 @@ public class OrderService {
             order.setAccount(account);
             order.setTool(tool);
             order.setLicense(license);
-
-            // mỗi order là 1 sản phẩm => price = giá license (không nhân qty)
             order.setPrice(license.getPrice());
-
             order.setOrderStatus(CustomerOrder.OrderStatus.PENDING);
             order.setPaymentMethod(CustomerOrder.PaymentMethod.BANK);
             order.setTransaction(transaction);
@@ -103,32 +98,36 @@ public class OrderService {
 
         return orders;
     }
+
     /**
-     * Xử lý sau khi thanh toán thành công:
-     * - Update order status
-     * - Giảm tool quantity
-     * - Tạo/gán LicenseAccount
+     * ✅ SUCCESS PAYMENT:
+     * - order -> SUCCESS
+     * - giảm quantity
+     * - cấp LicenseAccount nhưng CHƯA kích hoạt, CHƯA tính hạn
      */
     @Transactional
     public void processSuccessfulPayment(PaymentTransaction transaction) {
         List<CustomerOrder> orders = orderRepository.findByTransaction_TransactionId(transaction.getTransactionId());
-        
+
         for (CustomerOrder order : orders) {
-            // Update order status
+
+            // 1) Update order status
             order.setOrderStatus(CustomerOrder.OrderStatus.SUCCESS);
             order.setUpdatedAt(LocalDateTime.now());
             orderRepository.save(order);
-            
-            // Giảm tool quantity
+
+            // 2) Giảm tool quantity
             Tool tool = order.getTool();
-            Integer currentQty = tool.getAvailableQuantity();
-            if (currentQty != null && currentQty > 0) {
-                tool.setAvailableQuantity(currentQty - 1);
-                toolRepository.save(tool);
+            if (tool != null) {
+                Integer currentQty = tool.getAvailableQuantity();
+                if (currentQty != null && currentQty > 0) {
+                    tool.setAvailableQuantity(currentQty - 1);
+                    toolRepository.save(tool);
+                }
             }
-            
-            // Tạo hoặc gán LicenseAccount
-            createOrAssignLicenseAccount(order);
+
+            // 3) ✅ Cấp LicenseAccount nhưng chưa kích hoạt
+            provisionLicenseAccount(order);
         }
     }
 
@@ -138,7 +137,7 @@ public class OrderService {
     @Transactional
     public void processFailedPayment(PaymentTransaction transaction) {
         List<CustomerOrder> orders = orderRepository.findByTransaction_TransactionId(transaction.getTransactionId());
-        
+
         for (CustomerOrder order : orders) {
             order.setOrderStatus(CustomerOrder.OrderStatus.FAILED);
             order.setUpdatedAt(LocalDateTime.now());
@@ -147,50 +146,75 @@ public class OrderService {
     }
 
     /**
-     * Tạo hoặc gán LicenseAccount cho order dựa vào loginMethod của tool
+     * ✅ CẤP LicenseAccount cho order theo loginMethod
+     * - KHÔNG set startDate/endDate
+     * - used = false (chưa kích hoạt)
+     * - status giữ ACTIVE (để UI “Dùng dịch vụ” vẫn hiện), nhưng “kích hoạt” sẽ dựa theo used/startDate.
+     *
+     * Lưu ý TOKEN:
+     * - Không dùng used để “reserve”, mà reserve bằng cách gán Order (order != null)
+     * - Khi chọn token thì lọc acc.getOrder() == null để tránh cấp trùng token
      */
-    private void createOrAssignLicenseAccount(CustomerOrder order) {
+    private void provisionLicenseAccount(CustomerOrder order) {
+        if (order == null) return;
+
         Tool tool = order.getTool();
         License license = order.getLicense();
-        
+        if (tool == null || license == null) return;
+
+        // Nếu order đã có licenseAccount rồi thì thôi (idempotent)
+        if (order.getLicenseAccount() != null) return;
+
         if (Tool.LoginMethod.USER_PASSWORD.equals(tool.getLoginMethod())) {
-            // Tạo mới username/password
-            LicenseAccount newAccount = new LicenseAccount();
-            newAccount.setLicense(license);
-            newAccount.setOrder(order);
-            newAccount.setUsername(generateUsername(tool.getToolName()));
-            newAccount.setPassword(generatePassword());
-            newAccount.setStatus(LicenseAccount.Status.ACTIVE);
-            newAccount.setStartDate(LocalDateTime.now());
-            
-            // Tính endDate dựa vào license durationDays
-            if (license.getDurationDays() != null && license.getDurationDays() > 0) {
-                newAccount.setEndDate(LocalDateTime.now().plusDays(license.getDurationDays()));
-            }
-            
-            newAccount.setUsed(true);
-            licenseAccountRepository.save(newAccount);
-            
+
+            LicenseAccount la = new LicenseAccount();
+            la.setLicense(license);
+            la.setOrder(order);
+
+            la.setUsername(generateUsername(tool.getToolName()));
+            la.setPassword(generatePassword());
+
+            // ✅ CHƯA kích hoạt
+            la.setStatus(LicenseAccount.Status.ACTIVE);
+            la.setUsed(false);
+            la.setStartDate(null);
+            la.setEndDate(null);
+
+            la = licenseAccountRepository.save(la);
+
+            // ✅ gắn ngược lại order để view order.getLicenseAccount() luôn có
+            order.setLicenseAccount(la);
+            orderRepository.save(order);
+
         } else if (Tool.LoginMethod.TOKEN.equals(tool.getLoginMethod())) {
-            // Lấy token chưa dùng từ LicenseAccount của tool này
+
             List<LicenseAccount> unusedTokens = licenseAccountRepository
                     .findByLicense_Tool_ToolId(tool.getToolId())
                     .stream()
-                    .filter(acc -> acc.getToken() != null && Boolean.FALSE.equals(acc.getUsed()))
+                    .filter(acc -> acc.getToken() != null)
+                    .filter(acc -> Boolean.FALSE.equals(acc.getUsed()))
+                    .filter(acc -> acc.getOrder() == null) // ✅ chưa bị reserve
                     .toList();
-            
+
             if (!unusedTokens.isEmpty()) {
-                LicenseAccount tokenAccount = unusedTokens.get(0);
-                tokenAccount.setOrder(order);
-                tokenAccount.setUsed(true);
-                tokenAccount.setStartDate(LocalDateTime.now());
-                
-                // Tính endDate dựa vào license durationDays
-                if (license.getDurationDays() != null && license.getDurationDays() > 0) {
-                    tokenAccount.setEndDate(LocalDateTime.now().plusDays(license.getDurationDays()));
-                }
-                
-                licenseAccountRepository.save(tokenAccount);
+                LicenseAccount tokenAcc = unusedTokens.get(0);
+
+                // reserve token cho order
+                tokenAcc.setOrder(order);
+
+                // ✅ đảm bảo license đúng với đơn mua (để durationDays đúng)
+                tokenAcc.setLicense(license);
+
+                // ✅ CHƯA kích hoạt
+                tokenAcc.setStatus(LicenseAccount.Status.ACTIVE);
+                tokenAcc.setUsed(false);
+                tokenAcc.setStartDate(null);
+                tokenAcc.setEndDate(null);
+
+                tokenAcc = licenseAccountRepository.save(tokenAcc);
+
+                order.setLicenseAccount(tokenAcc);
+                orderRepository.save(order);
             }
         }
     }
@@ -199,10 +223,8 @@ public class OrderService {
      * Generate username duy nhất
      */
     private String generateUsername(String toolName) {
-        String prefix = toolName.replaceAll("[^A-Za-z0-9]", "").toLowerCase();
-        if (prefix.length() > 10) {
-            prefix = prefix.substring(0, 10);
-        }
+        String prefix = (toolName == null ? "tool" : toolName).replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+        if (prefix.length() > 10) prefix = prefix.substring(0, 10);
         return prefix + "_" + UUID.randomUUID().toString().substring(0, 8);
     }
 
@@ -213,4 +235,3 @@ public class OrderService {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 }
-
