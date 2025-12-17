@@ -31,6 +31,9 @@ public class PaymentController {
     private final OrderService orderService;
     private final CartService cartService;
     private final VNPayUtil vnPayUtil;
+    private final LicenseAccountRepository licenseAccountRepo;
+    private final LicenseRepository licenseRepo;
+    private final LicenseRenewLogRepository licenseRenewLogRepo;
 
     @GetMapping("/seller-return")
     @Transactional
@@ -307,6 +310,120 @@ public class PaymentController {
             e.printStackTrace();
             redirectAttrs.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/checkout";
+        }
+    }
+
+    /**
+     * VNPay callback for License Renewal
+     * GET /payment/license-renew-return
+     */
+    @GetMapping("/license-renew-return")
+    @Transactional
+    public String handleLicenseRenewReturn(@RequestParam Map<String, String> params,
+                                           HttpSession session,
+                                           RedirectAttributes ra) {
+        try {
+            // 1. Verify hash
+            boolean validHash = vnPayUtil.verifyHash(params);
+            if (!validHash) {
+                ra.addFlashAttribute("error", "Chữ ký không hợp lệ!");
+                return "redirect:/customer/license-accounts";
+            }
+
+            String vnp_ResponseCode = params.get("vnp_ResponseCode");
+            String vnp_TxnRef = params.get("vnp_TxnRef");
+            String vnp_OrderInfo = params.get("vnp_OrderInfo");
+
+            // 2. Find transaction
+            Optional<PaymentTransaction> txOpt = transactionRepo.findByVnpayTxnRef(vnp_TxnRef);
+            if (txOpt.isEmpty()) {
+                ra.addFlashAttribute("error", "Không tìm thấy giao dịch!");
+                return "redirect:/customer/license-accounts";
+            }
+
+            PaymentTransaction transaction = txOpt.get();
+            transaction.setVnpayResponseCode(vnp_ResponseCode);
+            transaction.setVnpayTransactionNo(params.get("vnp_TransactionNo"));
+            transaction.setVnpayBankCode(params.get("vnp_BankCode"));
+            transaction.setVnpayBankTranNo(params.get("vnp_BankTranNo"));
+            transaction.setVnpayCardType(params.get("vnp_CardType"));
+            transaction.setVnpayPayDate(params.get("vnp_PayDate"));
+
+            if ("00".equals(vnp_ResponseCode)) {
+                // SUCCESS
+                // Parse orderInfo: RENEW_LICENSE_{licenseAccountId}_{licenseId}_{transactionId}
+                if (vnp_OrderInfo == null || !vnp_OrderInfo.startsWith("RENEW_LICENSE_")) {
+                    ra.addFlashAttribute("error", "Thông tin đơn hàng không hợp lệ!");
+                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                    transactionRepo.save(transaction);
+                    return "redirect:/customer/license-accounts";
+                }
+
+                String[] parts = vnp_OrderInfo.split("_");
+                if (parts.length != 5) { // RENEW_LICENSE_{licenseAccountId}_{licenseId}_{transactionId}
+                    ra.addFlashAttribute("error", "Thông tin đơn hàng không đúng định dạng!");
+                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                    transactionRepo.save(transaction);
+                    return "redirect:/customer/license-accounts";
+                }
+
+                Long licenseAccountId = Long.parseLong(parts[2]);
+                Long licenseId = Long.parseLong(parts[3]);
+
+                // 3. Load License Account
+                LicenseAccount licenseAccount = licenseAccountRepo.findById(licenseAccountId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy License Account!"));
+
+                // 4. Load License package
+                License license = licenseRepo.findById(licenseId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy gói gia hạn!"));
+
+                // 5. Calculate new end date
+                LocalDateTime oldEndDate = licenseAccount.getEndDate();
+                LocalDateTime now = LocalDateTime.now();
+                
+                // Nếu license đã hết hạn → tính từ hiện tại
+                // Nếu còn hạn → cộng thêm vào end date hiện tại
+                LocalDateTime baseDate = (oldEndDate != null && oldEndDate.isAfter(now)) ? oldEndDate : now;
+                LocalDateTime newEndDate = baseDate.plusDays(license.getDurationDays());
+
+                // 6. Update License Account
+                licenseAccount.setEndDate(newEndDate);
+                licenseAccount.setStatus(LicenseAccount.Status.ACTIVE);
+                licenseAccountRepo.save(licenseAccount);
+
+                // 7. Create Renew Log
+                LicenseRenewLog renewLog = new LicenseRenewLog();
+                renewLog.setLicenseAccount(licenseAccount);
+                renewLog.setRenewDate(LocalDateTime.now());
+                renewLog.setNewEndDate(newEndDate);
+                renewLog.setAmountPaid(transaction.getAmount());
+                renewLog.setTransaction(transaction);
+                licenseRenewLogRepo.save(renewLog);
+
+                // 8. Update transaction
+                transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
+                transaction.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(transaction);
+
+                ra.addFlashAttribute("success", "Gia hạn license thành công! Hạn mới: " + 
+                        newEndDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                return "redirect:/customer/license-accounts/" + licenseAccountId;
+
+            } else {
+                // FAILED
+                transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                transactionRepo.save(transaction);
+
+                String errorMsg = transaction.getVnpayResponseMessage();
+                ra.addFlashAttribute("error", "Gia hạn thất bại: " + errorMsg);
+                return "redirect:/customer/license-accounts";
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/customer/license-accounts";
         }
     }
 }

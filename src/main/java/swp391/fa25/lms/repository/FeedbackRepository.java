@@ -1,14 +1,11 @@
 package swp391.fa25.lms.repository;
 
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Feedback;
 import swp391.fa25.lms.model.Tool;
 
@@ -18,35 +15,34 @@ import java.util.Optional;
 @Repository
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
-    @Query("""
-           select avg(f.rating)
-           from Feedback f
-           where f.tool = :tool
-             and (f.status = :status or f.status is null)
-           """)
-    Double avgRatingByToolAndStatusOrNull(@Param("tool") Tool tool,
-                                          @Param("status") Feedback.Status status);
+    Optional<Feedback> findByOrder_OrderId(Long orderId);
+
+    @Query("SELECT f FROM Feedback f LEFT JOIN FETCH f.account LEFT JOIN FETCH f.tool ORDER BY f.createdAt DESC")
+    List<Feedback> findAllWithAccountAndTool();
 
     @Query("""
-           select count(f)
-           from Feedback f
-           where f.tool = :tool
-             and (f.status = :status or f.status is null)
-           """)
-    long countByToolAndStatusOrNull(@Param("tool") Tool tool,
-                                    @Param("status") Feedback.Status status);
+        SELECT AVG(f.rating) FROM Feedback f 
+        WHERE f.tool = :tool 
+        AND (f.status = :status OR f.status IS NULL)
+    """)
+    Double avgRatingByToolAndStatus(@Param("tool") Tool tool, @Param("status") Feedback.Status status);
+
     @Query("""
-           select f
-           from Feedback f
-           where f.tool = :tool
-             and (f.status = :status or f.status is null)
-           """)
-    Page<Feedback> findByToolAndStatusOrNull(@Param("tool") Tool tool,
-                                             @Param("status") Feedback.Status status,
-                                             Pageable pageable);
+        SELECT COUNT(f) FROM Feedback f 
+        WHERE f.tool = :tool 
+        AND (f.status = :status OR f.status IS NULL)
+    """)
+    long countByToolAndStatus(@Param("tool") Tool tool, @Param("status") Feedback.Status status);
 
-    Optional<Feedback> findTopByAccount_AccountIdAndTool_ToolIdOrderByCreatedAtDesc(Long accountId, Long toolId);
+    @Query("""
+        SELECT f FROM Feedback f 
+        WHERE f.tool = :tool 
+        AND (f.status = :status OR f.status IS NULL)
+    """)
+    Page<Feedback> findByToolAndStatus(@Param("tool") Tool tool, 
+                                        @Param("status") Feedback.Status status, 
+                                        Pageable pageable);
 
-    @Query("select avg(f.rating) from Feedback f where f.tool.toolId = :toolId")
+    @Query("SELECT AVG(f.rating) FROM Feedback f WHERE f.tool.toolId = :toolId")
     Double avgRatingByToolId(@Param("toolId") Long toolId);
 }

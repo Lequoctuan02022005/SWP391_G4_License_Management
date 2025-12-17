@@ -1,5 +1,7 @@
 package swp391.fa25.lms.controller.license;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -11,7 +13,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.dto.LicenseAccountDTO;
 import swp391.fa25.lms.model.*;
 import swp391.fa25.lms.repository.AccountRepository;
+import swp391.fa25.lms.repository.LicenseRepository;
+import swp391.fa25.lms.repository.PaymentTransactionRepository;
 import swp391.fa25.lms.service.CustomerLicenseAccountService;
+import swp391.fa25.lms.util.VNPayUtil;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -22,11 +27,23 @@ public class CustomerLicenseAccountController {
 
     private final CustomerLicenseAccountService laService;
     private final AccountRepository accountRepo;
+    private final LicenseRepository licenseRepo;
+    private final PaymentTransactionRepository paymentTransactionRepo;
+    private final VNPayUtil vnpayUtil;
+
+    @Value("${vnpay.returnUrlLicenseRenew:http://localhost:7070/payment/license-renew-return}")
+    private String returnUrlLicenseRenew;
 
     public CustomerLicenseAccountController(CustomerLicenseAccountService laService,
-                                            AccountRepository accountRepo) {
+                                            AccountRepository accountRepo,
+                                            LicenseRepository licenseRepo,
+                                            PaymentTransactionRepository paymentTransactionRepo,
+                                            VNPayUtil vnpayUtil) {
         this.laService = laService;
         this.accountRepo = accountRepo;
+        this.licenseRepo = licenseRepo;
+        this.paymentTransactionRepo = paymentTransactionRepo;
+        this.vnpayUtil = vnpayUtil;
     }
 
     private Long currentAccountId(Authentication auth) {
@@ -88,8 +105,8 @@ public class CustomerLicenseAccountController {
     public String view(@PathVariable Long licenseAccountId,
                        Authentication auth,
                        Model model,
-                       @ModelAttribute("successMsg") String successMsg,
-                       @ModelAttribute("errorMsg") String errorMsg) {
+                       @ModelAttribute("success") String success,
+                       @ModelAttribute("error") String error) {
         Long accountId = currentAccountId(auth);
         LicenseAccount la = laService.getMyLicenseAccountDetail(accountId, licenseAccountId);
 
@@ -101,7 +118,7 @@ public class CustomerLicenseAccountController {
         LicenseAccountDTO renewForm = new LicenseAccountDTO();
         renewForm.setLicenseAccountId(la.getLicenseAccountId());
 
-        prepareViewModel(model, la, editDto, renewForm, false, false, null, successMsg, errorMsg);
+        prepareViewModel(model, la, editDto, renewForm, false, false, null, success, error);
         return "license/view";
     }
 
@@ -129,7 +146,7 @@ public class CustomerLicenseAccountController {
 
         try {
             laService.editUserPassword(accountId, licenseAccountId, editDto.getUsername(), editDto.getPassword());
-            ra.addFlashAttribute("successMsg", "MSG16: License information updated successfully.");
+            ra.addFlashAttribute("success", "Cập nhật thông tin license thành công!");
             return "redirect:/customer/license-accounts/" + licenseAccountId;
         } catch (IllegalArgumentException ex) {
             prepareViewModel(model, la, editDto, renewForm, true, false, null, null, ex.getMessage());
@@ -137,7 +154,7 @@ public class CustomerLicenseAccountController {
         }
     }
 
-    // RENEW POST (modal)
+    // RENEW POST (modal) - Redirect to VNPay
     @PostMapping("/{licenseAccountId}/renew")
     public String renew(@PathVariable Long licenseAccountId,
                         Authentication auth,
@@ -145,7 +162,8 @@ public class CustomerLicenseAccountController {
                         @ModelAttribute("renewForm") LicenseAccountDTO renewForm,
                         BindingResult br,
                         Model model,
-                        RedirectAttributes ra) {
+                        RedirectAttributes ra,
+                        HttpServletRequest request) {
 
         Long accountId = currentAccountId(auth);
         LicenseAccount la = laService.getMyLicenseAccountDetail(accountId, licenseAccountId);
@@ -162,10 +180,54 @@ public class CustomerLicenseAccountController {
         }
 
         try {
-            laService.renew(accountId, licenseAccountId, renewForm.getLicenseId());
-            ra.addFlashAttribute("successMsg", "MSG18: License renewed successfully!");
-            return "redirect:/customer/license-accounts/" + licenseAccountId;
-        } catch (IllegalArgumentException ex) {
+            // 1. Load license package
+            License license = licenseRepo.findById(renewForm.getLicenseId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy gói gia hạn!"));
+
+            // 2. Validate license thuộc cùng tool
+            if (la.getLicense() == null || la.getLicense().getTool() == null ||
+                    !license.getTool().getToolId().equals(la.getLicense().getTool().getToolId())) {
+                throw new IllegalArgumentException("Gói gia hạn không thuộc tool này!");
+            }
+
+            // 3. Get current account
+            Account account = accountRepo.findById(accountId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản!"));
+
+            // 4. Create Payment Transaction
+            PaymentTransaction transaction = new PaymentTransaction();
+            transaction.setAccount(account);
+            transaction.setTransactionType(PaymentTransaction.TransactionType.LICENSE_RENEWAL);
+            transaction.setStatus(PaymentTransaction.TransactionStatus.PENDING);
+            transaction.setAmount(license.getPrice() != null ? 
+                    java.math.BigDecimal.valueOf(license.getPrice().doubleValue()) : java.math.BigDecimal.ZERO);
+            transaction.setDescription("Gia hạn License Account #" + licenseAccountId + 
+                    " - " + license.getName());
+            transaction.setCreatedAt(LocalDateTime.now());
+            transaction.setIpAddress(request.getRemoteAddr());
+            transaction.setUserAgent(request.getHeader("User-Agent"));
+
+            // Generate unique txnRef
+            String txnRef = System.currentTimeMillis() + "";
+            transaction.setVnpayTxnRef(txnRef);
+
+            transaction = paymentTransactionRepo.save(transaction);
+
+            // 5. Create VNPay payment URL
+            String orderInfo = "RENEW_LICENSE_" + licenseAccountId + "_" + 
+                    renewForm.getLicenseId() + "_" + transaction.getTransactionId();
+            String vnpayUrl = vnpayUtil.createPaymentUrl(
+                    transaction.getAmount().longValue(),  // BigDecimal → long
+                    orderInfo,
+                    txnRef,
+                    returnUrlLicenseRenew,                // returnUrl (String)
+                    request                                // HttpServletRequest
+            );
+
+            // 6. Redirect to VNPay
+            return "redirect:" + vnpayUrl;
+
+        } catch (Exception ex) {
             prepareViewModel(model, la, editDto, renewForm, false, true,
                     ex.getMessage(), null, null);
             return "license/view";
@@ -193,8 +255,8 @@ public class CustomerLicenseAccountController {
                                   boolean openEditModal,
                                   boolean openRenewModal,
                                   String renewError,
-                                  String successMsg,
-                                  String errorMsg) {
+                                  String success,
+                                  String error) {
         model.addAttribute("la", la);
 
         Tool tool = (la.getLicense() != null) ? la.getLicense().getTool() : null;
@@ -220,7 +282,7 @@ public class CustomerLicenseAccountController {
         model.addAttribute("openRenewModal", openRenewModal);
         model.addAttribute("renewError", renewError);
 
-        if (successMsg != null && !successMsg.isBlank()) model.addAttribute("successMsg", successMsg);
-        if (errorMsg != null && !errorMsg.isBlank()) model.addAttribute("errorMsg", errorMsg);
+        if (success != null && !success.isBlank()) model.addAttribute("success", success);
+        if (error != null && !error.isBlank()) model.addAttribute("error", error);
     }
 }

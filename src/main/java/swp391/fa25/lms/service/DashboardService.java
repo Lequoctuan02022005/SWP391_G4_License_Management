@@ -48,8 +48,7 @@ public class DashboardService {
         data.put("totalSellers", dashboardRepository.countAllSellers());
         data.put("totalTools", dashboardRepository.countAllTools());
         data.put("totalReports",
-                dashboardRepository.countToolReports()
-                        + dashboardRepository.countFeedbackReports());
+                dashboardRepository.countToolReports());
     }
 
     // =========================
@@ -177,13 +176,8 @@ public class DashboardService {
         List<ToolReport> toolReports =
                 dashboardRepository.findPendingToolReports();
 
-        List<FeedbackReport> feedbackReports =
-                dashboardRepository.findPendingFeedbackReports();
-
         data.put("pendingToolReports", toolReports);
-        data.put("pendingFeedbackReports", feedbackReports);
 
-        data.put("totalPendingReports",
-                toolReports.size() + feedbackReports.size());
+        data.put("totalPendingReports", toolReports.size());
     }
 }
