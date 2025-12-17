@@ -1,479 +1,303 @@
-/* RESET */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: "Segoe UI", sans-serif;
-    background: #f5f7fa;
-    color: #333;
-}
-
-/* =======================================
-   PAGE LAYOUT
-======================================= */
+/* ===== PAGE LAYOUT ===== */
 .tl-page {
-    padding: 30px 0;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
 }
 
 .tl-page-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .tl-page-header h1 {
-    font-size: 32px;
-    font-weight: 700;
-    margin-bottom: 8px;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 5px;
 }
 
 .tl-page-header p {
-    font-size: 15px;
-    color: #666;
+    font-size: 0.95rem;
+    color: #555;
 }
 
-/* =======================================
-   LAYOUT 2 CỘT
-======================================= */
-.tl-layout {
-    display: grid;
-    grid-template-columns: 270px 1fr;
-    gap: 30px;
-    padding: 0 25px;
-}
-
-/* =======================================
-   SIDEBAR FILTER
-======================================= */
-.tl-filter-sidebar {
-    background: #fff;
-    padding: 22px;
-    border-radius: 14px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-    height: fit-content;
-}
-
-.tl-filter-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin-bottom: 15px;
+/* ===== FILTER BAR HORIZONTAL ===== */
+.tl-filter-bar {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
 }
 
 .tl-filter-group {
-    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+}
+
+.tl-filter-group.tl-filter-inline {
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
 }
 
 .tl-filter-group label {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    display: inline-block;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
-.tl-filter-group input,
-.tl-filter-group select {
-    width: 100%;
-    padding: 9px 12px;
-    border-radius: 10px;
-    border: 1px solid #d6dbe2;
-    font-size: 14px;
-    transition: .2s;
+.tl-filter-bar input[type="text"],
+.tl-filter-bar input[type="number"],
+.tl-filter-bar select {
+    padding: 5px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    min-width: 100px;
 }
 
-.tl-filter-group input:focus,
-.tl-filter-group select:focus {
-    border-color: #4a8bff;
-    box-shadow: 0 0 0 2px rgba(74,139,255,0.15);
-}
-
-.tl-price-range {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.tl-filter-buttons {
+    margin-left: auto;
 }
 
 .tl-btn {
-    padding: 10px 16px;
-    border-radius: 10px;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 0.9rem;
     cursor: pointer;
-    text-align: center;
-    display: inline-block;
-    font-size: 14px;
-    font-weight: 600;
+    border: none;
+    transition: 0.2s;
     text-decoration: none;
-}
-
-.tl-btn-full {
-    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .tl-btn-primary {
-    background: #2563eb;
+    background-color: #0d6efd;
     color: #fff;
 }
 
 .tl-btn-primary:hover {
-    background: #1e4ec7;
+    background-color: #0b5ed7;
 }
 
 .tl-btn-secondary {
-    background: #e5e7eb;
-    color: #333;
+    background-color: #6c757d;
+    color: #fff;
 }
 
 .tl-btn-secondary:hover {
-    background: #d6d8db;
-}
-
-.tl-mt-8 {
-    margin-top: 8px;
-}
-
-/* =======================================
-   CONTENT AREA
-======================================= */
-.tl-top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 18px;
-}
-
-.tl-top-right a {
-    padding: 8px 14px;
-    border-radius: 12px;
-}
-
-/* =======================================
-   GRID TOOL
-======================================= */
-.tl-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-    gap: 25px;
-}
-
-.tl-card {
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.07);
-    padding: 18px;
-    display: flex;
-    flex-direction: column;
-    transition: 0.25s;
-}
-
-.tl-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0px 7px 16px rgba(0,0,0,0.12);
-}
-
-.tl-card-image-wrapper {
-    width: 100%;
-    height: 180px;
-    overflow: hidden;
-    background: #f3f4f6;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-.tl-card-image {
-    width: 100%;
-    height: 170px;
-    object-fit: cover;
-    object-position: center;
-}
-
-/* =======================================
-   BADGE TRẠNG THÁI
-======================================= */
-.tl-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    padding: 5px 14px;
-    border-radius: 40px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.tl-badge-published {
-    background: #e0fbe7;
-    color: #0e7a28;
-}
-
-.tl-badge-pending {
-    background: #fff7d4;
-    color: #b18100;
-}
-
-.tl-badge-rejected {
-    background: #ffe5e5;
-    color: #d92525;
-}
-
-.tl-badge-deactivated {
-    background: #d1d5db;
-    color: #374151;
-}
-
-/* =======================================
-   CARD BODY
-======================================= */
-.tl-card-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    margin-top: 12px;
-}
-
-.tl-card-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-
-.tl-card-category,
-.tl-card-seller {
-    font-size: 14px;
-    color: #666;
-}
-
-.tl-card-seller-name {
-    font-weight: 600;
-}
-
-.tl-card-price {
-    margin: 8px 0;
-    font-size: 16px;
-    font-weight: 600;
-    color: #2563eb;
-}
-
-.tl-card-license-title {
-    font-weight: 600;
-}
-
-.tl-license-list {
-    padding-left: 18px;
-}
-
-.tl-license-list li {
-    font-size: 14px;
-    margin-bottom: 4px;
-}
-
-/* =======================================
-   RATING
-======================================= */
-.tl-card-rating {
-    margin-top: 8px;
-    font-size: 14px;
-    color: #f7b500;
-}
-
-.tl-card-rating .tl-stars {
-    font-size: 16px;
-}
-
-.tl-rating-value {
-    margin-left: 6px;
-    font-weight: 600;
-}
-
-.tl-rating-count {
-    color: #777;
-    margin-left: 4px;
-}
-
-/* =======================================
-   MÔ TẢ
-======================================= */
-.tl-card-desc {
-    font-size: 14px;
-    color: #555;
-    margin-top: 8px;
-}
-
-/* Stock */
-.tl-card-stock {
-    margin-top: 10px;
-    font-size: 14px;
-}
-
-/* =======================================
-   FOOTER CARD
-======================================= */
-.tl-card-footer {
-    margin-top: auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
+    background-color: #5c636a;
 }
 
 .tl-btn-outline {
-    border: 1px solid #cdd3dd;
-    background: #fff;
-    color: #333;
-    border-radius: 50px;
-    padding: 6px 12px;
-    font-size: 13px;
+    background-color: transparent;
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
 }
 
 .tl-btn-outline:hover {
-    border-color: #2563eb;
-    background: #eef4ff;
-}
-
-.tl-btn-sm {
-    padding: 6px 12px;
-}
-
-/* =======================================
-   SELLER ACTIONS
-======================================= */
-.tl-card-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    background-color: #0d6efd;
+    color: #fff;
 }
 
 .tl-btn-success {
-    background: #16a34a;
+    background-color: #198754;
     color: #fff;
 }
 
 .tl-btn-success:hover {
-    background: #138a3f;
+    background-color: #157347;
 }
 
-/* TRẠNG THÁI NÚT */
-.tl-btn-status {
-    border: none;
-    padding: 6px 14px;
-    border-radius: 40px;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
+/* ===== TOOL GRID ===== */
+.tl-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
 }
 
-.status-pending {
-    background: #b18100;
-}
-
-.status-approved {
-    background: #2764cc;
-}
-
-.status-rejected {
-    background: #d92525;
-}
-
-.status-published {
-    background: #0e7a28;
-}
-
-.status-deactivated {
-    background: #374151;
-}
-
-.status-suspect {
-    background: #b30052;
-}
-
-/* =======================================
-   EMPTY STATE
-======================================= */
-.tl-empty {
-    padding: 20px;
-    background: #fff;
+/* ===== TOOL CARD ===== */
+.tl-card {
+    background-color: #fff;
     border-radius: 10px;
-    text-align: center;
-    color: #777;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-/* =======================================
-   RESPONSIVE
-======================================= */
-@media (max-width: 900px) {
-    .tl-layout {
-        grid-template-columns: 1fr;
-    }
+.tl-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
 }
+
 .tl-card-image-wrapper {
     position: relative;
 }
 
+.tl-card-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
 .tl-sold-out-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.55);
+    top: 8px;
+    right: 8px;
+    background-color: rgba(255,0,0,0.85);
     color: #fff;
-    font-size: 24px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-transform: uppercase;
-    border-radius: 12px;
-    pointer-events: none;
+    padding: 3px 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 5px;
 }
-/* PAGINATION WRAPPER */
-.pagination {
+
+.tl-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tl-badge-published { background-color: #0d6efd; color: #fff; }
+.tl-badge-pending { background-color: #ffc107; color: #212529; }
+.tl-badge-rejected { background-color: #dc3545; color: #fff; }
+.tl-badge-deactivated { background-color: #6c757d; color: #fff; }
+
+.tl-card-body {
+    padding: 15px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.tl-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.tl-card-category,
+.tl-card-seller,
+.tl-card-price,
+.tl-card-stock,
+.tl-card-desc {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.tl-card-licenses ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+}
+
+.tl-card-licenses li {
+    font-size: 0.85rem;
+    color: #333;
+}
+
+.tl-card-rating {
+    display: flex;
     align-items: center;
-    gap: 6px;
-    margin: 30px 0;
+    gap: 5px;
+    font-size: 0.85rem;
+}
+
+.tl-stars {
+    color: #ffc107;
+}
+
+.tl-rating-value {
+    font-weight: 600;
+}
+
+.tl-card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-top: 1px solid #e0e0e0;
+    gap: 5px;
+}
+
+.tl-card-actions {
+    display: flex;
+    gap: 5px;
     flex-wrap: wrap;
 }
 
-/* BASE STYLE */
-.pagination a,
-.pagination span a {
+.tl-btn-status {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.status-published { background-color: #0d6efd; color: #fff; }
+.status-deactivated { background-color: #6c757d; color: #fff; }
+.status-pending { background-color: #ffc107; color: #212529; }
+.status-rejected { background-color: #dc3545; color: #fff; }
+
+.tl-inline-form { display: inline-block; margin: 0; }
+
+/* ===== PAGINATION ===== */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pagination a {
     display: inline-block;
-    padding: 8px 14px;
-    border: 1px solid #dcdcdc;
-    background: #fff;
-    color: #333;
-    border-radius: 6px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+    color: #0d6efd;
     text-decoration: none;
-    font-size: 14px;
-    transition: all 0.25s ease;
+    transition: 0.2s;
 }
 
-/* HOVER */
+.pagination a.active,
 .pagination a:hover {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
-/* ACTIVE PAGE */
-.pagination a.active {
-    background: #007bff;
+    background-color: #0d6efd;
     color: #fff;
-    border-color: #007bff;
-    cursor: default;
 }
 
-/* DISABLED (Prev/Next) */
-.pagination a[disabled],
-.pagination a.disabled {
-    opacity: 0.5;
-    pointer-events: none;
+/* ===== TOP BAR ===== */
+.tl-top-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
 }
 
-/* MOBILE RESPONSIVE */
-@media (max-width: 500px) {
-    .pagination a,
-    .pagination span a {
-        padding: 6px 10px;
-        font-size: 13px;
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .tl-filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .tl-filter-group.tl-filter-inline {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .tl-filter-buttons {
+        margin-left: 0;
     }
 }
