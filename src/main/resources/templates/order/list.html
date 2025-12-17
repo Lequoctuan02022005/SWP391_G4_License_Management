@@ -230,8 +230,8 @@
                                 </a>
 
                                 <a class="o-action o-action-primary"
-                                   th:if="${paidOk}"
-                                   th:href="@{/customer/orders/{id}/feedback(id=${o.orderId})}"
+                                   th:if="${paidOk && o.tool != null}"
+                                   th:href="@{/customer/feedback/create(orderId=${o.orderId}, toolId=${o.tool.toolId})}"
                                    title="Feedback">
                                     <i class="fa-regular fa-star"></i> Feedback
                                 </a>

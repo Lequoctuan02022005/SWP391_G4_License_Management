@@ -28,7 +28,8 @@ public class PaymentTransaction {
     public enum TransactionType {
         ORDER_PAYMENT,          // Thanh toán mua license
         SELLER_SUBSCRIPTION,    // Thanh toán gói seller (gia hạn)
-        SELLER_REGISTRATION     // Thanh toán đăng ký làm seller lần đầu
+        SELLER_REGISTRATION,    // Thanh toán đăng ký làm seller lần đầu
+        LICENSE_RENEWAL         // Gia hạn license account
     }
 
     @Enumerated(EnumType.STRING)

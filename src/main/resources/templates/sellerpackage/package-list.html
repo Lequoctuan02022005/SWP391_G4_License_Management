@@ -5,93 +5,76 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
           rel="stylesheet">
 </head>
-<style>
-    body {
-        background-color: #2b2b2b;
-    }
-    .page-wrapper {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 10px 25px rgba(0,0,0,.15);
-    }
-    .table thead th {
-        background-color: #1f2937;
-        color: #fff;
-    }
-</style>
 <body>
+<div th:replace="common/sidebar-header :: role-sidebar">
+    <th:block th:fragment="content">
+        <div class="container-fluid px-4 py-4">
 
-<div class="container py-5">
-    <div class="page-wrapper">
-    <h3 class="mb-3 text-center">Seller Package Management</h3>
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Seller Package Management</h5>
+                    <a href="/seller-packages/form" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Create
+                    </a>
+                </div>
 
-    <!-- FILTER -->
-    <form method="get" class="row g-2 mb-3">
-        <div class="col-md-2 col-sm-6">
-            <input name="packageName" class="form-control" placeholder="Package name">
-        </div>
-        <div class="col-md-2 col-sm-6">
-            <input name="minPrice" class="form-control" placeholder="Min price">
-        </div>
-        <div class="col-md-2 col-sm-6">
-            <input name="maxPrice" class="form-control" placeholder="Max price">
-        </div>
-        <div class="col-md-2 col-sm-6">
-            <input name="minDuration" class="form-control" placeholder="Min duration">
-        </div>
-        <div class="col-md-2 col-sm-6">
-            <input name="maxDuration" class="form-control" placeholder="Max duration">
-        </div>
-        <div class="col-md-2 col-sm-6">
-            <select name="status" class="form-select">
-                <option value="">All Status</option>
-                <option th:each="s : ${statusList}"
-                        th:value="${s}"
-                        th:text="${s}">
-                </option>
-            </select>
-        </div>
-        <div class="col-md-2 col-sm-6">
-            <button class="btn btn-primary w-100">Filter</button>
-        </div>
-    </form>
-
-    <!-- CREATE -->
-    <a href="/seller-packages/form" class="btn btn-success mb-3">Create</a>
-
+                    <!-- FILTER -->
+                <div class="card-body border-bottom">
+                    <form method="get" class="row g-2">
+                        <div class="col-md-2"><input name="packageName" class="form-control" placeholder="Package name"></div>
+                        <div class="col-md-2"><input name="minPrice" class="form-control" placeholder="Min price"></div>
+                        <div class="col-md-2"><input name="maxPrice" class="form-control" placeholder="Max price"></div>
+                        <div class="col-md-2"><input name="minDuration" class="form-control" placeholder="Min duration"></div>
+                        <div class="col-md-2"><input name="maxDuration" class="form-control" placeholder="Max duration"></div>
+                        <div class="col-md-2">
+                            <select name="status" class="form-select">
+                                <option value="">All Status</option>
+                                <option th:each="s : ${statusList}"
+                                        th:value="${s}"
+                                        th:text="${s}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+                </div>
     <!-- TABLE -->
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Package Name</th>
-            <th>Duration</th>
-            <th>Price</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th width="100">Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="p : ${packages}">
-            <td th:text="${p.id}"></td>
-            <td th:text="${p.packageName}"></td>
-            <td th:text="${p.durationInMonths}"></td>
-            <td th:text="${p.price} + ' VND'"></td>
-            <td th:text="${p.description}"></td>
-            <td>
-                <span class="badge bg-success" th:if="${p.status.name() == 'ACTIVE'}">ACTIVE</span>
-                <span class="badge bg-secondary" th:if="${p.status.name() == 'DEACTIVATED'}">DEACTIVATED</span>
-            </td>
-            <td>
-                <a th:href="@{/seller-packages/edit/{id}(id=${p.id})}"
-                   class="btn btn-sm btn-success">Edit</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Package Name</th>
+                            <th>Duration</th>
+                            <th>Price</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th width="120">Action</th>
+                            </tr>
+                            </thead>
+                                    <tbody>
+                            <tr th:each="p : ${packages}">
+                            <td th:text="${p.id}"></td>
+                            <td th:text="${p.packageName}"></td>
+                            <td th:text="${p.durationInMonths} + ' months'"></td>
+                            <td th:text="${#numbers.formatDecimal(p.price,0,'COMMA',0,'POINT')} + ' VND'"></td>
+                            <td th:text="${p.description}"></td>
+                            <td>
+                                <span class="badge bg-success" th:if="${p.status.name() == 'ACTIVE'}">ACTIVE</span>
+                                <span class="badge bg-secondary" th:if="${p.status.name() == 'DEACTIVATED'}">DEACTIVATED</span>
+                            </td>
+                            <td>
+                                <a th:href="@{/seller-packages/edit/{id}(id=${p.id})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
 
     <nav th:if="${page.totalPages > 1}">
         <ul class="pagination justify-content-center">
@@ -150,6 +133,7 @@
     </nav>
 </div>
 </div>
-
+    </th:block>
+</div>
 </body>
 </html>

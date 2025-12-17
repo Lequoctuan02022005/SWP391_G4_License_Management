@@ -1,0 +1,368 @@
+/* ========================================
+   FEEDBACK LIST - SELLER PAGE STYLES
+======================================== */
+
+html, body {
+    height: auto !important;
+    min-height: auto !important;
+}
+
+body {
+    margin: 0 !important;
+    display: block !important;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: #f6f7fb;
+    color: #111;
+}
+
+/* ========================================
+   CONTAINER & LAYOUT
+======================================== */
+.feedback-container {
+    max-width: 1300px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+
+.feedback-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+    padding: 24px;
+}
+
+.feedback-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 16px;
+}
+
+/* ========================================
+   STATS SECTION
+======================================== */
+.feedback-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-badge {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    border-left: 4px solid;
+}
+
+.stat-badge.warning {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #f59e0b;
+}
+
+.stat-badge.info {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #3b82f6;
+}
+
+/* ========================================
+   FILTER FORM
+======================================== */
+.filter-form {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: end;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 180px;
+}
+
+.filter-field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.filter-field input, 
+.filter-field select {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.filter-field input:focus, 
+.filter-field select:focus {
+    border-color: #1f6feb;
+    box-shadow: 0 0 0 2px rgba(31, 111, 235, 0.1);
+}
+
+/* ========================================
+   FEEDBACK ITEMS
+======================================== */
+.feedback-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+    background: #fff;
+    transition: all 0.2s;
+}
+
+.feedback-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-color: #d1d5db;
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.feedback-user {
+    font-weight: 600;
+    font-size: 16px;
+    color: #111;
+}
+
+.feedback-date {
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.rating-stars {
+    color: #f59e0b;
+    font-size: 16px;
+    margin-top: 6px;
+}
+
+.feedback-content {
+    margin: 12px 0;
+    padding: 14px;
+    background: #f9fafb;
+    border-left: 3px solid #1f6feb;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #374151;
+}
+
+.tool-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+/* ========================================
+   REPLY SECTION
+======================================== */
+.reply-section {
+    margin-top: 12px;
+    padding: 14px;
+    background: #f0fdf4;
+    border-left: 3px solid #10b981;
+    border-radius: 6px;
+}
+
+.reply-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.reply-label {
+    font-weight: 600;
+    color: #065f46;
+    font-size: 14px;
+}
+
+.reply-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ========================================
+   BUTTONS
+======================================== */
+.btn-reply {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-reply.primary {
+    background: #1f6feb;
+    color: white;
+}
+
+.btn-reply.primary:hover {
+    background: #1557c0;
+}
+
+.btn-reply.secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-reply.secondary:hover {
+    background: #4b5563;
+}
+
+.btn-reply.danger {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-reply.danger:hover {
+    background: #dc2626;
+}
+
+/* ========================================
+   PAGINATION
+======================================== */
+.pagination-nav {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.page-btn {
+    padding: 10px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: #374151;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.page-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.page-btn.active {
+    background: #1f6feb;
+    color: white;
+    border-color: #1f6feb;
+}
+
+.page-btn.active:hover {
+    background: #1557c0;
+}
+
+/* ========================================
+   EMPTY STATE
+======================================== */
+.text-center.py-5 {
+    padding: 40px 0;
+}
+
+.text-center.py-5 .fa-inbox {
+    color: #9ca3af;
+}
+
+.text-muted {
+    color: #6b7280;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+======================================== */
+@media (max-width: 768px) {
+    .feedback-container {
+        padding: 0 12px;
+        margin: 16px auto;
+    }
+    
+    .feedback-card {
+        padding: 16px;
+    }
+    
+    .feedback-title {
+        font-size: 20px;
+    }
+    
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-field {
+        min-width: 100%;
+    }
+    
+    .feedback-stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .feedback-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .reply-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .reply-actions {
+        width: 100%;
+    }
+    
+    .btn-reply {
+        flex: 1;
+    }
+    
+    .pagination-nav {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .feedback-title {
+        font-size: 18px;
+    }
+    
+    .stat-badge {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+    
+    .feedback-item {
+        padding: 14px;
+    }
+}

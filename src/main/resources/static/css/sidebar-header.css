@@ -1,0 +1,127 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f5f6fa;
+}
+
+/* LAYOUT */
+.layout-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 270px;
+    background: linear-gradient(180deg, #0f172a, #020617);
+    color: #fff;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* PROFILE */
+.sidebar-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #38bdf8;
+}
+
+.profile-info .name {
+    font-weight: 600;
+}
+
+.profile-info .role {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* ACTIONS */
+.sidebar-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #cbd5f5;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.action-item i {
+    font-size: 16px;
+}
+
+.action-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.action-item.logout {
+    margin-top: 6px;
+    color: #f87171;
+}
+
+.action-item.logout:hover {
+    background: rgba(248,113,113,0.15);
+}
+
+/* MENU */
+.menu {
+    list-style: none;
+    margin-top: 24px;
+    flex-grow: 1;
+}
+
+.menu li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    color: #e5e7eb;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    font-size: 15px;
+}
+
+.menu li a i {
+    font-size: 18px;
+}
+
+.menu li a:hover {
+    background: rgba(255,255,255,0.12);
+    transform: translateX(4px);
+}
+
+/* CONTENT */
+.content {
+    flex: 1;
+    padding: 28px;
+    background: #f8fafc;
+}

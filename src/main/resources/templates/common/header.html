@@ -11,7 +11,7 @@
 <body>
 <div th:fragment="header">
     <!-- User & Seller Header -->
-    <div th:if="${account != null and (account.role.roleName.name() == 'CUSTOMER' or account.role.roleName.name() == 'SELLER')}">
+
         <!-- Top bar -->
         <div class="navbar-top py-2 px-4 d-flex justify-content-between align-items-center top-bar">
             <div>
@@ -71,17 +71,16 @@
                                         Seller Dashboard
                                     </a>
                                 </li>
-                                <!-- Nếu đã là SELLER và còn hạn -->
-                                <li th:if="${account.role != null and account.role.roleName.toString() == 'SELLER' and account.sellerActive}">
+                                <li th:if="${account.role.roleName.name() == 'SELLER'}">
+                                    <a class="dropdown-item" th:href="@{/seller/feedbacks}">
+                                        <i class="fas fa-comments me-1"></i> Quản lý Feedback
+                                    </a>
+                                </li>
+                                <li th:if="${account.sellerActive}">
                                     <a class="dropdown-item" th:href="@{/seller/renew}">Gia hạn Seller</a>
                                 </li>
-                                <!-- Nếu đã là SELLER nhưng hết hạn -->
-                                <li th:if="${account.role != null and account.role.roleName.toString() == 'SELLER' and !account.sellerActive}">
-                                    <a class="dropdown-item" th:href="@{/seller/renew}">Gia hạn Seller</a>
-                                </li>
-                                <!-- Nếu chưa là SELLER (CUSTOMER) -->
-                                <li th:if="${account.role != null and account.role.roleName.toString() != 'SELLER'}">
-                                    <a class="dropdown-item" th:href="@{/seller/register}">Đăng ký làm Seller</a>
+                                <li th:if="${!account.sellerActive}">
+                                    <a class="dropdown-item" th:href="@{/seller/renew}">Đăng ký làm Seller</a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" th:href="@{/logout}">Thoát</a></li>
@@ -92,57 +91,6 @@
             </div>
         </nav>
     </div>
-
-    <!-- Sidebar Admin/Mod/Manager -->
-    <div th:if="${account != null and (account.role.roleName.name() == 'ADMIN')}">
-        <div class="d-flex">
-            <nav class="sidebar bg-dark text-white vh-100 p-3">
-                <h4 class="text-white mb-4" th:text="'Hello ' + ${account.fullName}">Hello Admin</h4>
-                <ul class="nav flex-column">
-                    <li class="nav-item mb-2"><a th:href="@{/admin/dashboard}" class="nav-link text-white">Dashboard</a></li>
-                    <li class="nav-item mb-2"><a th:href="@{/admin/accounts}" class="nav-link text-white">Quản lý Users</a></li>
-                    <li class="nav-item mb-2"><a th:href="@{/tools/mod/uploads}" class="nav-link text-white">Quản lý Tools</a></li>
-                    <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Orders</a></li>
-                    <li class="nav-item mt-4"><a th:href="@{/logout}" class="nav-link text-danger">Logout</a></li>
-                </ul>
-            </nav>
-            <div class="main-content flex-grow-1 p-4">
-                <div th:insert="~{::content}"></div>
-            </div>
-        </div>
-    </div><div th:if="${account != null and ( account.role.roleName.name() == 'MOD' )}">
-    <div class="d-flex">
-        <nav class="sidebar bg-dark text-white vh-100 p-3">
-            <h4 class="text-white mb-4" th:text="'Hello ' + ${account.fullName}">Hello Admin</h4>
-            <ul class="nav flex-column">
-                <li class="nav-item mb-2"><a href="/dashboard" class="nav-link text-white">Dashboard</a></li>
-                <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Users</a></li>
-                <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Tools</a></li>
-                <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Orders</a></li>
-                <li class="nav-item mt-4"><a th:href="@{/logout}" class="nav-link text-danger">Logout</a></li>
-            </ul>
-        </nav>
-        <div class="main-content flex-grow-1 p-4">
-            <!-- Nội dung trang sẽ chèn vào đây -->
-        </div>
-    </div>
-</div><div th:if="${account != null and ( account.role.roleName.name() == 'MANAGER')}">
-    <div class="d-flex">
-        <nav class="sidebar bg-dark text-white vh-100 p-3">
-            <h4 class="text-white mb-4" th:text="'Hello ' + ${account.fullName}">Hello Admin</h4>
-            <ul class="nav flex-column">
-                <li class="nav-item mb-2"><a href="/dashboard" class="nav-link text-white">Dashboard</a></li>
-                <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Users</a></li>
-                <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Tools</a></li>
-                <li class="nav-item mb-2"><a href="#" class="nav-link text-white">Quản lý Orders</a></li>
-                <li class="nav-item mt-4"><a th:href="@{/logout}" class="nav-link text-danger">Logout</a></li>
-            </ul>
-        </nav>
-        <div class="main-content flex-grow-1 p-4">
-            <!-- Nội dung trang sẽ chèn vào đây -->
-        </div>
-    </div>
-</div>
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
             const badge = document.getElementById("favoriteCountBadge");
@@ -204,6 +152,5 @@
         // Load khi mở trang
         document.addEventListener('DOMContentLoaded', window.updateCartBadge);
     </script>
-</div>
 </body>
 </html>
