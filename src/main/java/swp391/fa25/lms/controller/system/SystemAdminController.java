@@ -5,17 +5,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Role;
+import swp391.fa25.lms.model.SellerSubscription;
 import swp391.fa25.lms.repository.RoleRepository;
 import swp391.fa25.lms.service.RoleService;
 import swp391.fa25.lms.service.AccountService;
+import swp391.fa25.lms.service.SellerSubscriptionService;
 
 import javax.sql.DataSource;
+import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/admin")
@@ -32,6 +37,10 @@ public class SystemAdminController {
 
     @Autowired
     private DataSource dataSource;
+
+    @Autowired
+    private SellerSubscriptionService sellerSubscriptionService;
+
 
     @GetMapping("/dashboard")
     public String dashboard() {
@@ -193,4 +202,36 @@ public class SystemAdminController {
         roleRepository.deleteById(id);
         return "redirect:/admin/roles";
     }
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/financial-report")
+    public String financialReport(
+            @RequestParam(required = false) String seller,
+            @RequestParam(required = false) Long packageId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate toDate,
+            @RequestParam(defaultValue = "0") int page,
+            Model model
+    ) {
+
+        Pageable pageable = PageRequest.of(page, 10);
+
+        Page<SellerSubscription> result =
+                sellerSubscriptionService.filter(
+                        seller, packageId, status, fromDate, toDate, pageable
+                );
+        Long totalRevenue =
+                sellerSubscriptionService.sumRevenue(
+                        seller, packageId, status, fromDate, toDate
+                );
+        model.addAttribute("page", result);
+        model.addAttribute("totalRevenue", totalRevenue);
+
+        return "system/financial-report";
+    }
+
 }
