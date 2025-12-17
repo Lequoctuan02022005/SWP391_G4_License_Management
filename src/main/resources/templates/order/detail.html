@@ -104,19 +104,20 @@
                             <!-- Dùng dịch vụ (mở LicenseAccount) -->
                             <a class="btn btn-dark"
                                th:classappend="${(order.orderStatus != null and order.orderStatus.name() == 'SUCCESS' and order.licenseAccount != null) ? '' : ' btn-disabled'}"
-                               th:href="@{/customer/license-accounts/{id}(id=${order.licenseAccount.licenseAccountId})}">
+                               th:href="${order.licenseAccount != null ? '/customer/license-accounts/' + order.licenseAccount.licenseAccountId : '#'}">
                                 Dùng dịch vụ
                             </a>
 
                             <!-- Feedback -->
                             <a class="btn btn-ghost"
-                               th:if="${order.orderStatus != null and order.orderStatus.name() == 'SUCCESS'}"
+                               th:if="${order.orderStatus != null and order.orderStatus.name() == 'SUCCESS' and order.tool != null}"
                                th:href="@{/customer/feedback/create(orderId=${order.orderId}, toolId=${order.tool.toolId})}">
                                 Feedback
                             </a>
 
                             <!-- Báo cáo tool -->
                             <a class="btn btn-danger"
+                               th:if="${order.tool != null}"
                                th:href="@{/customer/tool-report/create(toolId=${order.tool.toolId}, orderId=${order.orderId})}">
                                 Báo cáo
                             </a>

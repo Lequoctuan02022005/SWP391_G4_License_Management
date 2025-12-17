@@ -82,12 +82,13 @@ public class CustomerOrderController {
             model.addAttribute("paymentMsg", order.getTransaction().getVnpayResponseMessage());
         }
 
-        // ====== Rating (của user + trung bình tool) ======
+        // ====== Rating (của order này + trung bình tool) ======
         if (order.getTool() != null) {
             Long toolId = order.getTool().getToolId();
 
+            // Tìm feedback theo ORDER (vì giờ mỗi order có 1 feedback riêng)
             Feedback myFeedback = feedbackRepo
-                    .findTopByAccount_AccountIdAndTool_ToolIdOrderByCreatedAtDesc(accountId, toolId)
+                    .findByOrder_OrderId(orderId)
                     .orElse(null);
 
             Double avgRating = feedbackRepo.avgRatingByToolId(toolId);

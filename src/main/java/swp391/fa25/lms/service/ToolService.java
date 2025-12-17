@@ -228,8 +228,8 @@ public class ToolService {
             }
 
             // Rating & total CHỈ tính PUBLISHED (hoặc status NULL)
-            Double avg = feedbackRepo.avgRatingByToolAndStatusOrNull(tool, Feedback.Status.PUBLISHED);
-            Long total = feedbackRepo.countByToolAndStatusOrNull(tool, Feedback.Status.PUBLISHED);
+            Double avg = feedbackRepo.avgRatingByToolAndStatus(tool, Feedback.Status.PUBLISHED);
+            Long total = feedbackRepo.countByToolAndStatus(tool, Feedback.Status.PUBLISHED);
             tool.setAverageRating(avg != null ? avg : 0.0);
             tool.setTotalReviews(total != null ? total : 0L);
         });

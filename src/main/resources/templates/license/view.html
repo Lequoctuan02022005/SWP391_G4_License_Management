@@ -68,8 +68,13 @@
             </div>
         </div>
 
-        <div th:if="${successMsg != null}" class="msg msg-ok" th:text="${successMsg}">OK</div>
-        <div th:if="${errorMsg != null}" class="msg msg-err" th:text="${errorMsg}">ERR</div>
+        <!-- Success/Error Alerts -->
+        <div th:if="${success}" class="msg msg-ok">
+            <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" class="msg msg-err">
+            <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+        </div>
 
         <div class="grid">
 
@@ -249,13 +254,9 @@
                 <div class="err" th:if="${renewError != null}" th:text="${renewError}">err</div>
             </div>
 
-            <div class="muted">
-                Bấm “Pay via VNPay” để đi tới flow thanh toán (backend sẽ init transaction).
-            </div>
-
             <div class="rowbtn">
-                <button class="btn btn-ghost" type="button" onclick="closeModal('renewModal')">Close</button>
-                <button class="btn btn-dark" type="submit">Pay via VNPay</button>
+                <button class="btn btn-ghost" type="button" onclick="closeModal('renewModal')">Đóng</button>
+                <button class="btn btn-dark" type="submit">Thanh toán qua VNPay</button>
             </div>
         </form>
     </div>

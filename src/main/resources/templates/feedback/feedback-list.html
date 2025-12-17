@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý Feedback - Seller</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link th:href="@{/css/feedback-list.css}" rel="stylesheet">
+</head>
+<body>
+    <div th:replace="~{common/header :: header}"></div>
+
+    <div class="feedback-container">
+        <div class="feedback-card">
+            <h1 class="feedback-title">
+                <i class="fas fa-comments"></i> Quản lý Feedback
+            </h1>
+
+            <!-- Stats -->
+            <div class="feedback-stats">
+                <div class="stat-badge warning">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong th:text="${unrepliedCount}">0</strong> chưa reply
+                </div>
+                <div class="stat-badge info">
+                    <i class="fas fa-list"></i>
+                    Tổng: <strong th:text="${feedbacks.totalElements}">0</strong> feedbacks
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-triangle"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Filter Form -->
+            <form th:action="@{/seller/feedbacks}" method="get" class="filter-form">
+                <div class="filter-field">
+                    <label>Tool</label>
+                    <select name="toolId" class="form-select">
+                        <option value="">Tất cả tools</option>
+                        <option th:each="tool : ${sellerTools}" 
+                                th:value="${tool.toolId}" 
+                                th:text="${tool.toolName}"
+                                th:selected="${selectedToolId != null && selectedToolId == tool.toolId}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label>Trạng thái reply</label>
+                    <select name="hasReply" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="false" th:selected="${selectedHasReply != null && !selectedHasReply}">Chưa reply</option>
+                        <option value="true" th:selected="${selectedHasReply != null && selectedHasReply}">Đã reply</option>
+                    </select>
+                </div>
+
+                <div class="filter-field">
+                    <label>Rating tối thiểu</label>
+                    <select name="minRating" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="1" th:selected="${selectedMinRating == 1}">1 sao trở lên</option>
+                        <option value="2" th:selected="${selectedMinRating == 2}">2 sao trở lên</option>
+                        <option value="3" th:selected="${selectedMinRating == 3}">3 sao trở lên</option>
+                        <option value="4" th:selected="${selectedMinRating == 4}">4 sao trở lên</option>
+                        <option value="5" th:selected="${selectedMinRating == 5}">5 sao</option>
+                    </select>
+                </div>
+
+                <div class="filter-field" style="display: flex; align-items: flex-end;">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Lọc
+                    </button>
+                </div>
+
+                <div class="filter-field" style="display: flex; align-items: flex-end;">
+                    <a th:href="@{/seller/feedbacks}" class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-redo"></i> Xóa lọc
+                    </a>
+                </div>
+            </form>
+
+            <!-- Feedback List -->
+            <div th:if="${feedbacks.isEmpty()}" class="text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <p class="text-muted">Chưa có feedback nào.</p>
+            </div>
+
+            <div th:each="fb : ${feedbacks.content}" class="feedback-item">
+                <!-- Tool Badge -->
+                <div class="tool-badge" th:if="${fb.tool != null}">
+                    <i class="fas fa-box"></i> <span th:text="${fb.tool.toolName}">Tool Name</span>
+                </div>
+
+                <!-- Feedback Header -->
+                <div class="feedback-header">
+                    <div>
+                        <div class="feedback-user">
+                            <i class="fas fa-user"></i>
+                            <span th:text="${fb.account != null ? fb.account.fullName : 'Ẩn danh'}">User Name</span>
+                        </div>
+                        <div class="rating-stars">
+                            <i class="fas fa-star" th:each="i : ${#numbers.sequence(1, fb.rating)}"></i>
+                            <span th:text="'(' + ${fb.rating} + '/5)'"></span>
+                        </div>
+                    </div>
+                    <div class="feedback-date">
+                        <i class="far fa-clock"></i>
+                        <span th:text="${#temporals.format(fb.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                </div>
+
+                <!-- Feedback Content -->
+                <div class="feedback-content">
+                    <p th:text="${fb.comment != null && !fb.comment.isEmpty() ? fb.comment : '(Không có nhận xét)'}"></p>
+                </div>
+
+                <!-- Reply Section -->
+                <div th:with="reply=${repliesMap.get(fb.feedbackId)}">
+                    <!-- Đã có reply -->
+                    <div th:if="${reply != null}" class="reply-section">
+                        <div class="reply-header">
+                            <span class="reply-label">
+                                <i class="fas fa-reply"></i> Phản hồi của bạn:
+                            </span>
+                            <div class="reply-actions">
+                                <button type="button" class="btn-reply secondary btn-sm" 
+                                        th:data-reply-id="${reply.replyId}"
+                                        th:data-reply-content="${reply.content}"
+                                        onclick="editReplyClick(this)">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </button>
+                                <button type="button" class="btn-reply danger btn-sm" 
+                                        th:data-reply-id="${reply.replyId}"
+                                        onclick="deleteReplyClick(this)">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </div>
+                        </div>
+                        <p th:text="${reply.content}"></p>
+                        <small class="text-muted">
+                            <i class="far fa-clock"></i>
+                            <span th:text="${#temporals.format(reply.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                            <span th:if="${reply.updatedAt != null}">
+                                (Cập nhật: <span th:text="${#temporals.format(reply.updatedAt, 'dd/MM/yyyy HH:mm')}"></span>)
+                            </span>
+                        </small>
+                    </div>
+
+                    <!-- Chưa có reply -->
+                    <div th:if="${reply == null}">
+                        <button type="button" class="btn-reply primary" 
+                                th:data-feedback-id="${fb.feedbackId}"
+                                onclick="showReplyModal(this.getAttribute('data-feedback-id'))">
+                            <i class="fas fa-reply"></i> Reply ngay
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <nav th:if="${feedbacks.totalPages > 1}" class="pagination-nav">
+                <a th:if="${currentPage > 0}" 
+                   th:href="@{/seller/feedbacks(page=${currentPage - 1}, toolId=${selectedToolId}, hasReply=${selectedHasReply}, minRating=${selectedMinRating})}" 
+                   class="page-btn">
+                    <i class="fas fa-chevron-left"></i> Trước
+                </a>
+
+                <span class="page-btn active">
+                    Trang <span th:text="${currentPage + 1}">1</span> / <span th:text="${totalPages}">1</span>
+                </span>
+
+                <a th:if="${currentPage < totalPages - 1}" 
+                   th:href="@{/seller/feedbacks(page=${currentPage + 1}, toolId=${selectedToolId}, hasReply=${selectedHasReply}, minRating=${selectedMinRating})}" 
+                   class="page-btn">
+                    Sau <i class="fas fa-chevron-right"></i>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Modal: Create Reply -->
+    <div class="modal fade" id="replyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/seller/feedbacks/{id}/reply(id=${0})}" method="post" id="replyForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-reply"></i> Gửi phản hồi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Nội dung phản hồi (tối đa 500 ký tự)</label>
+                        <textarea name="content" class="form-control" rows="5" required maxlength="500" 
+                                  placeholder="Nhập phản hồi của bạn..."></textarea>
+                        <div class="form-text">
+                            <span id="charCount">0</span>/500 ký tự
+                        </div>
+                        <input type="hidden" name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}"/>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Gửi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Reply -->
+    <div class="modal fade" id="editReplyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/seller/feedbacks/reply/{id}/update(id=${0})}" method="post" id="editReplyForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-edit"></i> Sửa phản hồi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Nội dung phản hồi</label>
+                        <textarea name="content" class="form-control" rows="5" required maxlength="500" 
+                                  id="editContent"></textarea>
+                        <div class="form-text">
+                            <span id="editCharCount">0</span>/500 ký tự
+                        </div>
+                        <input type="hidden" name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}"/>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Lưu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Delete Confirmation -->
+    <div class="modal fade" id="deleteReplyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/seller/feedbacks/reply/{id}/delete(id=${0})}" method="post" id="deleteReplyForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fas fa-trash"></i> Xác nhận xóa</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Bạn có chắc chắn muốn xóa phản hồi này?</p>
+                        <p class="text-danger"><strong>Lưu ý:</strong> Hành động này không thể hoàn tác!</p>
+                        <input type="hidden" name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf != null}"/>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show reply modal
+        function showReplyModal(feedbackId) {
+            const form = document.getElementById('replyForm');
+            form.action = `/seller/feedbacks/${feedbackId}/reply`;
+            const modal = new bootstrap.Modal(document.getElementById('replyModal'));
+            modal.show();
+        }
+
+        // Edit reply modal (từ data attributes)
+        function editReplyClick(button) {
+            const replyId = button.getAttribute('data-reply-id');
+            const content = button.getAttribute('data-reply-content');
+            editReply(replyId, content);
+        }
+
+        // Edit reply modal
+        function editReply(replyId, content) {
+            const form = document.getElementById('editReplyForm');
+            form.action = `/seller/feedbacks/reply/${replyId}/update`;
+            document.getElementById('editContent').value = content;
+            updateCharCount('editContent', 'editCharCount');
+            const modal = new bootstrap.Modal(document.getElementById('editReplyModal'));
+            modal.show();
+        }
+
+        // Delete reply modal (từ data attributes)
+        function deleteReplyClick(button) {
+            const replyId = button.getAttribute('data-reply-id');
+            deleteReply(replyId);
+        }
+
+        // Delete reply modal
+        function deleteReply(replyId) {
+            const form = document.getElementById('deleteReplyForm');
+            form.action = `/seller/feedbacks/reply/${replyId}/delete`;
+            const modal = new bootstrap.Modal(document.getElementById('deleteReplyModal'));
+            modal.show();
+        }
+
+        // Character count
+        function updateCharCount(textareaId, countId) {
+            const textarea = document.getElementById(textareaId);
+            const count = document.getElementById(countId);
+            if (textarea && count) {
+                count.textContent = textarea.value.length;
+            }
+        }
+
+        // Add event listeners for char count
+        document.addEventListener('DOMContentLoaded', function() {
+            const replyTextarea = document.querySelector('#replyModal textarea');
+            const editTextarea = document.getElementById('editContent');
+            
+            if (replyTextarea) {
+                replyTextarea.addEventListener('input', function() {
+                    document.getElementById('charCount').textContent = this.value.length;
+                });
+            }
+            
+            if (editTextarea) {
+                editTextarea.addEventListener('input', function() {
+                    document.getElementById('editCharCount').textContent = this.value.length;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+

@@ -24,11 +24,14 @@ import java.util.Objects;
 
 import org.springframework.data.domain.*;
 import swp391.fa25.lms.model.ToolReport;
+import swp391.fa25.lms.model.Feedback;
 import swp391.fa25.lms.repository.ToolReportRepository;
 import swp391.fa25.lms.repository.ToolRepository;
+import swp391.fa25.lms.repository.FeedbackRepository;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/tools")
@@ -313,8 +316,15 @@ public class ToolController {
 
         boolean isCustomer = (account != null && account.getRole().getRoleName() == Role.RoleName.CUSTOMER);
 
+        // Load feedbacks (chỉ PUBLISHED) - Dùng Pageable.unpaged() để lấy tất cả
+        org.springframework.data.domain.Page<Feedback> feedbackPage = 
+                feedbackRepo.findByToolAndStatus(tool, Feedback.Status.PUBLISHED, 
+                        org.springframework.data.domain.Pageable.unpaged());
+        List<Feedback> feedbacks = feedbackPage.getContent();
+
         model.addAttribute("tool", tool);
         model.addAttribute("licenses", tool.getLicenses());
+        model.addAttribute("feedbacks", feedbacks);
         model.addAttribute("isCustomer", isCustomer);
         model.addAttribute("account", account);
 
@@ -329,6 +339,9 @@ public class ToolController {
 
     @Autowired
     private ToolRepository toolRepo;
+
+    @Autowired
+    private FeedbackRepository feedbackRepo;
 
     @Autowired
     private ToolReportRepository reportRepo;

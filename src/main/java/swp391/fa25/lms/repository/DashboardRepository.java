@@ -31,9 +31,6 @@ public interface DashboardRepository extends JpaRepository<Account, Long> {
     @Query("SELECT COUNT(tr) FROM ToolReport tr")
     long countToolReports();
 
-    @Query("SELECT COUNT(fr) FROM FeedbackReport fr")
-    long countFeedbackReports();
-
     // =========================
     // SELLER
     // =========================
@@ -131,11 +128,4 @@ public interface DashboardRepository extends JpaRepository<Account, Long> {
         WHERE tr.status = 'PENDING'
     """)
     List<ToolReport> findPendingToolReports();
-
-    @Query("""
-        SELECT fr
-        FROM FeedbackReport fr
-        WHERE fr.status = 'PENDING'
-    """)
-    List<FeedbackReport> findPendingFeedbackReports();
 }

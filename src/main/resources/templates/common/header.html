@@ -71,6 +71,11 @@
                                         Seller Dashboard
                                     </a>
                                 </li>
+                                <li th:if="${account.role.roleName.name() == 'SELLER'}">
+                                    <a class="dropdown-item" th:href="@{/seller/feedbacks}">
+                                        <i class="fas fa-comments me-1"></i> Quản lý Feedback
+                                    </a>
+                                </li>
                                 <li th:if="${account.sellerActive}">
                                     <a class="dropdown-item" th:href="@{/seller/renew}">Gia hạn Seller</a>
                                 </li>
