@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import swp391.fa25.lms.config.security.CustomAuthenticationFailureHandler;
 import swp391.fa25.lms.config.security.CustomUserDetailsService;
 import swp391.fa25.lms.config.security.CustomAuthenticationSuccessHandler;
 
@@ -17,6 +18,9 @@ public class SecurityConfig {
 
     @Autowired
     private CustomAuthenticationSuccessHandler successHandler;
+
+    @Autowired
+    private CustomAuthenticationFailureHandler failureHandler;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -63,8 +67,8 @@ public class SecurityConfig {
                 .formLogin(form -> form
                         .loginPage("/login")
                         .loginProcessingUrl("/perform_login")
-                        .successHandler(successHandler)  // ⭐ Redirect theo ROLE
-                        .failureUrl("/login?error=true")
+                        .successHandler(successHandler)
+                        .failureHandler(failureHandler)
                         .permitAll()
                 )
 
