@@ -1,0 +1,98 @@
+/* Modern footer styles for LMS */
+.site-footer {
+  background: linear-gradient(180deg, #0f1724 0%, #071029 100%);
+  color: #cbd5e1;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.site-footer .footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 20px;
+}
+
+.site-footer h5, .site-footer h6 {
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.site-footer p, .site-footer .footer-text, .site-footer .footer-links a {
+  color: #cbd5e1;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 32px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  margin: 6px 0 14px 0;
+  list-style: none;
+}
+
+.footer-links a {
+  color: #9fb0c8;
+  text-decoration: none;
+  transition: color .18s ease, transform .12s ease;
+}
+
+.footer-links a:hover {
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.footer-certificates img {
+  height: 44px;
+  margin: 0 8px;
+  filter: saturate(.9) brightness(.95);
+}
+
+.footer-company {
+  margin-top: 8px;
+  font-weight: 600;
+  color: #e6eef8;
+}
+
+.footer-text {
+  margin-top: 8px;
+  line-height: 1.7;
+  color: #9fb0c8;
+}
+
+.site-footer hr {
+  border-color: rgba(255,255,255,0.06);
+}
+
+.site-footer .social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.site-footer .social-icon:hover {
+  background: rgba(255,255,255,0.10);
+}
+
+@media (min-width: 768px) {
+  .site-footer .footer-container {
+    padding: 48px 24px;
+  }
+  .footer-links {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 575px) {
+  .site-footer .footer-container {
+    padding: 20px 14px;
+  }
+  .footer-certificates img { height: 36px; }
+}
