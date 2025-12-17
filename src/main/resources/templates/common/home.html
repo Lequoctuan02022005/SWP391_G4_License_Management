@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -42,6 +44,7 @@
                         <a href="#products" class="hero-btn-secondary">ALL PRODUCTS</a>
                     </div>
                 </div>
+
                 <div class="carousel-item">
                     <h1>Banner quảng cáo 2</h1>
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>
@@ -110,7 +113,8 @@
                         <option th:each="cate : ${categories}"
                                 th:value="${cate.categoryId}"
                                 th:text="${cate.categoryName}"
-                                th:selected="${cate.categoryId == selectedCategory}"></option>
+                                th:selected="${cate.categoryId == selectedCategory}">
+                        </option>
                     </select>
                 </div>
 
@@ -125,7 +129,7 @@
 
                 <div class="col-md-2">
                     <select class="form-select" name="priceFilter">
-                        <option value="all" th:selected="${priceFilter=='all'}">Mọi giá</option>
+                        <option value="all" th:selected="${priceFilter=='all' or priceFilter == null}">Mọi giá</option>
                         <option value="under100k" th:selected="${priceFilter=='under100k'}">Dưới 100.000</option>
                         <option value="100k-500k" th:selected="${priceFilter=='100k-500k'}">100.000 - 500.000</option>
                         <option value="500k-1m" th:selected="${priceFilter=='500k-1m'}">500.000 - 1.000.000</option>
@@ -159,7 +163,9 @@
 
         <!-- List (server render trước, ajax sẽ replace sau) -->
         <div id="product-list">
+            <!-- ✅ fragment để /home/tools trả về -->
             <div th:fragment="toolList">
+
                 <th:block th:if="${tools == null or #lists.isEmpty(tools)}">
                     <div class="col-12 text-center py-4 text-muted">
                         <h5>Không có sản phẩm phù hợp</h5>
@@ -170,15 +176,14 @@
                     <div class="col-md-4" th:each="tool : ${tools}">
                         <a th:href="@{'/tools/detail/' + ${tool.toolId}}" class="product-card">
                             <div class="product-image">
-<<<<<<< HEAD
+
+                                <!-- Favorite (nếu anh muốn bật lại) -->
+                                <!--
                                 <div class="favorite-icon" th:attr="data-tool-id=${tool.toolId}">
                                     <i th:class="${tool.isFavorite} ? 'fas fa-heart text-danger' : 'far fa-heart'"></i>
                                 </div>
-=======
-<!--                                <div class="favorite-icon" th:attr="data-tool-id=${tool.toolId}">-->
-<!--                                    <i class="far fa-heart" th:classappend="${tool.isFavorite} ? 'fas' : 'far'"></i>-->
-<!--                                </div>-->
->>>>>>> 2663297e31c64619f54956de599f54933442ddc8
+                                -->
+
                                 <img th:src="${tool.image != null ? tool.image : '/placeholder.svg?height=250&width=350'}"
                                      alt="Product">
                             </div>
@@ -245,6 +250,7 @@
                         </select>
                     </div>
                 </div>
+
             </div>
         </div>
 
@@ -257,7 +263,6 @@
 <!-- Bootstrap JS (CHỈ 1 LẦN) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- JS DUY NHẤT -->
 <script th:inline="javascript">
     const TOOLS_URL      = /*[[@{/home/tools}]]*/ "/home/tools";
     const FAV_COUNT_URL  = /*[[@{/favorite/count}]]*/ "/favorite/count";
@@ -291,12 +296,31 @@
         function buildQuery(params = {}) {
             const fd = filterForm ? new FormData(filterForm) : new FormData();
 
+            // override
             for (const [k, v] of Object.entries(params)) {
                 if (v !== undefined && v !== null) fd.set(k, v);
             }
 
+            // ✅ normalize: bỏ param rỗng + bỏ priceFilter=all
+            const kw = (fd.get("keyword") || "").trim();
+            if (!kw) fd.delete("keyword"); else fd.set("keyword", kw);
+
+            const cat = (fd.get("categoryId") || "").trim();
+            if (!cat) fd.delete("categoryId");
+
+            const date = (fd.get("dateFilter") || "").trim();
+            if (!date) fd.delete("dateFilter");
+
+            const price = (fd.get("priceFilter") || "").trim();
+            if (!price || price === "all") fd.delete("priceFilter");
+
+            const rating = (fd.get("ratingFilter") || "").trim();
+            if (!rating) fd.delete("ratingFilter");
+
+            // page default
             if (!fd.has("page")) fd.set("page", "0");
 
+            // size
             const sizeEl = document.getElementById("pageSizeSelect");
             const size = params.size ?? (sizeEl ? sizeEl.value : "9");
             fd.set("size", String(size));
@@ -313,7 +337,6 @@
                     credentials: "include",
                 });
 
-                // cực quan trọng: nếu bị security đá về login
                 if (res.redirected) { window.location.href = res.url; return; }
                 if (res.status === 401) { window.location.href = LOGIN_URL; return; }
 
@@ -333,7 +356,7 @@
             }
         }
 
-        // Favorite toggle (event delegation)
+        // Favorite toggle (event delegation) - nếu anh bật lại favorite-icon
         productListContainer.addEventListener("click", async function (ev) {
             const favEl = ev.target.closest(".favorite-icon");
             if (!favEl) return;
@@ -387,12 +410,19 @@
 
                 link.addEventListener("click", function (e) {
                     e.preventDefault();
+
+                    const item = this.closest(".page-item");
+                    if (item && item.classList.contains("disabled")) return;
+
                     const page = this.getAttribute("data-page");
                     if (page == null) return;
 
+                    const p = parseInt(page, 10);
+                    if (Number.isNaN(p) || p < 0) return;
+
                     const sizeEl = document.getElementById("pageSizeSelect");
                     const size = sizeEl ? sizeEl.value : "9";
-                    loadTools({ page, size });
+                    loadTools({ page: p, size });
                 });
             });
         }
@@ -423,12 +453,15 @@
         if (clearFiltersBtn && filterForm) {
             clearFiltersBtn.addEventListener("click", function () {
                 filterForm.reset();
-                loadTools({ page: 0 });
+                const sizeEl = document.getElementById("pageSizeSelect");
+                if (sizeEl) sizeEl.value = "9";
+                loadTools({ page: 0, size: "9" });
             });
         }
 
-        // first load
-        loadTools();
+        // ✅ lần đầu: KHÔNG gọi loadTools() để khỏi đè list server-render
+        attachPaginationListeners();
+        attachPageSizeListener();
         window.loadFavoriteCount();
     });
 
@@ -452,11 +485,17 @@
         }
 
         nextBtn.addEventListener("click", function () {
-            if (currentIndex + itemsPerPage < items.length) { currentIndex += itemsPerPage; showItems(); }
+            if (currentIndex + itemsPerPage < items.length) {
+                currentIndex += itemsPerPage;
+                showItems();
+            }
         });
 
         prevBtn.addEventListener("click", function () {
-            if (currentIndex - itemsPerPage >= 0) { currentIndex -= itemsPerPage; showItems(); }
+            if (currentIndex - itemsPerPage >= 0) {
+                currentIndex -= itemsPerPage;
+                showItems();
+            }
         });
 
         showItems();

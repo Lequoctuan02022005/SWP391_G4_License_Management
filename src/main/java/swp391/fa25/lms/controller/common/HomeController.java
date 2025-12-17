@@ -33,7 +33,6 @@ public class HomeController {
     }
 
     @GetMapping("/home")
-<<<<<<< HEAD
     public String home(
             @RequestParam(value = "keyword", required = false) String keyword,
             @RequestParam(value = "categoryId", required = false) Long categoryId,
@@ -45,9 +44,6 @@ public class HomeController {
             HttpServletRequest request,
             Model model
     ) {
-=======
-    public String home(HttpServletRequest request, Model model) {
->>>>>>> 2663297e31c64619f54956de599f54933442ddc8
         Account account = (Account) request.getSession().getAttribute("loggedInAccount");
 
         model.addAttribute("categories", categoryService.getAllCategories());
@@ -81,7 +77,6 @@ public class HomeController {
                 keyword, categoryId, dateFilter, priceFilter, ratingFilter, account, page, size
         );
 
-<<<<<<< HEAD
         bindToolPage(model, toolPage, keyword, categoryId, dateFilter, priceFilter, ratingFilter, page, size);
 
         return "common/home :: toolList";
@@ -98,8 +93,6 @@ public class HomeController {
                               int size) {
 
         // tính availableQuantity
-=======
->>>>>>> 2663297e31c64619f54956de599f54933442ddc8
         for (Tool tool : toolPage.getContent()) {
             List<LicenseAccount> active = licenseAccountRepository
                     .findByStatusAndLicense_Tool_ToolId(LicenseAccount.Status.ACTIVE, tool.getToolId());
@@ -119,23 +112,12 @@ public class HomeController {
         model.addAttribute("priceFilter", priceFilter);
         model.addAttribute("ratingFilter", ratingFilter);
         model.addAttribute("pageSize", size);
-<<<<<<< HEAD
-=======
-
-        return "common/home :: toolList";
->>>>>>> 2663297e31c64619f54956de599f54933442ddc8
     }
 
     @GetMapping("/logout")
     public String logout(HttpServletRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-<<<<<<< HEAD
         if (auth != null) new SecurityContextLogoutHandler().logout(request, null, auth);
-=======
-        if (auth != null) {
-            new SecurityContextLogoutHandler().logout(request, null, auth);
-        }
->>>>>>> 2663297e31c64619f54956de599f54933442ddc8
         request.getSession().invalidate();
         return "redirect:/login";
     }
