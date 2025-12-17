@@ -35,6 +35,15 @@ public class PaymentController {
     private final LicenseRepository licenseRepo;
     private final LicenseRenewLogRepository licenseRenewLogRepo;
 
+    private void clearCheckoutSession(HttpSession session) {
+        if (session == null) return;
+        session.removeAttribute("CHECKOUT_MODE");
+        session.removeAttribute("BUY_NOW_TOOL_ID");
+        session.removeAttribute("BUY_NOW_LICENSE_ID");
+        session.removeAttribute("BUY_NOW_QTY");
+        session.removeAttribute("CHECKOUT_SELECTED_IDS");
+    }
+
     @GetMapping("/seller-return")
     @Transactional
     public String handleSellerPaymentReturn(@RequestParam Map<String, String> params,
@@ -196,7 +205,6 @@ public class PaymentController {
                     return "redirect:/seller/register";
                 }
 
-                // Chuyển role thành SELLER và SAVE NGAY
                 Role sellerRole = roleRepo.findByRoleName(Role.RoleName.SELLER)
                         .orElseThrow(() -> new RuntimeException("Role SELLER không tồn tại!"));
 
@@ -204,15 +212,12 @@ public class PaymentController {
                 user.setSellerActive(true);
                 user.setSellerPackage(pkg);
 
-                // SAVE ACCOUNT NGAY ĐỂ COMMIT ROLE VÀO DB
                 accountRepo.saveAndFlush(user);
 
-                // Cập nhật transaction status
                 transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
                 transaction.setCompletedAt(LocalDateTime.now());
                 transactionRepo.save(transaction);
 
-                // Tạo SellerSubscription
                 SellerSubscription newSub = new SellerSubscription();
                 newSub.setAccount(user);
                 newSub.setSellerPackage(pkg);
@@ -223,11 +228,9 @@ public class PaymentController {
                 newSub.setTransaction(transaction);
                 subscriptionRepo.save(newSub);
 
-                // Cập nhật seller expiry date
                 user.setSellerExpiryDate(newSub.getEndDate());
                 accountRepo.saveAndFlush(user);
 
-                // Cập nhật session
                 session.setAttribute("loggedInAccount", user);
 
                 redirectAttrs.addFlashAttribute("success",
@@ -235,7 +238,6 @@ public class PaymentController {
                 return "redirect:/dashboard";
 
             } else {
-                // Thanh toán thất bại
                 transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
                 transaction.setCompletedAt(LocalDateTime.now());
                 transactionRepo.save(transaction);
@@ -254,21 +256,26 @@ public class PaymentController {
 
     @GetMapping("/checkout-return")
     @Transactional
-    public String handleCheckoutPaymentReturn(@RequestParam Map<String, String> params, HttpSession session, RedirectAttributes redirectAttrs) {
+    public String handleCheckoutPaymentReturn(@RequestParam Map<String, String> params,
+                                              HttpSession session,
+                                              RedirectAttributes redirectAttrs) {
         try {
             boolean validHash = vnPayUtil.verifyHash(params);
             if (!validHash) {
+                // ✅ dọn session luôn cho chắc
+                clearCheckoutSession(session);
+
                 redirectAttrs.addFlashAttribute("error", "Chữ ký không hợp lệ! Vui lòng liên hệ Admin.");
                 return "redirect:/checkout";
             }
 
             String vnp_ResponseCode = params.get("vnp_ResponseCode");
             String vnp_TxnRef = params.get("vnp_TxnRef");
-            String vnp_OrderInfo = params.get("vnp_OrderInfo");
 
             PaymentTransaction transaction = transactionRepo.findByVnpayTxnRef(vnp_TxnRef).orElse(null);
-
             if (transaction == null) {
+                clearCheckoutSession(session);
+
                 redirectAttrs.addFlashAttribute("error", "Không tìm thấy giao dịch!");
                 return "redirect:/checkout";
             }
@@ -276,30 +283,59 @@ public class PaymentController {
             transaction.setVnpayResponseCode(vnp_ResponseCode);
 
             if ("00".equals(vnp_ResponseCode)) {
-                // Thanh toán thành công
+                // SUCCESS
                 transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
                 transaction.setCompletedAt(LocalDateTime.now());
                 transactionRepo.save(transaction);
 
-                // Xử lý orders: update status, giảm stock, tạo license accounts
+                // xử lý orders: update status, giảm stock, tạo license accounts
                 orderService.processSuccessfulPayment(transaction);
 
-                // Clear cart
                 Account account = transaction.getAccount();
-                cartService.clearCart(account);
+                String desc = transaction.getDescription();
+
+                if (desc != null && desc.startsWith("BUYNOW_")) {
+                    // BUY NOW: không đụng giỏ hàng
+                } else if (desc != null && desc.startsWith("CHECKOUT_SELECTED:")) {
+                    // CHECKOUT_SELECTED:<cartId>:<id1,id2,...>
+                    try {
+                        String[] parts = desc.split(":");
+                        if (parts.length >= 3) {
+                            String idsCsv = parts[2];
+                            for (String s : idsCsv.split(",")) {
+                                try {
+                                    Long cartItemId = Long.parseLong(s.trim());
+                                    cartService.removeItem(account, cartItemId);
+                                } catch (Exception ignored) {}
+                            }
+                        } else {
+                            cartService.clearCart(account);
+                        }
+                    } catch (Exception e) {
+                        cartService.clearCart(account);
+                    }
+                } else {
+                    // checkout all
+                    cartService.clearCart(account);
+                }
+
+                // ✅ QUAN TRỌNG: clear session để không bị dính mua ngay / selected
+                clearCheckoutSession(session);
 
                 redirectAttrs.addFlashAttribute("success",
                         "Thanh toán thành công! Bạn có thể xem thông tin tài khoản trong mục 'Đơn hàng của tôi'.");
                 return "redirect:/checkout/success";
 
             } else {
-                // Thanh toán thất bại
+                // FAILED
                 transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
                 transaction.setCompletedAt(LocalDateTime.now());
                 transactionRepo.save(transaction);
 
-                // Update orders thành FAILED
                 orderService.processFailedPayment(transaction);
+
+                // ✅ clear session để lần sau chọn giỏ hàng không bị dính
+                clearCheckoutSession(session);
 
                 String errorMsg = transaction.getVnpayResponseMessage();
                 redirectAttrs.addFlashAttribute("error", "Thanh toán thất bại: " + errorMsg);
@@ -308,22 +344,21 @@ public class PaymentController {
 
         } catch (Exception e) {
             e.printStackTrace();
+
+            // ✅ clear session cả khi exception
+            clearCheckoutSession(session);
+
             redirectAttrs.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/checkout";
         }
     }
 
-    /**
-     * VNPay callback for License Renewal
-     * GET /payment/license-renew-return
-     */
     @GetMapping("/license-renew-return")
     @Transactional
     public String handleLicenseRenewReturn(@RequestParam Map<String, String> params,
                                            HttpSession session,
                                            RedirectAttributes ra) {
         try {
-            // 1. Verify hash
             boolean validHash = vnPayUtil.verifyHash(params);
             if (!validHash) {
                 ra.addFlashAttribute("error", "Chữ ký không hợp lệ!");
@@ -334,7 +369,6 @@ public class PaymentController {
             String vnp_TxnRef = params.get("vnp_TxnRef");
             String vnp_OrderInfo = params.get("vnp_OrderInfo");
 
-            // 2. Find transaction
             Optional<PaymentTransaction> txOpt = transactionRepo.findByVnpayTxnRef(vnp_TxnRef);
             if (txOpt.isEmpty()) {
                 ra.addFlashAttribute("error", "Không tìm thấy giao dịch!");
@@ -350,8 +384,6 @@ public class PaymentController {
             transaction.setVnpayPayDate(params.get("vnp_PayDate"));
 
             if ("00".equals(vnp_ResponseCode)) {
-                // SUCCESS
-                // Parse orderInfo: RENEW_LICENSE_{licenseAccountId}_{licenseId}_{transactionId}
                 if (vnp_OrderInfo == null || !vnp_OrderInfo.startsWith("RENEW_LICENSE_")) {
                     ra.addFlashAttribute("error", "Thông tin đơn hàng không hợp lệ!");
                     transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
@@ -360,7 +392,7 @@ public class PaymentController {
                 }
 
                 String[] parts = vnp_OrderInfo.split("_");
-                if (parts.length != 5) { // RENEW_LICENSE_{licenseAccountId}_{licenseId}_{transactionId}
+                if (parts.length != 5) {
                     ra.addFlashAttribute("error", "Thông tin đơn hàng không đúng định dạng!");
                     transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
                     transactionRepo.save(transaction);
@@ -370,29 +402,21 @@ public class PaymentController {
                 Long licenseAccountId = Long.parseLong(parts[2]);
                 Long licenseId = Long.parseLong(parts[3]);
 
-                // 3. Load License Account
                 LicenseAccount licenseAccount = licenseAccountRepo.findById(licenseAccountId)
                         .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy License Account!"));
 
-                // 4. Load License package
                 License license = licenseRepo.findById(licenseId)
                         .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy gói gia hạn!"));
 
-                // 5. Calculate new end date
                 LocalDateTime oldEndDate = licenseAccount.getEndDate();
                 LocalDateTime now = LocalDateTime.now();
-                
-                // Nếu license đã hết hạn → tính từ hiện tại
-                // Nếu còn hạn → cộng thêm vào end date hiện tại
                 LocalDateTime baseDate = (oldEndDate != null && oldEndDate.isAfter(now)) ? oldEndDate : now;
                 LocalDateTime newEndDate = baseDate.plusDays(license.getDurationDays());
 
-                // 6. Update License Account
                 licenseAccount.setEndDate(newEndDate);
                 licenseAccount.setStatus(LicenseAccount.Status.ACTIVE);
                 licenseAccountRepo.save(licenseAccount);
 
-                // 7. Create Renew Log
                 LicenseRenewLog renewLog = new LicenseRenewLog();
                 renewLog.setLicenseAccount(licenseAccount);
                 renewLog.setRenewDate(LocalDateTime.now());
@@ -401,17 +425,15 @@ public class PaymentController {
                 renewLog.setTransaction(transaction);
                 licenseRenewLogRepo.save(renewLog);
 
-                // 8. Update transaction
                 transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
                 transaction.setCompletedAt(LocalDateTime.now());
                 transactionRepo.save(transaction);
 
-                ra.addFlashAttribute("success", "Gia hạn license thành công! Hạn mới: " + 
+                ra.addFlashAttribute("success", "Gia hạn license thành công! Hạn mới: " +
                         newEndDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
                 return "redirect:/customer/license-accounts/" + licenseAccountId;
 
             } else {
-                // FAILED
                 transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
                 transactionRepo.save(transaction);
 

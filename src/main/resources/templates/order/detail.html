@@ -87,16 +87,16 @@
                             </div>
 
                             <!-- Rating -->
-                            <div style="text-align:right;" th:with="myR=${myFeedback != null ? myFeedback.rating : 0}">
-                                <div class="muted">Đánh giá của bạn</div>
-                                <div class="stars">
-                                    <span th:each="i : ${#numbers.sequence(1,5)}"
-                                          th:text="${i <= myR ? '★' : '☆'}">★</span>
-                                </div>
-                                <div class="muted" th:if="${avgRating != null}">
-                                    Trung bình: <b th:text="${#numbers.formatDecimal(avgRating,1,'POINT',1,'POINT')}">0.0</b>/5
-                                </div>
-                            </div>
+<!--                            <div style="text-align:right;" th:with="myR=${myFeedback != null ? myFeedback.rating : 0}">-->
+<!--                                <div class="muted">Đánh giá của bạn</div>-->
+<!--                                <div class="stars">-->
+<!--                                    <span th:each="i : ${#numbers.sequence(1,5)}"-->
+<!--                                          th:text="${i <= myR ? '★' : '☆'}">★</span>-->
+<!--                                </div>-->
+<!--                                <div class="muted" th:if="${avgRating != null}">-->
+<!--                                    Trung bình: <b th:text="${#numbers.formatDecimal(avgRating,1,'POINT',1,'POINT')}">0.0</b>/5-->
+<!--                                </div>-->
+<!--                            </div>-->
                         </div>
 
                         <!-- ACTION BUTTONS -->
@@ -187,44 +187,7 @@
                 </div>
             </div>
 
-            <!-- LICENSE ACCOUNT (hạn sử dụng thực tế) -->
-            <div class="box full" th:if="${order.licenseAccount != null}">
-                <div class="label">License Account được cấp</div>
-                <div class="value">
-                    <div>ID: <b th:text="${order.licenseAccount.licenseAccountId}">0</b></div>
 
-                    <div style="margin-top:8px;">
-                        <span class="badge b-success" th:if="${order.licenseAccount.status != null and order.licenseAccount.status.name() == 'ACTIVE'}">ACTIVE</span>
-                        <span class="badge b-pending" th:if="${order.licenseAccount.status != null and order.licenseAccount.status.name() == 'EXPIRED'}">EXPIRED</span>
-                        <span class="badge b-failed"  th:if="${order.licenseAccount.status != null and order.licenseAccount.status.name() == 'REVOKED'}">REVOKED</span>
-                        <span class="badge b-null" th:if="${order.licenseAccount.status == null}">N/A</span>
-                    </div>
-
-                    <div class="sep"></div>
-
-                    <!-- TOKEN mode -->
-                    <div th:if="${order.licenseAccount.token != null}">
-                        Token: <b th:text="${order.licenseAccount.token}">token</b>
-                    </div>
-
-                    <!-- USER/PASS mode -->
-                    <div th:if="${order.licenseAccount.token == null}">
-                        <div>Username: <b th:text="${order.licenseAccount.username != null ? order.licenseAccount.username : '(N/A)'}">user</b></div>
-                        <div>Password: <b th:text="${order.licenseAccount.password != null ? order.licenseAccount.password : '(N/A)'}">pass</b></div>
-                    </div>
-
-                    <div class="muted" style="margin-top:8px;">
-                        Used: <b th:text="${order.licenseAccount.used}">false</b>
-                    </div>
-
-                    <div class="muted" th:if="${order.licenseAccount.startDate != null and order.licenseAccount.endDate != null}">
-                        Hạn sử dụng:
-                        <b th:text="${#temporals.format(order.licenseAccount.startDate,'dd/MM/yyyy HH:mm')}">--</b>
-                        →
-                        <b th:text="${#temporals.format(order.licenseAccount.endDate,'dd/MM/yyyy HH:mm')}">--</b>
-                    </div>
-                </div>
-            </div>
 
             <div class="box full" th:if="${order.licenseAccount == null}">
                 <div class="label">License Account được cấp</div>

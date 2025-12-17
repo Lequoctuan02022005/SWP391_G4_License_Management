@@ -40,17 +40,32 @@
         <div class="table-responsive">
           <table class="table table-hover align-middle">
             <thead class="table-primary">
-              <tr>
-                <th>Sản phẩm</th>
-                <th>License</th>
-                <th>Giá</th>
-                <th>Số lượng</th>
-                <th>Tổng</th>
-                <th></th>
-              </tr>
+            <tr>
+              <th style="width:56px;" class="text-center">
+                <input class="form-check-input" type="checkbox" id="selectAll" />
+              </th>
+              <th>Sản phẩm</th>
+              <th>License</th>
+              <th>Giá</th>
+              <th>Số lượng</th>
+              <th>Tổng</th>
+              <th></th>
+            </tr>
             </thead>
             <tbody>
-              <tr th:each="item : ${items}">
+              <tr th:each="item : ${items}"
+                  th:attr="data-id=${item.cartItemId},
+             data-total=${item.totalPrice},
+             data-name=${item.tool.toolName}">
+                <td class="text-center">
+                  <input
+                          class="form-check-input item-check"
+                          type="checkbox"
+                          th:value="${item.cartItemId}"
+                          checked
+                          onchange="recalcSelectedTotal()"
+                  />
+                </td>
                 <td>
                   <div class="d-flex align-items-center">
                     <img
@@ -94,29 +109,79 @@
           </table>
         </div>
 
-        <div class="text-end mt-4 bg-light p-4 rounded">
-          <h4>
-            Tổng thanh toán:
-            <span
-              class="text-danger fw-bold fs-3"
-              th:text="${#numbers.formatInteger(#aggregates.sum(items.![totalPrice]), 0, 'COMMA')} + ' VND'"
-              >0 VND</span
-            >
-          </h4>
-          <a href="/checkout" class="btn btn-success btn-lg px-5">
-            <i class="fas fa-credit-card me-2"></i>Thanh toán
-          </a>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 bg-light p-4 rounded">
+          <div>
+            <div class="text-muted">Đã chọn: <span id="selectedCount" class="fw-bold">0</span> sản phẩm</div>
+            <h4 class="mb-0">
+              Tổng thanh toán:
+              <span id="selectedTotal" class="text-danger fw-bold fs-3">0 VND</span>
+            </h4>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-danger btn-lg" type="button" onclick="removeSelected()">
+              <i class="bi bi-trash me-2"></i>Xoá đã chọn
+            </button>
+
+            <button class="btn btn-success btn-lg px-5" type="button" onclick="goCheckoutSelected()">
+              <i class="fas fa-credit-card me-2"></i>Thanh toán
+            </button>
+          </div>
         </div>
+
       </div>
     </main>
 
     <div th:replace="~{common/footer :: footer}"></div>
 
     <script th:inline="javascript">
+      function formatVND(n) {
+        return new Intl.NumberFormat("vi-VN").format(n) + " VND";
+      }
+
+      function getSelectedIds() {
+        return Array.from(document.querySelectorAll(".item-check:checked"))
+                .map(cb => cb.value)
+                .filter(Boolean);
+      }
+
+      function recalcSelectedTotal() {
+        const allChecks = Array.from(document.querySelectorAll(".item-check"));
+        const checked = allChecks.filter(cb => cb.checked);
+
+        let total = 0;
+        checked.forEach(cb => {
+          const row = cb.closest("tr");
+          const rowTotal = parseFloat(row?.dataset?.total || "0");
+          total += isNaN(rowTotal) ? 0 : rowTotal;
+        });
+
+        const countEl = document.getElementById("selectedCount");
+        const totalEl = document.getElementById("selectedTotal");
+        if (countEl) countEl.textContent = checked.length;
+        if (totalEl) totalEl.textContent = formatVND(total);
+
+        const selectAll = document.getElementById("selectAll");
+        if (selectAll) {
+          selectAll.checked = allChecks.length > 0 && checked.length === allChecks.length;
+          selectAll.indeterminate = checked.length > 0 && checked.length < allChecks.length;
+        }
+      }
+
+      function bindSelectAll() {
+        const selectAll = document.getElementById("selectAll");
+        if (!selectAll) return;
+
+        selectAll.addEventListener("change", function () {
+          const checked = this.checked;
+          document.querySelectorAll(".item-check").forEach(cb => cb.checked = checked);
+          recalcSelectedTotal();
+        });
+      }
+
       async function updateQty(input) {
         const id = input.dataset.id;
         let qty = parseInt(input.value);
-        console.log("Updating cart item:", id, "with quantity:", qty);
 
         if (isNaN(qty) || qty < 1) {
           input.value = 1;
@@ -127,64 +192,91 @@
           const res = await fetch("/cart/update", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({
-              cartItemId: id,
-              quantity: qty,
-            }),
+            body: new URLSearchParams({ cartItemId: id, quantity: qty }),
           });
 
-          console.log("Update response status:", res.status);
-
           if (res.ok) {
-            const data = await res.json();
-            console.log("Update success:", data);
+            await res.json().catch(() => null);
             location.reload();
           } else {
-            const errorData = await res.json();
-            console.error("Update failed:", errorData);
+            const errorData = await res.json().catch(() => ({}));
             alert("Cập nhật thất bại: " + (errorData.message || res.status));
           }
         } catch (e) {
-          console.error("Update error:", e);
           alert("Lỗi kết nối: " + e.message);
         }
       }
 
       async function removeItem(id) {
-        console.log("Removing cart item:", id);
+        if (!confirm("Xóa sản phẩm này khỏi giỏ hàng?")) return;
 
-        if (confirm("Xóa sản phẩm này khỏi giỏ hàng?")) {
+        try {
+          const res = await fetch("/cart/remove", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ cartItemId: id }),
+          });
+
+          if (res.ok) {
+            await res.json().catch(() => null);
+            location.reload();
+          } else {
+            const errorData = await res.json().catch(() => ({}));
+            alert("Xóa thất bại: " + (errorData.message || res.status));
+          }
+        } catch (e) {
+          alert("Xóa thất bại: " + e.message);
+        }
+      }
+
+      async function removeSelected() {
+        const ids = getSelectedIds();
+        if (ids.length === 0) return alert("Bạn chưa chọn sản phẩm nào.");
+
+        if (!confirm(`Xóa ${ids.length} sản phẩm đã chọn khỏi giỏ hàng?`)) return;
+
+        for (const id of ids) {
           try {
-            const res = await fetch("/cart/remove", {
+            await fetch("/cart/remove", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
               body: new URLSearchParams({ cartItemId: id }),
             });
-
-            console.log("Remove response status:", res.status);
-
-            if (res.ok) {
-              const data = await res.json();
-              console.log("Remove success:", data);
-              location.reload();
-            } else {
-              const errorData = await res.json();
-              console.error("Remove failed:", errorData);
-              alert("Xóa thất bại: " + (errorData.message || res.status));
-            }
           } catch (e) {
-            console.error("Remove error:", e);
-            alert("Xóa thất bại: " + e.message);
+            console.error("Remove selected error:", e);
           }
         }
+        location.reload();
       }
 
+      function goCheckoutSelected() {
+        const ids = getSelectedIds();
+
+        if (ids.length === 0) {
+          window.location.href = "/checkout";
+          return;
+        }
+
+        const qs = encodeURIComponent(ids.join(","));
+        window.location.href = "/checkout?selected=" + qs;
+      }
+
+
       document.addEventListener("DOMContentLoaded", () => {
+        bindSelectAll();
+
+        recalcSelectedTotal();
+
+        document.querySelectorAll(".item-check").forEach(cb => {
+          cb.addEventListener("change", recalcSelectedTotal);
+        });
+
         if (typeof window.updateCartCount === "function") {
           window.updateCartCount();
         }
       });
     </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   </body>

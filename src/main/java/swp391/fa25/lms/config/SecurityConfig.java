@@ -33,6 +33,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/",
                                 "/home", "/home/**",
                                 "/verify", "/verify-reset",
                                 "/forgot-password",     // ⭐ đúng URL

@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link th:href="@{/css/home.css}" rel="stylesheet">
 </head>
 <body>
-<!--Header-->
+
+<!-- Header -->
 <div th:replace="common/header :: header"></div>
 
 <!-- Success/Error Alerts -->
 <div class="container mt-3">
-    <!-- Success Alert -->
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         <span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-    
-    <!-- Error Alert -->
+
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <span th:text="${error}"></span>
@@ -36,8 +36,7 @@
             <div class="carousel-inner">
                 <div class="carousel-item active">
                     <h1>Banner quảng cáo</h1>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra
-                        nec, mattis ac neque.</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>
                     <div class="mt-4">
                         <a href="#products" class="hero-btn-primary">SHOP SALES</a>
                         <a href="#products" class="hero-btn-secondary">ALL PRODUCTS</a>
@@ -45,18 +44,17 @@
                 </div>
                 <div class="carousel-item">
                     <h1>Banner quảng cáo 2</h1>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla quam velit, vulputate eu pharetra
-                        nec, mattis ac neque.</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>
                     <div class="mt-4">
                         <a href="#products" class="hero-btn-primary">SHOP SALES</a>
                         <a href="#products" class="hero-btn-secondary">ALL PRODUCTS</a>
                     </div>
                 </div>
             </div>
+
             <div class="carousel-indicators">
                 <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
                 <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
-                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
             </div>
         </div>
     </div>
@@ -66,6 +64,7 @@
 <section class="services-section" id="category">
     <div class="container">
         <h2 class="section-title">DANH SÁCH DỊCH VỤ</h2>
+
         <div class="position-relative">
             <button class="service-nav-btn prev" id="prevBtn" style="display:none;">
                 <i class="fas fa-chevron-left"></i>
@@ -76,9 +75,7 @@
 
             <div class="row g-4" id="categoryContainer">
                 <th:block th:each="category, iterStat : ${categories}">
-                    <div class="col-md-4 category-item"
-                         th:data-index="${iterStat.index}"
-                         style="display:none;">
+                    <div class="col-md-4 category-item" th:data-index="${iterStat.index}" style="display:none;">
                         <div class="service-card text-center p-4 shadow-sm rounded bg-white">
                             <div class="service-icon fs-1 mb-3">
                                 <i th:class="${category.icon}"></i>
@@ -98,16 +95,15 @@
     <div class="container">
         <h2 class="section-title">DANH SÁCH SẢN PHẨM</h2>
 
-        <!-- Search and Filter Bar -->
+        <!-- Filter -->
         <form class="search-filter-bar" id="filterForm">
             <div class="row g-3 align-items-end">
-                <!--SEARCH theo: tên tool, thêm tên seller-->
                 <div class="col-md-5 search-box">
-                    <input type="text" class="form-control" name="keyword" placeholder="Tìm kiếm tool hoặc seller"
+                    <input type="text" class="form-control" name="keyword"
+                           placeholder="Tìm kiếm tool hoặc seller"
                            th:value="${keyword}">
                 </div>
 
-                <!--Filter theo category-->
                 <div class="col-md-2">
                     <select class="form-select" name="categoryId">
                         <option value="">Tất cả dịch vụ</option>
@@ -118,7 +114,6 @@
                     </select>
                 </div>
 
-                <!--Filter theo ngày đăng-->
                 <div class="col-md-2">
                     <select class="form-select" name="dateFilter">
                         <option value="">Ngày đăng</option>
@@ -128,7 +123,6 @@
                     </select>
                 </div>
 
-                <!--Filter theo giá: Mọi giá, Dưới 100.000, 100.000 - 500.000, 500.000 - 1.000.000, Trên 1.000.000-->
                 <div class="col-md-2">
                     <select class="form-select" name="priceFilter">
                         <option value="all" th:selected="${priceFilter=='all'}">Mọi giá</option>
@@ -139,7 +133,6 @@
                     </select>
                 </div>
 
-                <!--Filter theo số sao-->
                 <div class="col-md-2">
                     <select class="form-select" name="ratingFilter">
                         <option value="">Số sao</option>
@@ -164,56 +157,54 @@
             </div>
         </form>
 
-
-        <!-- Danh sách sản phẩm (load động) -->
+        <!-- List (server render trước, ajax sẽ replace sau) -->
         <div id="product-list">
-            <div id="toolList" th:fragment="toolList">
-                <th:block th:if="${#lists.isEmpty(tools)}">
+            <div th:fragment="toolList">
+                <th:block th:if="${tools == null or #lists.isEmpty(tools)}">
                     <div class="col-12 text-center py-4 text-muted">
                         <h5>Không có sản phẩm phù hợp</h5>
                     </div>
                 </th:block>
-                <div class="row g-4">
+
+                <div class="row g-4" th:if="${tools != null and !#lists.isEmpty(tools)}">
                     <div class="col-md-4" th:each="tool : ${tools}">
-                        <a th:href="@{'/tools/' + ${tool.toolId}}" class="product-card">
+                        <a th:href="@{'/tools/detail/' + ${tool.toolId}}" class="product-card">
                             <div class="product-image">
                                 <div class="favorite-icon" th:attr="data-tool-id=${tool.toolId}">
-                                    <i class="far fa-heart" th:classappend="${tool.isFavorite} ? 'fas' : 'far'"></i>
+                                    <i th:class="${tool.isFavorite} ? 'fas fa-heart text-danger' : 'far fa-heart'"></i>
                                 </div>
                                 <img th:src="${tool.image != null ? tool.image : '/placeholder.svg?height=250&width=350'}"
                                      alt="Product">
                             </div>
-                            <div class="product-info">
 
-                                <!-- Tool Name + Hết hàng -->
+                            <div class="product-info">
                                 <h3 class="product-name fs-5 fw-bold">
                                     <span th:text="${tool.toolName}"></span>
-                                    <span th:if="${tool.availableQuantity == 0}" class="text-danger fw-bold ms-2 fs-6">(Hết hàng)</span>
+                                    <span th:if="${tool.availableQuantity == 0}"
+                                          class="text-danger fw-bold ms-2 fs-6">(Hết hàng)</span>
                                 </h3>
 
                                 <span th:text="'👤 ' + ${tool.seller.fullName}"></span>
 
-                                <!--Review-->
                                 <div class="product-rating">
                                     <div class="stars">
-                            <span th:each="i : ${#numbers.sequence(1,5)}">
-                                <i th:classappend="${i <= tool.averageRating} ? 'fas fa-star text-warning' :
-                                (${i - tool.averageRating < 1} ? 'fas fa-star-half-alt text-warning' : 'far fa-star text-warning')"></i>
-                            </span>
+                                        <span th:each="i : ${#numbers.sequence(1,5)}">
+                                            <i th:classappend="${i <= tool.averageRating} ? 'fas fa-star text-warning' :
+                                            (${i - tool.averageRating < 1} ? 'fas fa-star-half-alt text-warning' : 'far fa-star text-warning')"></i>
+                                        </span>
                                     </div>
                                     <span class="review-count" th:text="${tool.totalReviews + ' reviews'}"></span>
                                 </div>
 
-                                <!--Price-->
                                 <p class="product-price fw-bold mt-2">
                                     <i class="bi bi-cash-stack"></i>
                                     <span th:if="${tool.minPrice != null && tool.maxPrice != null}">
-                            <span th:text="${tool.minPrice.equals(tool.maxPrice) ?
-                            #numbers.formatDecimal(tool.minPrice, 0, 'COMMA', 0, 'POINT') :
-                            #numbers.formatDecimal(tool.minPrice, 0, 'COMMA', 0, 'POINT') + ' – ' +
-                            #numbers.formatDecimal(tool.maxPrice, 0, 'COMMA', 0, 'POINT')}"></span>
-                                VND
-                            </span>
+                                        <span th:text="${tool.minPrice.equals(tool.maxPrice) ?
+                                        #numbers.formatDecimal(tool.minPrice, 0, 'COMMA', 0, 'POINT') :
+                                        #numbers.formatDecimal(tool.minPrice, 0, 'COMMA', 0, 'POINT') + ' – ' +
+                                        #numbers.formatDecimal(tool.maxPrice, 0, 'COMMA', 0, 'POINT')}"></span>
+                                        VND
+                                    </span>
                                 </p>
                             </div>
                         </a>
@@ -221,41 +212,33 @@
                 </div>
 
                 <!-- Pagination -->
-                <div class="pagination-wrapper mt-4" th:if="${totalPages >= 1}">
+                <div class="pagination-wrapper mt-4" th:if="${totalPages != null and totalPages >= 1}">
                     <nav>
                         <ul class="pagination justify-content-center">
-                            <!-- Previous -->
                             <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                <a href="#" class="page-link"
-                                   th:data-page="${currentPage - 1}"
-                                   tabindex="-1">Trước</a>
+                                <a href="#" class="page-link" th:data-page="${currentPage - 1}" tabindex="-1">Trước</a>
                             </li>
 
-                            <!-- Page numbers -->
                             <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
                                 th:classappend="${i == currentPage} ? 'active'">
                                 <a href="#" class="page-link" th:data-page="${i}" th:text="${i + 1}"></a>
                             </li>
 
-                            <!-- Next -->
                             <li class="page-item" th:classappend="${currentPage + 1 >= totalPages} ? 'disabled'">
-                                <a href="#" class="page-link"
-                                   th:data-page="${currentPage + 1}">Sau</a>
+                                <a href="#" class="page-link" th:data-page="${currentPage + 1}">Sau</a>
                             </li>
                         </ul>
                     </nav>
 
-                    <!-- Combo chọn số sản phẩm / trang -->
                     <div class="ms-3">
                         <label for="pageSizeSelect" class="form-label me-2 mb-0">Số sản phẩm / trang:</label>
                         <select id="pageSizeSelect" class="form-select d-inline-block w-auto pe-5">
-                            <option value="6">6</option>
-                            <option value="9" selected>9</option>
-                            <option value="12">12</option>
+                            <option value="6" th:selected="${pageSize == 6}">6</option>
+                            <option value="9" th:selected="${pageSize == 9}">9</option>
+                            <option value="12" th:selected="${pageSize == 12}">12</option>
                         </select>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -265,21 +248,30 @@
 <!-- Footer -->
 <div th:replace="common/footer :: footer"></div>
 
-<!-- Thêm Bootstrap JS Bundle ở cuối -->
+<!-- Bootstrap JS (CHỈ 1 LẦN) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Global function để header có thể gọi
+
+<!-- JS DUY NHẤT -->
+<script th:inline="javascript">
+    const TOOLS_URL      = /*[[@{/home/tools}]]*/ "/home/tools";
+    const FAV_COUNT_URL  = /*[[@{/favorite/count}]]*/ "/favorite/count";
+    const FAV_TOGGLE_URL = /*[[@{/favorite/toggle}]]*/ "/favorite/toggle";
+    const LOGIN_URL      = /*[[@{/login}]]*/ "/login";
+
     window.loadFavoriteCount = async function () {
         const badge = document.getElementById("favoriteCountBadge");
         if (!badge) return;
+
         try {
-            const res = await fetch("/favorite/count", {credentials: "include"});
+            const res = await fetch(FAV_COUNT_URL, { credentials: "include" });
+            if (res.redirected) { window.location.href = res.url; return; }
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const count = await res.json();
             badge.textContent = count;
-        } catch (error) {
-            // Silently fail - favorite feature chưa có
+            badge.style.display = count > 0 ? "inline-block" : "none";
+        } catch (e) {
             badge.textContent = "0";
+            badge.style.display = "none";
         }
     };
 
@@ -288,28 +280,36 @@
         const productListContainer = document.getElementById("product-list");
         const clearFiltersBtn = document.getElementById("clearFilters");
 
-        if (!productListContainer) {
-            console.error("Không tìm thấy #product-list container");
-            return;
+        if (!productListContainer) return;
+
+        function buildQuery(params = {}) {
+            const fd = filterForm ? new FormData(filterForm) : new FormData();
+
+            for (const [k, v] of Object.entries(params)) {
+                if (v !== undefined && v !== null) fd.set(k, v);
+            }
+
+            if (!fd.has("page")) fd.set("page", "0");
+
+            const sizeEl = document.getElementById("pageSizeSelect");
+            const size = params.size ?? (sizeEl ? sizeEl.value : "9");
+            fd.set("size", String(size));
+
+            return new URLSearchParams(fd).toString();
         }
 
-        // ======================= LOAD TOOL FRAGMENT =======================
         async function loadTools(params = {}) {
             try {
-                const formData = new FormData(filterForm);
-                for (const [k, v] of Object.entries(params)) formData.set(k, v);
-
-                if (!formData.has("page")) formData.set("page", "0");
-
-                let size = params.size || (document.getElementById("pageSizeSelect")?.value || "9");
-                formData.set("size", size);
-
-                const query = new URLSearchParams(formData).toString();
-                const res = await fetch(`/home/tools?${query}`, {
+                const query = buildQuery(params);
+                const res = await fetch(`${TOOLS_URL}?${query}`, {
                     method: "GET",
-                    headers: {"X-Requested-With": "XMLHttpRequest"},
-                    credentials: "include"
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    credentials: "include",
                 });
+
+                // cực quan trọng: nếu bị security đá về login
+                if (res.redirected) { window.location.href = res.url; return; }
+                if (res.status === 401) { window.location.href = LOGIN_URL; return; }
 
                 if (!res.ok) {
                     console.error("Lỗi tải tools:", res.status, await res.text());
@@ -327,7 +327,7 @@
             }
         }
 
-        // ======================= FAVORITE TOGGLE =======================
+        // Favorite toggle (event delegation)
         productListContainer.addEventListener("click", async function (ev) {
             const favEl = ev.target.closest(".favorite-icon");
             if (!favEl) return;
@@ -339,165 +339,127 @@
             if (!toolId) return;
 
             try {
-                const res = await fetch(`/favorite/toggle?toolId=${encodeURIComponent(toolId)}`, {
+                const res = await fetch(`${FAV_TOGGLE_URL}?toolId=${encodeURIComponent(toolId)}`, {
                     method: "POST",
-                    headers: {"X-Requested-With": "XMLHttpRequest"},
-                    credentials: "include"
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    credentials: "include",
                 });
 
-                if (res.status === 401) {
-                    window.location.href = "/login";
-                    return;
-                }
+                if (res.redirected) { window.location.href = res.url; return; }
+                if (res.status === 401) { window.location.href = LOGIN_URL; return; }
 
-                const result = await res.text();
-                console.log("Toggle result:", result.trim());
-
+                const result = (await res.text()).trim();
                 const icon = favEl.querySelector("i");
                 if (!icon) return;
 
-                let currentCount = parseInt(document.getElementById("favoriteCountBadge").textContent) || 0;
-                let newCount = currentCount;
+                const badge = document.getElementById("favoriteCountBadge");
+                let currentCount = badge ? parseInt(badge.textContent || "0", 10) : 0;
 
-                if (result.trim() === "added") {
-                    // Toggle to filled + increase count
-                    icon.classList.remove("far");
-                    icon.classList.add("fas", "text-danger");
-                    newCount = currentCount + 1;
+                if (result === "added") {
+                    icon.className = "fas fa-heart text-danger";
+                    currentCount += 1;
                 } else {
-                    // Toggle to empty + decrease count
-                    icon.classList.remove("fas", "text-danger");
-                    icon.classList.add("far");
-                    newCount = Math.max(0, currentCount - 1);
+                    icon.className = "far fa-heart";
+                    currentCount = Math.max(0, currentCount - 1);
                 }
 
-                // Update badge local
-                document.getElementById("favoriteCountBadge").textContent = newCount;
+                if (badge) {
+                    badge.textContent = currentCount;
+                    badge.style.display = currentCount > 0 ? "inline-block" : "none";
+                }
 
                 document.dispatchEvent(new Event("favorite-changed"));
-                console.log("Favorite toggled smoothly! New count:", newCount);
             } catch (err) {
                 console.error("toggle favorite error:", err);
             }
         });
 
-        // ======================= PHÂN TRANG =======================
         function attachPaginationListeners() {
             productListContainer.querySelectorAll(".page-link").forEach(link => {
+                if (link.dataset.bound === "1") return;
+                link.dataset.bound = "1";
+
                 link.addEventListener("click", function (e) {
                     e.preventDefault();
                     const page = this.getAttribute("data-page");
                     if (page == null) return;
 
-                    const sizeSelect = document.getElementById("pageSizeSelect");
-                    const size = sizeSelect ? parseInt(sizeSelect.value) : 9;
-                    loadTools({page, size});
+                    const sizeEl = document.getElementById("pageSizeSelect");
+                    const size = sizeEl ? sizeEl.value : "9";
+                    loadTools({ page, size });
                 });
             });
         }
 
-        // ======================= PAGE SIZE SELECT =======================
         function attachPageSizeListener() {
             const sizeSelect = document.getElementById("pageSizeSelect");
             if (!sizeSelect) return;
 
-            const newSelect = sizeSelect.cloneNode(true);
-            sizeSelect.parentNode.replaceChild(newSelect, sizeSelect);
+            if (sizeSelect.dataset.bound === "1") return;
+            sizeSelect.dataset.bound = "1";
 
-            newSelect.addEventListener("change", function () {
-                const newSize = parseInt(this.value) || 9;
-                loadTools({page: 0, size: newSize});
+            sizeSelect.addEventListener("change", function () {
+                loadTools({ page: 0, size: this.value || "9" });
             });
         }
 
-        // ======================= FILTER + CLEAR =======================
         if (filterForm) {
-            filterForm.addEventListener("change", () => loadTools({page: 0}));
-            filterForm.addEventListener("submit", (e) => {
+            filterForm.addEventListener("submit", function (e) {
                 e.preventDefault();
-                loadTools({page: 0});
+                loadTools({ page: 0 });
+            });
+
+            filterForm.addEventListener("change", function () {
+                loadTools({ page: 0 });
             });
         }
 
         if (clearFiltersBtn && filterForm) {
-            clearFiltersBtn.addEventListener("click", () => {
+            clearFiltersBtn.addEventListener("click", function () {
                 filterForm.reset();
-                loadTools({page: 0});
+                loadTools({ page: 0 });
             });
         }
 
-        // ======================= GỌI LẦN ĐẦU =======================
+        // first load
         loadTools();
+        window.loadFavoriteCount();
     });
 
-    // Category carousel (giữ nguyên)
+    // Category carousel
     document.addEventListener("DOMContentLoaded", function () {
         const items = document.querySelectorAll(".category-item");
         const nextBtn = document.getElementById("nextBtn");
         const prevBtn = document.getElementById("prevBtn");
+        if (!items.length || !nextBtn || !prevBtn) return;
+
         const itemsPerPage = 3;
         let currentIndex = 0;
 
         function showItems() {
-            items.forEach(item => item.style.display = "none");
+            items.forEach(i => i.style.display = "none");
             for (let i = currentIndex; i < currentIndex + itemsPerPage && i < items.length; i++) {
                 items[i].style.display = "block";
             }
-
             prevBtn.style.display = currentIndex === 0 ? "none" : "block";
             nextBtn.style.display = currentIndex + itemsPerPage >= items.length ? "none" : "block";
         }
 
         nextBtn.addEventListener("click", function () {
-            if (currentIndex + itemsPerPage < items.length) {
-                currentIndex += itemsPerPage;
-                showItems();
-            }
+            if (currentIndex + itemsPerPage < items.length) { currentIndex += itemsPerPage; showItems(); }
         });
 
         prevBtn.addEventListener("click", function () {
-            if (currentIndex - itemsPerPage >= 0) {
-                currentIndex -= itemsPerPage;
-                showItems();
-            }
+            if (currentIndex - itemsPerPage >= 0) { currentIndex -= itemsPerPage; showItems(); }
         });
 
         showItems();
     });
 
-    // Listen global event cho header (backup)
-    document.addEventListener("favorite-changed", window.loadFavoriteCount);
-
-    (function () {
-        if (!window.chatbase || window.chatbase("getState") !== "initialized") {
-            window.chatbase = (...arguments) => {
-                if (!window.chatbase.q) {
-                    window.chatbase.q = []
-                }
-                window.chatbase.q.push(arguments)
-            };
-            window.chatbase = new Proxy(window.chatbase, {
-                get(target, prop) {
-                    if (prop === "q") {
-                        return target.q
-                    }
-                    return (...args) => target(prop, ...args)
-                }
-            })
-        }
-        const onLoad = function () {
-            const script = document.createElement("script");
-            script.src = "https://www.chatbase.co/embed.min.js";
-            script.id = "ypb9oSF98TwztC7T8ZbVU";
-            script.domain = "www.chatbase.co";
-            document.body.appendChild(script)
-        };
-        if (document.readyState === "complete") {
-            onLoad()
-        } else {
-            window.addEventListener("load", onLoad)
-        }
-    })();
+    document.addEventListener("favorite-changed", function () {
+        window.loadFavoriteCount();
+    });
 </script>
+
 </body>
 </html>

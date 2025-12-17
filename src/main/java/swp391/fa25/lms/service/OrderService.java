@@ -47,6 +47,62 @@ public class OrderService {
         return orders;
     }
 
+    @Transactional
+    public List<CustomerOrder> createOrdersFromCartItems(Account account,
+                                                         List<CartItem> items,
+                                                         PaymentTransaction transaction) {
+        List<CustomerOrder> orders = new ArrayList<>();
+        if (items == null || items.isEmpty()) return orders;
+
+        for (CartItem item : items) {
+            CustomerOrder order = new CustomerOrder();
+            order.setAccount(account);
+            order.setTool(item.getTool());
+            order.setLicense(item.getLicense());
+            order.setPrice(item.getTotalPrice());
+            order.setOrderStatus(CustomerOrder.OrderStatus.PENDING);
+            order.setPaymentMethod(CustomerOrder.PaymentMethod.BANK);
+            order.setTransaction(transaction);
+            order.setCreatedAt(LocalDateTime.now());
+            order.setUpdatedAt(LocalDateTime.now());
+
+            orders.add(orderRepository.save(order));
+        }
+        return orders;
+    }
+
+
+
+    @Transactional
+    public List<CustomerOrder> createOrderFromBuyNow(Account account,
+                                                     Tool tool,
+                                                     License license,
+                                                     int qty,
+                                                     PaymentTransaction transaction) {
+        if (qty <= 0) qty = 1;
+
+        List<CustomerOrder> orders = new ArrayList<>();
+
+        for (int i = 0; i < qty; i++) {
+            CustomerOrder order = new CustomerOrder();
+            order.setAccount(account);
+            order.setTool(tool);
+            order.setLicense(license);
+
+            // mỗi order là 1 sản phẩm => price = giá license (không nhân qty)
+            order.setPrice(license.getPrice());
+
+            order.setOrderStatus(CustomerOrder.OrderStatus.PENDING);
+            order.setPaymentMethod(CustomerOrder.PaymentMethod.BANK);
+            order.setTransaction(transaction);
+            order.setCreatedAt(LocalDateTime.now());
+            order.setUpdatedAt(LocalDateTime.now());
+
+            orders.add(orderRepository.save(order));
+        }
+
+        return orders;
+    }
     /**
      * Xử lý sau khi thanh toán thành công:
      * - Update order status

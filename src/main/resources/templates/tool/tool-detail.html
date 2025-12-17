@@ -151,9 +151,15 @@
               ></span>
             </button>
 
-            <a th:href="@{/checkout}" class="btn btn-outline-dark btn-lg px-5">
+            <button
+                    type="button"
+                    class="btn btn-outline-dark btn-lg px-5"
+                    th:disabled="${tool.availableQuantity == 0}"
+                    onclick="buyNow()"
+            >
               <i class="fas fa-shopping-cart me-2"></i> Mua Ngay
-            </a>
+            </button>
+
           </div>
 
           <!-- Không phải CUSTOMER -->
@@ -378,6 +384,55 @@
           document.getElementById("addToCartForm").submit();
         }
       }
+
+      async function buyNow() {
+        if (available <= 0) return alert("Sản phẩm đã hết hàng!");
+
+        if (!isLoggedIn) {
+          new bootstrap.Modal(document.getElementById("loginModal")).show();
+          return;
+        }
+
+        const activeBtn = document.querySelector(".license-btn.active");
+        if (!activeBtn) return alert("Vui lòng chọn gói license!");
+
+        const licenseId = activeBtn.dataset.id;
+
+        const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+
+        const headers = {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Requested-With": "XMLHttpRequest",
+        };
+        if (csrfTokenMeta && csrfHeaderMeta) {
+          headers[csrfHeaderMeta.content] = csrfTokenMeta.content;
+        }
+
+        try {
+          const res = await fetch(window.location.origin + "/checkout/buy-now", {
+            method: "POST",
+            headers,
+            body: new URLSearchParams({
+              toolId: toolId,
+              licenseId: licenseId,
+              quantity: 1,
+            }),
+          });
+
+          const data = await res.json();
+          if (res.ok && data.success) {
+            // sang trang confirm buy-now
+            window.location.href = data.redirectUrl || "/checkout/buy-now/confirm";
+          } else {
+            alert(data.message || "Không thể mua ngay");
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Có lỗi khi mua ngay, vui lòng thử lại!");
+        }
+      }
+
       /*]]>*/
     </script>
   </body>
