@@ -170,9 +170,15 @@
                     <div class="col-md-4" th:each="tool : ${tools}">
                         <a th:href="@{'/tools/detail/' + ${tool.toolId}}" class="product-card">
                             <div class="product-image">
+<<<<<<< HEAD
                                 <div class="favorite-icon" th:attr="data-tool-id=${tool.toolId}">
                                     <i th:class="${tool.isFavorite} ? 'fas fa-heart text-danger' : 'far fa-heart'"></i>
                                 </div>
+=======
+<!--                                <div class="favorite-icon" th:attr="data-tool-id=${tool.toolId}">-->
+<!--                                    <i class="far fa-heart" th:classappend="${tool.isFavorite} ? 'fas' : 'far'"></i>-->
+<!--                                </div>-->
+>>>>>>> 2663297e31c64619f54956de599f54933442ddc8
                                 <img th:src="${tool.image != null ? tool.image : '/placeholder.svg?height=250&width=350'}"
                                      alt="Product">
                             </div>

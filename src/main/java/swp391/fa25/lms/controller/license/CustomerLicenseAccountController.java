@@ -285,4 +285,29 @@ public class CustomerLicenseAccountController {
         if (success != null && !success.isBlank()) model.addAttribute("success", success);
         if (error != null && !error.isBlank()) model.addAttribute("error", error);
     }
+
+    @PostMapping("/{licenseAccountId}/use")
+    public String use(@PathVariable Long licenseAccountId,
+                      @RequestParam(required = false) Long orderId,
+                      Authentication auth,
+                      RedirectAttributes ra) {
+
+        Long accountId = currentAccountId(auth);
+
+        try {
+            laService.useLicenseAccount(accountId, licenseAccountId);
+            ra.addFlashAttribute("successMsg", "Đã dùng dịch vụ thành công.");
+
+            if (orderId != null) return "redirect:/customer/orders/" + orderId;
+
+            // fallback
+            return "redirect:/customer/license-accounts/" + licenseAccountId;
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("errorMsg", ex.getMessage());
+            if (orderId != null) return "redirect:/customer/orders/" + orderId;
+            return "redirect:/customer/license-accounts/" + licenseAccountId;
+        }
+    }
+
+
 }
