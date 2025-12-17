@@ -59,11 +59,11 @@ public interface DashboardRepository extends JpaRepository<Account, Long> {
     long countSellerPendingRejectedTools(@Param("sellerId") Long sellerId);
 
     @Query("""
-        SELECT COALESCE(SUM(p.amount), 0)
-        FROM PaymentTransaction p
-        WHERE p.account.accountId = :sellerId
-          AND p.status = swp391.fa25.lms.model.PaymentTransaction.TransactionStatus.SUCCESS
-    """)
+    SELECT COALESCE(SUM(o.price), 0)
+    FROM CustomerOrder o
+    WHERE o.tool.seller.accountId = :sellerId
+      AND o.orderStatus = swp391.fa25.lms.model.CustomerOrder.OrderStatus.SUCCESS
+""")
     Double sumSellerRevenue(@Param("sellerId") Long sellerId);
 
     @Query("""

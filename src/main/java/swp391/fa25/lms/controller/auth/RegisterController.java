@@ -59,7 +59,7 @@ public class RegisterController {
     // ================== VERIFY ==================
     @GetMapping("/verify")
     public String showVerifyPage() {
-        return "auth/verify-code";
+            return "auth/verify-code";
     }
 
     @PostMapping("/verify")
