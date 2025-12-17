@@ -1,0 +1,98 @@
+package swp391.fa25.lms.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import swp391.fa25.lms.model.Account;
+import swp391.fa25.lms.model.Tool;
+import swp391.fa25.lms.repository.ToolRepository;
+
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class ToolReviewService {
+
+    private final ToolRepository toolRepository;
+
+    // ========================= LIST =========================
+    public Page<Tool> getModeratorPendingTools(Long sellerId, Long categoryId, String keyword,
+                                               LocalDateTime uploadFrom, LocalDateTime uploadTo,
+                                               int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return toolRepository.findModeratorPendingTools(sellerId, categoryId, keyword, uploadFrom, uploadTo, pageable);
+    }
+
+    public Page<Tool> getManagerApprovedTools(Long sellerId, Long categoryId, String keyword,
+                                              LocalDateTime uploadFrom, LocalDateTime uploadTo,
+                                              int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return toolRepository.findManagerApprovedTools(sellerId, categoryId, keyword, uploadFrom, uploadTo, pageable);
+    }
+
+    // ========================= DETAIL =========================
+    public Tool getToolOrThrow(Long toolId) {
+        return toolRepository.findById(toolId)
+                .orElseThrow(() -> new RuntimeException("Tool not found: " + toolId));
+    }
+
+    // ========================= ACTIONS =========================
+    @Transactional
+    public void moderatorApprove(Long toolId, Account moderatorAccount) {
+        Tool tool = toolRepository.findByToolIdAndStatus(toolId, Tool.Status.PENDING)
+                .orElseThrow(() -> new RuntimeException("Tool not found or not PENDING"));
+        tool.setStatus(Tool.Status.APPROVED);
+        tool.setReviewedBy(moderatorAccount.getRole().getRoleName().toString());
+        tool.setUpdatedAt(LocalDateTime.now());
+        tool.setNote(null); // clear old note if you want
+        toolRepository.save(tool);
+    }
+
+    @Transactional
+    public void moderatorReject(Long toolId, String reason, Account moderatorAccount) {
+        Tool tool = toolRepository.findByToolIdAndStatus(toolId, Tool.Status.PENDING)
+                .orElseThrow(() -> new RuntimeException("Tool not found or not PENDING"));
+        tool.setStatus(Tool.Status.REJECTED);
+        tool.setReviewedBy(moderatorAccount.getRole().getRoleName().toString());
+        tool.setNote(reason);
+        tool.setUpdatedAt(LocalDateTime.now());
+        toolRepository.save(tool);
+    }
+
+    @Transactional
+    public void managerPublish(Long toolId, Account managerAccount) {
+        Tool tool = toolRepository.findByToolIdAndStatus(toolId, Tool.Status.APPROVED)
+                .orElseThrow(() -> new RuntimeException("Tool not found or not APPROVED"));
+        if (tool.getAvailableQuantity() == null) {
+            tool.setAvailableQuantity(tool.getQuantity());
+        }
+        tool.setStatus(Tool.Status.PUBLISHED);
+        tool.setReviewedBy(managerAccount.getRole().getRoleName().toString());
+        tool.setUpdatedAt(LocalDateTime.now());
+        toolRepository.save(tool);
+    }
+
+    // Manager set pending again (nếu muốn trả về mod)
+    @Transactional
+    public void managerSetPending(Long toolId, String note, Account managerAccount) {
+        Tool tool = toolRepository.findByToolIdAndStatus(toolId, Tool.Status.APPROVED)
+                .orElseThrow(() -> new RuntimeException("Tool not found or not APPROVED"));
+        tool.setStatus(Tool.Status.PENDING);
+        tool.setReviewedBy(managerAccount.getRole().getRoleName().toString());
+        tool.setNote(note);
+        tool.setUpdatedAt(LocalDateTime.now());
+        toolRepository.save(tool);
+    }
+
+    @Transactional
+    public void managerReject(Long toolId, String note, Account managerAccount) {
+        Tool tool = toolRepository.findByToolIdAndStatus(toolId, Tool.Status.APPROVED)
+                .orElseThrow(() -> new RuntimeException("Tool not found or not APPROVED"));
+        tool.setStatus(Tool.Status.REJECTED);
+        tool.setReviewedBy(managerAccount.getRole().getRoleName().toString());
+        tool.setNote(note);
+        tool.setUpdatedAt(LocalDateTime.now());
+        toolRepository.save(tool);
+    }
+}
