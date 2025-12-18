@@ -56,29 +56,6 @@ public interface ToolRepository extends JpaRepository<Tool, Long> {
     );
     // =================
 
-    // Home page for customers
-    @Query("SELECT t FROM Tool t " +
-            "WHERE t.status = swp391.fa25.lms.model.Tool.Status.PUBLISHED " +
-            "AND (:keyword IS NULL OR t.toolName LIKE %:keyword%)")
-    Page<Tool> findPublishedTools(
-            @Param("keyword") String keyword, Pageable pageable
-    );
-
-    List<Tool> findBySellerAccountId(Long sellerId);
-
-    @Query("SELECT t.toolName FROM Tool t WHERE t.toolName LIKE %:keyword%")
-    List<String> searchNames(@Param("keyword") String keyword);
-
-    @Query("SELECT COUNT(t) FROM Tool t WHERE t.status = :status")
-    long countByStatus(@Param("status") Tool.Status status);
-
-    @Query("""
-            SELECT t FROM Tool t
-            WHERE (:keyword IS NULL OR :keyword = '' 
-                   OR LOWER(t.toolName) LIKE LOWER(CONCAT('%', :keyword, '%')))
-            """)
-    Page<Tool> findAllTools(@Param("keyword") String keyword, Pageable pageable);
-
     @Query("""
             SELECT t FROM Tool t
             WHERE (:keyword IS NULL OR :keyword = '' 
