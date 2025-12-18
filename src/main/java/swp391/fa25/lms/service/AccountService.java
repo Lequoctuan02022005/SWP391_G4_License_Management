@@ -643,11 +643,21 @@ public class AccountService {
             account.setRole(role);
         }
 
+        // Hash password before saving
+        if (account.getPassword() != null && !account.getPassword().isEmpty()) {
+            account.setPassword(passwordEncoder.encode(account.getPassword()));
+        }
+
         account.setCreatedAt(LocalDateTime.now());
         account.setUpdatedAt(LocalDateTime.now());
 
         if (account.getStatus() == null) {
             account.setStatus(Account.AccountStatus.ACTIVE);
+        }
+
+        // Set verified to true by default for admin-created accounts
+        if (account.getVerified() == null) {
+            account.setVerified(true);
         }
 
         return accountRepo.save(account);
@@ -684,11 +694,51 @@ public class AccountService {
         accountRepo.deleteById(id);
     }
 
+    /**
+     * Activate account - set status to ACTIVE
+     * @param id Account ID
+     */
+    public void activateAccount(Long id) {
+        Account account = accountRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+        
+        account.setStatus(Account.AccountStatus.ACTIVE);
+        account.setUpdatedAt(LocalDateTime.now());
+        
+        accountRepo.save(account);
+    }
+
+    /**
+     * Deactivate account - set status to DEACTIVATED
+     * @param id Account ID
+     */
+    public void deactivateAccount(Long id) {
+        Account account = accountRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Account not found"));
+        
+        account.setStatus(Account.AccountStatus.DEACTIVATED);
+        account.setUpdatedAt(LocalDateTime.now());
+        
+        accountRepo.save(account);
+    }
+
     public boolean emailExists(String email) {
         return accountRepo.existsByEmail(email);
     }
     public Account findByEmail(String email) {
         return accountRepo.findByEmail(email).orElse(null);
+    }
+
+    /**
+     * Search accounts with multiple filters
+     * @param keyword Search in email, fullName
+     * @param roleId Filter by role
+     * @param status Filter by status
+     * @param pageable Pagination
+     * @return Page of accounts
+     */
+    public Page<Account> searchWithFilters(String keyword, Integer roleId, Account.AccountStatus status, Pageable pageable) {
+        return accountRepo.searchWithFilters(keyword, roleId, status, pageable);
     }
 
 }

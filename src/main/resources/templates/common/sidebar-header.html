@@ -72,8 +72,9 @@
                 <!-- ADMIN -->
                 <th:block th:if="${account.role.roleName.name() == 'ADMIN'}">
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
-                    <li><a href="/admin/users"><i class="bi bi-people"></i> Users</a></li>
-                    <li><a href="/seller-package/renew-history"><i class="bi bi-wrench"></i> Renew History</a></li>
+                    <li><a href="/admin/accounts"><i class="bi bi-people"></i> Account Management</a></li>
+                    <li><a href="/admin/roles"><i class="bi bi-shield-check"></i> Role Management</a></li>
+                    <li><a href="/seller-package/renew-history"><i class="bi bi-clock-history"></i> Renew History</a></li>
                     <li><a href="/admin/orders"><i class="bi bi-receipt"></i> Orders</a></li>
                     <li><a href="/logout" class="action-item logout">
                         <i class="bi bi-box-arrow-right"></i>
@@ -97,6 +98,8 @@
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
                     <li><a href="/manager/statistics"><i class="bi bi-bar-chart"></i> Statistics</a></li>
                     <li><a href="/seller-packages"><i class="bi bi-box-seam"></i><span>Seller Packages</span></a></li>
+                    <li><a href="/manager/blogs"><i class="bi bi-journal-text"></i><span>Blog Management</span></a></li>
+                    <li><a href="/manager/blog-categories"><i class="bi bi-folder"></i><span>Blog Categories</span></a></li>
                     <li><a href="/logout" class="action-item logout"><i class="bi bi-box-arrow-right"></i><span>Thoát</span></a></li>
 
                 </th:block>
