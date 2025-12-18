@@ -155,9 +155,14 @@ public class ToolController {
             return "redirect:/toollist";
 
         } catch (Exception e) {
-            redirectAttrs.addFlashAttribute("error", e.getMessage());
+            model.addAttribute("error", e.getMessage());
+
+            // giữ lại dữ liệu form
+            model.addAttribute("tool", tool);
+            model.addAttribute("categories", toolService.getAllCategories());
+
         }
-        return "redirect:/tools/seller/add";
+        return "tool/tool-add";
     }
 
     /**
