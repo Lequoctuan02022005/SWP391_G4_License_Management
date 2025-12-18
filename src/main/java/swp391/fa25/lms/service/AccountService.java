@@ -711,10 +711,17 @@ public class AccountService {
     /**
      * Deactivate account - set status to DEACTIVATED
      * @param id Account ID
+     * @throws RuntimeException nếu account là ADMIN
      */
     public void deactivateAccount(Long id) {
         Account account = accountRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
+        
+        // Không cho phép deactivate admin account
+        if (account.getRole() != null && 
+            account.getRole().getRoleName() == swp391.fa25.lms.model.Role.RoleName.ADMIN) {
+            throw new RuntimeException("Không thể vô hiệu hóa tài khoản Admin!");
+        }
         
         account.setStatus(Account.AccountStatus.DEACTIVATED);
         account.setUpdatedAt(LocalDateTime.now());
