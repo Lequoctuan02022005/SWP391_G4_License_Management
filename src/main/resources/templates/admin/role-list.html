@@ -4,129 +4,133 @@
     <meta charset="UTF-8">
     <title>Role Management</title>
 
-    <!-- BOOTSTRAP (GIỐNG ACCOUNT) -->
+    <!-- BOOTSTRAP -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-    <style>
-        body { background: #f5f7fa; }
-        .sidebar { width: 240px; }
-    </style>
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/sidebar-header.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-pages.css}">
+
 </head>
 
 <body>
 
-<div class="d-flex">
+<!-- SIDEBAR HEADER -->
+<div th:replace="common/sidebar-header :: role-sidebar">
+    
+    <!-- PAGE CONTENT -->
+    <div th:fragment="content">
+        
+        <div class="admin-container">
 
-    <!-- SIDEBAR (GIỐNG ACCOUNT MANAGEMENT) -->
-    <nav class="sidebar bg-dark text-white vh-100 p-3">
-        <h4 class="mb-4">Hello System Admin</h4>
-        <ul class="nav flex-column">
-            <li>
-                <a th:href="@{/admin/dashboard}" class="nav-link text-white">
-                    Dashboard
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <div>
+                    <h1><i class="bi bi-shield-check"></i> Quản lý vai trò</h1>
+                    <p class="page-subtitle">Quản lý vai trò và quyền hạn hệ thống</p>
+                </div>
+                <a href="/admin/roles/create" class="btn btn-create">
+                    <i class="bi bi-plus-circle"></i> Tạo vai trò
                 </a>
-            </li>
-            <li>
-                <a th:href="@{/admin/accounts}" class="nav-link text-white">
-                    Accounts
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/admin/roles}" class="nav-link text-white fw-bold">
-                    Roles
-                </a>
-            </li>
-            <li class="mt-3">
-                <a th:href="@{/logout}" class="nav-link text-danger">
-                    Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
+            </div>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-grow-1 p-4">
+            <!-- SEARCH SECTION -->
+            <div class="search-section">
+                <form method="get" th:action="@{/admin/roles}" class="search-form">
+                    <div class="search-input-group">
+                        <i class="bi bi-search"></i>
+                        <input type="text"
+                               name="keyword"
+                               th:value="${keyword}"
+                               placeholder="Tìm kiếm tên vai trò..."
+                               class="search-input">
+                    </div>
+                    <button type="submit" class="btn btn-search">
+                        <i class="bi bi-search"></i> Tìm kiếm
+                    </button>
+                </form>
+            </div>
 
-        <h2 class="mb-4">Role Management</h2>
+            <!-- TABLE SECTION -->
+            <div class="table-section">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="col-id">ID</th>
+                            <th class="col-name">Tên vai trò</th>
+                            <th class="col-note">Mô tả</th>
+                            <th class="col-actions">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="r : ${roles}" class="role-row">
+                            <td class="col-id">
+                                <span class="badge-id" th:text="${r.roleId}"></span>
+                            </td>
+                            <td class="col-name">
+                                <strong th:text="${r.roleName}"></strong>
+                            </td>
+                            <td class="col-note" th:text="${r.note}"></td>
+                            <td class="col-actions">
+                                <a th:href="@{/admin/roles/edit/{id}(id=${r.roleId})}" 
+                                   class="btn-action edit" 
+                                   title="Chỉnh sửa">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </a>
+                                <a th:href="@{/admin/roles/delete/{id}(id=${r.roleId})}" 
+                                   class="btn-action delete"
+                                   onclick="return confirm('Bạn có chắc chắn muốn xóa vai trò này?');"
+                                   title="Xóa">
+                                    <i class="bi bi-trash"></i> Xóa
+                                </a>
+                            </td>
+                        </tr>
+                        <tr th:if="${roles.size() == 0}" class="empty-row">
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>Không tìm thấy vai trò nào</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- SEARCH -->
-        <div class="d-flex justify-content-between mb-3">
-            <form method="get" th:action="@{/admin/roles}" class="d-flex">
-                <input class="form-control me-2"
-                       name="keyword"
-                       th:value="${keyword}"
-                       placeholder="Search role name...">
-                <button class="btn btn-outline-dark">
-                    Search
-                </button>
-            </form>
+            <!-- PAGINATION -->
+            <nav th:if="${totalPages > 1}" class="pagination-section">
+                <ul class="pagination-list">
+
+                    <li class="pagination-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a th:href="@{'/admin/roles?page=' + (${currentPage} - 1) + '&keyword=' + ${keyword}}"
+                           class="pagination-link">
+                            <i class="bi bi-chevron-left"></i> Trước
+                        </a>
+                    </li>
+
+                    <li class="pagination-item"
+                        th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                        th:classappend="${i == currentPage} ? 'active'">
+                        <a class="pagination-link"
+                           th:text="${i + 1}"
+                           th:href="@{'/admin/roles?page=' + ${i} + '&keyword=' + ${keyword}}">
+                        </a>
+                    </li>
+
+                    <li class="pagination-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                        <a th:href="@{'/admin/roles?page=' + (${currentPage} + 1) + '&keyword=' + ${keyword}}"
+                           class="pagination-link">
+                            Tiếp <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
+
         </div>
 
-        <!-- TABLE -->
-        <table class="table table-hover table-bordered text-center">
-            <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Role Name</th>
-                <th>Note</th>
-                <th width="120px">Actions</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            <tr th:each="r : ${roles}">
-                <td th:text="${r.roleId}"></td>
-                <td th:text="${r.roleName}"></td>
-                <td th:text="${r.note}"></td>
-                <td>
-                    <a class="btn btn-sm btn-warning"
-                       th:href="@{/admin/roles/edit/{id}(id=${r.roleId})}">
-                        Edit
-                    </a>
-                </td>
-            </tr>
-
-            <tr th:if="${roles.size() == 0}">
-                <td colspan="4" class="text-muted">
-                    No roles found
-                </td>
-            </tr>
-            </tbody>
-        </table>
-
-        <!-- PAGINATION -->
-        <nav th:if="${totalPages > 1}">
-            <ul class="pagination justify-content-center">
-
-                <li class="page-item"
-                    th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link"
-                       th:href="@{'/admin/roles?page=' + (${currentPage} - 1) + '&keyword=' + ${keyword}}">
-                        Previous
-                    </a>
-                </li>
-
-                <li class="page-item"
-                    th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                    th:classappend="${i == currentPage} ? 'active'">
-                    <a class="page-link"
-                       th:text="${i + 1}"
-                       th:href="@{'/admin/roles?page=' + ${i} + '&keyword=' + ${keyword}}">
-                    </a>
-                </li>
-
-                <li class="page-item"
-                    th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
-                    <a class="page-link"
-                       th:href="@{'/admin/roles?page=' + (${currentPage} + 1) + '&keyword=' + ${keyword}}">
-                        Next
-                    </a>
-                </li>
-
-            </ul>
-        </nav>
-
-    </main>
+    </div>
 
 </div>
 
