@@ -4,6 +4,10 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -31,7 +35,7 @@ public class BlogCategoryController {
     private final BlogCategoryService categoryService;
 
     /**
-     * Danh sách category với search và sort
+     * Danh sách category với search, sort và phân trang
      * GET /manager/blog-categories
      */
     @PreAuthorize("hasRole('MANAGER')")
@@ -40,6 +44,8 @@ public class BlogCategoryController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "displayOrder") String sortBy,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             HttpSession session, 
             Model model, 
             RedirectAttributes ra) {
@@ -51,21 +57,45 @@ public class BlogCategoryController {
         }
 
         try {
-            List<BlogCategoryDTO> categories = categoryService.searchCategories(keyword, status, sortBy);
+            // Tạo Pageable với sort
+            Sort sort = Sort.by(Sort.Direction.ASC, sortBy);
+            Pageable pageable = PageRequest.of(page, size, sort);
             
-            model.addAttribute("categories", categories);
+            // Lấy tất cả categories với filter
+            List<BlogCategoryDTO> allCategories = categoryService.searchCategories(keyword, status, sortBy);
+            
+            // Manual pagination
+            int start = page * size;
+            int end = Math.min(start + size, allCategories.size());
+            List<BlogCategoryDTO> pageContent = (start < allCategories.size()) 
+                    ? allCategories.subList(start, end) 
+                    : new java.util.ArrayList<>();
+            
+            Page<BlogCategoryDTO> categoriesPage = new org.springframework.data.domain.PageImpl<>(
+                    pageContent, pageable, allCategories.size());
+            
+            model.addAttribute("categories", categoriesPage.getContent());
+            model.addAttribute("currentPage", page);
+            model.addAttribute("totalPages", categoriesPage.getTotalPages());
+            model.addAttribute("totalCategories", categoriesPage.getTotalElements());
+            model.addAttribute("pageSize", size);
             model.addAttribute("keyword", keyword);
             model.addAttribute("status", status);
             model.addAttribute("sortBy", sortBy);
             model.addAttribute("manager", manager);
+            model.addAttribute("account", manager); // Sidebar needs this
             
-            return "manager/blog-categories";
+            return "blog/manager/blog-categories";
         } catch (Exception e) {
             log.error("Error loading categories with keyword={}, status={}, sortBy={}", keyword, status, sortBy, e);
             model.addAttribute("error", "Lỗi tải danh sách danh mục: " + e.getMessage());
-            model.addAttribute("categories", categoryService.getAllCategories());
+            model.addAttribute("categories", new java.util.ArrayList<>());
+            model.addAttribute("currentPage", 0);
+            model.addAttribute("totalPages", 0);
+            model.addAttribute("totalCategories", 0);
             model.addAttribute("manager", manager);
-            return "manager/blog-categories";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/blog-categories";
         }
     }
 
@@ -88,8 +118,9 @@ public class BlogCategoryController {
         model.addAttribute("category", dto);
         model.addAttribute("isEdit", false);
         model.addAttribute("manager", manager);
+        model.addAttribute("account", manager); // Sidebar needs this
 
-        return "manager/category-form";
+        return "blog/manager/category-form";
     }
 
     /**
@@ -113,7 +144,8 @@ public class BlogCategoryController {
 
         if (result.hasErrors()) {
             model.addAttribute("manager", manager);
-            return "manager/category-form";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/category-form";
         }
 
         try {
@@ -124,7 +156,8 @@ public class BlogCategoryController {
             log.error("Error creating category", e);
             model.addAttribute("error", "Lỗi: " + e.getMessage());
             model.addAttribute("manager", manager);
-            return "manager/category-form";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/category-form";
         }
     }
 
@@ -160,8 +193,9 @@ public class BlogCategoryController {
             model.addAttribute("category", updateDTO);
             model.addAttribute("isEdit", true);
             model.addAttribute("manager", manager);
+            model.addAttribute("account", manager); // Sidebar needs this
 
-            return "manager/category-form";
+            return "blog/manager/category-form";
         } catch (RuntimeException e) {
             log.error("Error loading category for edit: {}", id, e);
             ra.addFlashAttribute("error", "Không tìm thấy danh mục");
@@ -192,7 +226,8 @@ public class BlogCategoryController {
         if (result.hasErrors()) {
             model.addAttribute("isEdit", true);
             model.addAttribute("manager", manager);
-            return "manager/category-form";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/category-form";
         }
 
         try {
@@ -210,7 +245,8 @@ public class BlogCategoryController {
             model.addAttribute("error", "Lỗi: " + e.getMessage());
             model.addAttribute("isEdit", true);
             model.addAttribute("manager", manager);
-            return "manager/category-form";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/category-form";
         }
     }
 

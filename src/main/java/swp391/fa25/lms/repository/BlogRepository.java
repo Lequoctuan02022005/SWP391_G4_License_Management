@@ -55,23 +55,6 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
                                 Pageable pageable);
 
     /**
-     * Advanced search với nhiều filters
-     * Chỉ lấy blog từ category ACTIVE
-     */
-    @Query("SELECT b FROM Blog b " +
-            "WHERE (:categoryId IS NULL OR b.category.blogCategoryId = :categoryId) AND " +
-            "(:status IS NULL OR b.status = :status) AND " +
-            "(:authorId IS NULL OR b.author.accountId = :authorId) AND " +
-            "(:keyword IS NULL OR LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(b.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
-            "b.category.status = 'ACTIVE'")
-    Page<Blog> advancedSearch(@Param("categoryId") Long categoryId,
-                               @Param("status") Blog.Status status,
-                               @Param("authorId") Long authorId,
-                               @Param("keyword") String keyword,
-                               Pageable pageable);
-
-    /**
      * Lấy các blog published và có scheduledPublishAt <= hiện tại
      * Chỉ lấy blog từ category ACTIVE
      */
@@ -110,11 +93,6 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
                                  Pageable pageable);
 
     /**
-     * Đếm số blog theo status
-     */
-    long countByStatus(Blog.Status status);
-
-    /**
      * Đếm số blog theo category (tất cả status)
      */
     long countByCategory(BlogCategory category);
@@ -125,9 +103,4 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
      */
     @Query("SELECT COUNT(b) FROM Blog b WHERE b.category = :category AND b.status = 'PUBLISHED' AND b.category.status = 'ACTIVE'")
     long countPublishedBlogsByCategory(@Param("category") BlogCategory category);
-
-    /**
-     * Đếm số blog theo author
-     */
-    long countByAuthorAccountId(Long authorId);
 }

@@ -188,8 +188,9 @@ public class BlogController {
         model.addAttribute("totalBlogs", blogs.getTotalElements());
         model.addAttribute("pageSize", size);
         model.addAttribute("manager", manager);
+        model.addAttribute("account", manager); // Sidebar needs this
 
-        return "manager/blog-list";
+        return "blog/manager/blog-list";
     }
 
     /**
@@ -211,8 +212,9 @@ public class BlogController {
         model.addAttribute("blog", dto);
         model.addAttribute("categories", categoryService.getActiveCategories());
         model.addAttribute("manager", manager);
+        model.addAttribute("account", manager); // Sidebar needs this
 
-        return "manager/blog-form";
+        return "blog/manager/blog-form";
     }
 
     /**
@@ -239,7 +241,8 @@ public class BlogController {
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("manager", manager);
-            return "manager/blog-form";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/blog-form";
         }
 
         try {
@@ -262,7 +265,8 @@ public class BlogController {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("manager", manager);
-            return "manager/blog-form";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/blog-form";
         }
     }
 
@@ -303,8 +307,9 @@ public class BlogController {
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("isEdit", true);
             model.addAttribute("manager", manager);
+            model.addAttribute("account", manager); // Sidebar needs this
 
-            return "manager/blog-form";
+            return "blog/manager/blog-form";
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Không tìm thấy blog: " + e.getMessage());
             return "redirect:/manager/blogs";
@@ -337,7 +342,8 @@ public class BlogController {
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("isEdit", true);
             model.addAttribute("manager", manager);
-            return "manager/blog-form";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/blog-form";
         }
 
         try {
@@ -367,7 +373,8 @@ public class BlogController {
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("isEdit", true);
             model.addAttribute("manager", manager);
-            return "manager/blog-form";
+            model.addAttribute("account", manager); // Sidebar needs this
+            return "blog/manager/blog-form";
         }
     }
 

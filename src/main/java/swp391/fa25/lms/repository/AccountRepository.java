@@ -60,4 +60,20 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query("SELECT a FROM Account a JOIN a.role r WHERE r.roleId = 2 or r.roleId = 1")
     List<Account> findAllSellers();
+
+    // Search with multiple filters (keyword, role, status)
+    @Query("""
+           SELECT a FROM Account a
+           WHERE (:keyword IS NULL OR :keyword = '' 
+                 OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                 OR LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))
+             AND (:roleId IS NULL OR a.role.roleId = :roleId)
+             AND (:status IS NULL OR a.status = :status)
+           ORDER BY a.createdAt DESC
+           """)
+    Page<Account> searchWithFilters(@Param("keyword") String keyword,
+                                     @Param("roleId") Integer roleId,
+                                     @Param("status") AccountStatus status,
+                                     Pageable pageable);
+
 }

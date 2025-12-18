@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Management - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .action-buttons .btn {
+            margin-right: 0.25rem;
+        }
+        .status-badge {
+            min-width: 80px;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="common/sidebar-header :: role-sidebar">
+    <th:block th:fragment="content">
+        <div class="container-fluid px-4 py-4">
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h2>Account Management</h2>
+    <div>
+        <a th:href="@{/admin/accounts/create}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Create New Account
+        </a>
+    </div>
+</div>
+
+<!-- Flash Messages -->
+<div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle"></i> <span th:text="${success}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle"></i> <span th:text="${error}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+
+<!-- Search & Filter -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" th:action="@{/admin/accounts}" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="keyword" class="form-control" 
+                       th:value="${keyword}" placeholder="Email, Full Name...">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Role</label>
+                <select name="roleId" class="form-select">
+                    <option value="">All Roles</option>
+                    <option th:each="r : ${roles}" 
+                            th:value="${r.roleId}" 
+                            th:text="${r.roleName}"
+                            th:selected="${selectedRole != null && selectedRole == r.roleId}">
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">Active</option>
+                    <option value="DEACTIVATED" th:selected="${selectedStatus == 'DEACTIVATED'}">Deactivated</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Items/Page</label>
+                <select name="size" class="form-select">
+                    <option value="10" th:selected="${pageSize == 10}">10</option>
+                    <option value="20" th:selected="${pageSize == 20}">20</option>
+                    <option value="50" th:selected="${pageSize == 50}">50</option>
+                    <option value="100" th:selected="${pageSize == 100}">100</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    <a th:href="@{/admin/accounts}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Account Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 60px;">ID</th>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th style="width: 120px;">Phone</th>
+                        <th style="width: 100px;">Role</th>
+                        <th style="width: 120px;">Status</th>
+                        <th style="width: 100px;">Verified</th>
+                        <th style="width: 150px;">Created Date</th>
+                        <th style="width: 150px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(accounts)}">
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p class="mb-0 mt-2">No accounts found</p>
+                        </td>
+                    </tr>
+                    <tr th:each="acc : ${accounts}">
+                        <td th:text="${acc.accountId}"></td>
+                        <td>
+                            <small th:text="${acc.email}"></small>
+                        </td>
+                        <td>
+                            <strong th:text="${acc.fullName}"></strong>
+                        </td>
+                        <td>
+                            <small th:text="${acc.phone}"></small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-dark" th:text="${acc.role.roleName}"></span>
+                        </td>
+                        <td>
+                            <span th:if="${acc.status.name() == 'ACTIVE'}" class="badge bg-success status-badge">
+                                <i class="bi bi-check-circle"></i> Active
+                            </span>
+                            <span th:if="${acc.status.name() == 'DEACTIVATED'}" class="badge bg-secondary status-badge">
+                                <i class="bi bi-x-circle"></i> Deactivated
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span th:if="${acc.verified}" class="badge bg-success">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </span>
+                            <span th:unless="${acc.verified}" class="badge bg-warning text-dark">
+                                <i class="bi bi-exclamation-circle-fill"></i>
+                            </span>
+                        </td>
+                        <td>
+                            <small th:text="${#temporals.format(acc.createdAt, 'dd/MM/yyyy HH:mm')}"></small>
+                        </td>
+                        <td class="action-buttons">
+                            <a th:href="@{/admin/accounts/edit/{id}(id=${acc.accountId})}" 
+                               class="btn btn-sm btn-outline-primary" 
+                               title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            
+                            <!-- Activate button - show when DEACTIVATED -->
+                            <form th:if="${acc.status.name() == 'DEACTIVATED'}"
+                                  th:action="@{/admin/accounts/activate/{id}(id=${acc.accountId})}" 
+                                  method="post" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Are you sure you want to activate this account?')">
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Activate">
+                                    <i class="bi bi-check-circle"></i>
+                                </button>
+                            </form>
+                            
+                            <!-- Deactivate button - show when ACTIVE -->
+                            <form th:if="${acc.status.name() == 'ACTIVE'}"
+                                  th:action="@{/admin/accounts/deactivate/{id}(id=${acc.accountId})}" 
+                                  method="post" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Are you sure you want to deactivate this account?')">
+                                <button type="submit" class="btn btn-sm btn-outline-warning" title="Deactivate">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Account Count Info -->
+        <div class="text-center text-muted mt-3">
+            <small>
+                Showing <strong th:text="${#lists.size(accounts)}">0</strong> of 
+                <strong th:text="${totalAccounts}">0</strong> accounts
+            </small>
+        </div>
+
+        <!-- Pagination -->
+        <nav th:if="${totalPages > 1}" class="mt-3"
+             th:with="startPage=${currentPage - 2 lt 0 ? 0 : currentPage - 2},
+                      endPage=${currentPage + 2 ge totalPages ? totalPages - 1 : currentPage + 2}">
+            <ul class="pagination justify-content-center">
+                <!-- Previous Button -->
+                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                    <a class="page-link" th:href="@{/admin/accounts(page=${currentPage - 1}, size=${pageSize}, keyword=${keyword}, roleId=${selectedRole}, status=${selectedStatus})}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                
+                <!-- First Page -->
+                <li th:if="${currentPage > 2}" class="page-item">
+                    <a class="page-link" th:href="@{/admin/accounts(page=0, size=${pageSize}, keyword=${keyword}, roleId=${selectedRole}, status=${selectedStatus})}">1</a>
+                </li>
+                <li th:if="${currentPage > 3}" class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                
+                <!-- Page Numbers (show 5 pages max) -->
+                <li th:each="i : ${#numbers.sequence(startPage, endPage)}" 
+                    class="page-item" 
+                    th:classappend="${i == currentPage} ? 'active'">
+                    <a class="page-link" th:href="@{/admin/accounts(page=${i}, size=${pageSize}, keyword=${keyword}, roleId=${selectedRole}, status=${selectedStatus})}" th:text="${i + 1}">1</a>
+                </li>
+                
+                <!-- Last Page -->
+                <li th:if="${currentPage < totalPages - 4}" class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                <li th:if="${currentPage < totalPages - 3}" class="page-item">
+                    <a class="page-link" th:href="@{/admin/accounts(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword}, roleId=${selectedRole}, status=${selectedStatus})}" th:text="${totalPages}">Last</a>
+                </li>
+                
+                <!-- Next Button -->
+                <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
+                    <a class="page-link" th:href="@{/admin/accounts(page=${currentPage + 1}, size=${pageSize}, keyword=${keyword}, roleId=${selectedRole}, status=${selectedStatus})}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+        </div>
+    </th:block>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
