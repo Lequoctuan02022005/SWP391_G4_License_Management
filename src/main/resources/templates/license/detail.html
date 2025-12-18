@@ -18,11 +18,13 @@
         .btn-primary { background:#1f6feb; color:#fff; }
         .btn-dark { background:#111; color:#fff; }
         .btn-danger { background:#fee2e2; color:#991b1b; }
+
         .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px; }
         .box { border:1px solid #edf0f5; border-radius:12px; padding:12px; background:#fbfcff; }
         .label { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
         .value { font-size:14px; }
         .value b { font-size:16px; }
+
         .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:800; }
         .b-active { background:#ecfdf5; color:#065f46; }
         .b-expired { background:#fff7ed; color:#9a3412; }
@@ -30,9 +32,10 @@
         .b-null { background:#f3f4f6; color:#374151; }
         .full { grid-column: 1 / -1; }
         .sep { height:1px; background:#edf0f5; margin:12px 0; }
+
         .msg { padding:10px 12px; border-radius:10px; margin-top:10px; font-weight:800; }
-        .msg-ok { background:#ecfdf5; color:#065f46; }
-        .msg-err { background:#fef2f2; color:#991b1b; }
+        .msg-ok { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+        .msg-err { background:#fef2f2; color:#991b1b; border:1px solid #fecaca; }
 
         /* modal */
         .overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; padding:16px; }
@@ -45,9 +48,13 @@
         input, select { padding:10px; border:1px solid #d7d9e0; border-radius:10px; outline:none; background:#fff; }
         .err { color:#b91c1c; font-size:12px; font-weight:800; }
         .rowbtn { display:flex; gap:10px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap; }
-        table { width:100%; border-collapse:collapse; margin-top:10px; }
-        th, td { text-align:left; padding:10px; border-bottom:1px solid #edf0f5; vertical-align:top; }
-        th { font-size:12px; color:#555; text-transform:uppercase; letter-spacing:.04em; }
+
+        /* login info toggle */
+        .pwd-row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+        .pwd-actions { display:flex; align-items:center; gap:10px; margin-top:4px; flex-wrap:wrap; }
+        .pwd-btn { padding:6px 10px; border-radius:10px; background:#f3f4f6; border:0; cursor:pointer; font-weight:900; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
         @media (max-width: 860px){ .grid { grid-template-columns:1fr; } }
     </style>
 </head>
@@ -61,15 +68,19 @@
 
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <a class="btn btn-ghost" th:href="@{/customer/license-accounts}">← Danh sách</a>
-                <a class="btn btn-dark" th:if="${la.order != null}"
-                   th:href="@{/customer/orders/{id}(id=${la.order.orderId})}">
+
+                <a class="btn btn-dark"
+                   th:if="${la.order != null}"
+                   th:href="@{/customer/orders/}">
                     ← Back to order
                 </a>
             </div>
         </div>
 
-        <div th:if="${successMsg != null}" class="msg msg-ok" th:text="${successMsg}">OK</div>
-        <div th:if="${errorMsg != null}" class="msg msg-err" th:text="${errorMsg}">ERR</div>
+        <div th:if="${successMsg != null and !#strings.isEmpty(successMsg)}"
+             class="msg msg-ok" th:text="${successMsg}">OK</div>
+        <div th:if="${errorMsg != null and !#strings.isEmpty(errorMsg)}"
+             class="msg msg-err" th:text="${errorMsg}">ERR</div>
 
         <div class="grid">
 
@@ -125,23 +136,45 @@
                     <!-- TOKEN -->
                     <div th:if="${la.token != null}">
                         <div class="muted">Token</div>
-                        <b th:text="${la.token}">token</b>
+                        <b class="mono" th:text="${la.token}">token</b>
                         <div class="muted" style="margin-top:6px;">(Tool TOKEN không cho edit credential)</div>
                     </div>
 
                     <!-- USER/PASS -->
                     <div th:if="${la.token == null}">
-                        <div style="display:flex; gap:14px; flex-wrap:wrap;">
+                        <div class="pwd-row">
                             <div>
                                 <div class="muted">Username</div>
-                                <b th:text="${la.username != null ? la.username : '(N/A)'}">u</b>
+                                <b class="mono" th:text="${la.username != null ? la.username : '(N/A)'}">u</b>
                             </div>
+
                             <div>
                                 <div class="muted">Password</div>
-                                <b>••••••••</b>
+
+                                <div class="pwd-actions">
+                                    <input
+                                            id="laPwdInput"
+                                            class="mono"
+                                            type="password"
+                                            th:value="${la.password != null ? la.password : ''}"
+                                            readonly
+                                            style="min-width:240px;"
+                                    />
+
+                                    <button type="button"
+                                            class="pwd-btn"
+                                            onclick="togglePwdField('laPwdInput', this)">
+                                        👁 <span class="muted" style="font-weight:900;">Xem</span>
+                                    </button>
+                                </div>
+
+                                <div class="muted" style="margin-top:6px;">(Ẩn/Hiện mật khẩu)</div>
                             </div>
                         </div>
-                        <div class="muted" style="margin-top:6px;">Password được ẩn — bấm “Edit” để cập nhật.</div>
+
+                        <div class="muted" style="margin-top:6px;">
+                            Tip: nếu muốn đổi mật khẩu, bấm “Edit”.
+                        </div>
                     </div>
 
                 </div>
@@ -154,7 +187,9 @@
                     <!-- EDIT: chỉ khi USER_PASSWORD + ACTIVE -->
                     <button class="btn btn-primary"
                             type="button"
-                            th:if="${la.license != null and la.license.tool != null and la.license.tool.loginMethod.name() == 'USER_PASSWORD'
+                            th:if="${la.license != null and la.license.tool != null
+                          and la.license.tool.loginMethod != null
+                          and la.license.tool.loginMethod.name() == 'USER_PASSWORD'
                           and la.status != null and la.status.name() == 'ACTIVE'}"
                             onclick="openModal('editModal')">
                         Edit
@@ -190,11 +225,14 @@
             <button class="close" type="button" onclick="closeModal('editModal')">✕</button>
         </div>
 
-        <!-- editDto: LicenseAccountEditDTO -->
         <form class="form"
               th:action="@{/customer/license-accounts/{id}/edit(id=${la.licenseAccountId})}"
               th:object="${editDto}"
               method="post">
+
+            <input type="hidden" th:if="${_csrf != null}"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}" />
 
             <div class="field">
                 <label>Username</label>
@@ -204,9 +242,9 @@
 
             <div class="field">
                 <label>Password</label>
-                <div style="display:flex; gap:10px; align-items:center;">
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                     <input id="pwd" type="password" th:field="*{password}" placeholder="Nhập mật khẩu mới"
-                           required minlength="4" maxlength="255" style="flex:1;">
+                           required minlength="4" maxlength="255" style="flex:1; min-width:240px;">
                     <button type="button" class="close" onclick="togglePwd()">👁</button>
                 </div>
                 <div class="err" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">err</div>
@@ -228,11 +266,14 @@
             <button class="close" type="button" onclick="closeModal('renewModal')">✕</button>
         </div>
 
-        <!-- renewDto: dto chứa licenseAccountId + licenseId (hoặc anh dùng param licenseId) -->
         <form class="form"
               th:action="@{/customer/license-accounts/{id}/renew(id=${la.licenseAccountId})}"
               th:object="${renewForm}"
               method="post">
+
+            <input type="hidden" th:if="${_csrf != null}"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}" />
 
             <input type="hidden" name="licenseAccountId" th:value="${la.licenseAccountId}"/>
 
@@ -240,7 +281,6 @@
                 <label>Chọn gói gia hạn</label>
                 <select name="licenseId" required>
                     <option value="" selected>-- Chọn gói --</option>
-                    <!-- renewPackages: List<License> -->
                     <option th:each="p : ${renewPackages}"
                             th:value="${p.licenseId}"
                             th:text="${p.name + ' · ' + (p.durationDays != null ? p.durationDays : 0) + ' ngày · ' + (p.price != null ? p.price : 0) + ' VND'}">
@@ -265,13 +305,30 @@
     function openModal(id){ document.getElementById(id).style.display = 'flex'; }
     function closeModal(id){ document.getElementById(id).style.display = 'none'; }
     function overlayClose(e, id){ if(e.target && e.target.id === id) closeModal(id); }
+
+    // Toggle password in EDIT modal
     function togglePwd(){
         const el = document.getElementById('pwd');
         if(!el) return;
         el.type = (el.type === 'password') ? 'text' : 'password';
     }
 
+    // Toggle password field (Login info)
+    function togglePwdField(inputId, btn){
+        const el = document.getElementById(inputId);
+        if(!el) return;
 
+        const isHidden = el.type === 'password';
+        el.type = isHidden ? 'text' : 'password';
+
+        if(btn){
+            btn.innerHTML = isHidden
+                ? '🙈 <span class="muted" style="font-weight:900;">Che</span>'
+                : '👁 <span class="muted" style="font-weight:900;">Xem</span>';
+        }
+    }
+
+    // Auto open modal from server flags
     const openEdit = /*[[${openEditModal}]]*/ false;
     if(openEdit){ openModal('editModal'); }
 

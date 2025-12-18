@@ -19,8 +19,8 @@
 
                 <img class="avatar"
                      th:src="${account.images != null
-                     ? account.images
-                     : 'https://cdn-icons-png.flaticon.com/512/147/147144.png'}"/>
+                             ? '/uploads/avatar/' + account.images
+                             : 'https://cdn-icons-png.flaticon.com/512/147/147144.png'}"/>
 
                 <div class="profile-info">
                     <div class="name" th:text="${account.fullName}"></div>
@@ -75,7 +75,7 @@
                     <li><a href="/admin/accounts"><i class="bi bi-people"></i> Account Management</a></li>
                     <li><a href="/admin/roles"><i class="bi bi-shield-check"></i> Role Management</a></li>
                     <li><a href="/seller-package/renew-history"><i class="bi bi-clock-history"></i> Renew History</a></li>
-                    <li><a href="/admin/orders"><i class="bi bi-receipt"></i> Orders</a></li>
+                    <li><a href="/admin/financial-report"><i class="bi bi-cash-coin"></i> Financial report</a></li>
                     <li><a href="/logout" class="action-item logout">
                         <i class="bi bi-box-arrow-right"></i>
                         <span>Thoát</span>
@@ -85,6 +85,7 @@
                 <!-- MOD -->
                 <th:block th:if="${account.role.roleName.name() == 'MOD'}">
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
+                    <li><a href="/moderator/upload-requests"><i class="bi bi-cloud-upload"></i> Upload Tool Requests</a></li>
                     <li><a href="/mod/tools"><i class="bi bi-check2-circle"></i> Duyệt Tools</a></li>
                     <li><a href="/mod/reports"><i class="bi bi-flag"></i> Reports</a></li>
                     <li><a href="/logout" class="action-item logout">
@@ -96,6 +97,7 @@
                 <!-- MANAGER -->
                 <th:block th:if="${account.role.roleName.name() == 'MANAGER'}">
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
+                    <li><a href="/manager/upload-tools"><i class="bi bi-cloud-upload"></i><span>Upload Tool Requests</span></a></li>
                     <li><a href="/manager/statistics"><i class="bi bi-bar-chart"></i> Statistics</a></li>
                     <li><a href="/seller-packages"><i class="bi bi-box-seam"></i><span>Seller Packages</span></a></li>
                     <li><a href="/manager/blogs"><i class="bi bi-journal-text"></i><span>Blog Management</span></a></li>

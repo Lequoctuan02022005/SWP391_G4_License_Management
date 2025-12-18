@@ -39,6 +39,7 @@ public class RoleDataInitializer implements CommandLineRunner {
             admin.setFullName("System Admin");
             admin.setPassword(passwordEncoder.encode("123456"));
             admin.setStatus(Account.AccountStatus.ACTIVE);
+            admin.setVerified(true);
             admin.setRole(roleRepo.findByRoleName(Role.RoleName.ADMIN).get());
             accountRepo.save(admin);
             System.out.println("⭐ Admin created");
@@ -49,6 +50,7 @@ public class RoleDataInitializer implements CommandLineRunner {
             Account seller = new Account();
             seller.setEmail("seller@gmail.com");
             seller.setFullName("Test Seller");
+            seller.setVerified(true);
             seller.setPassword(passwordEncoder.encode("123456"));
             seller.setStatus(Account.AccountStatus.ACTIVE);
             seller.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());
@@ -65,6 +67,7 @@ public class RoleDataInitializer implements CommandLineRunner {
             user.setEmail("user@gmail.com");
             user.setFullName("Test User");
             user.setPassword(passwordEncoder.encode("123456"));
+            user.setVerified(true);
             user.setStatus(Account.AccountStatus.ACTIVE);
             user.setRole(roleRepo.findByRoleName(Role.RoleName.CUSTOMER).get());
             accountRepo.save(user);
@@ -78,6 +81,7 @@ public class RoleDataInitializer implements CommandLineRunner {
             manager.setFullName("Test Manager");
             manager.setPassword(passwordEncoder.encode("123456"));
             manager.setStatus(Account.AccountStatus.ACTIVE);
+            manager.setVerified(true);
             manager.setRole(roleRepo.findByRoleName(Role.RoleName.MANAGER).get());
             accountRepo.save(manager);
             System.out.println("⭐ Manager created");
@@ -89,6 +93,7 @@ public class RoleDataInitializer implements CommandLineRunner {
                 mod.setFullName("Moderator User");
                 mod.setPassword(passwordEncoder.encode("123456"));
                 mod.setStatus(Account.AccountStatus.ACTIVE);
+                mod.setVerified(true);
                 mod.setRole(roleRepo.findByRoleName(Role.RoleName.MOD).get());
                 accountRepo.save(mod);
                 System.out.println("⭐ Moderator created");
@@ -97,6 +102,7 @@ public class RoleDataInitializer implements CommandLineRunner {
                 Account activeSeller = new Account();
                 activeSeller.setEmail("selleractive@gmail.com");
                 activeSeller.setFullName("Seller Active");
+                activeSeller.setVerified(true);
                 activeSeller.setPassword(passwordEncoder.encode("123456"));
                 activeSeller.setStatus(Account.AccountStatus.ACTIVE);
                 activeSeller.setRole(roleRepo.findByRoleName(Role.RoleName.SELLER).get());

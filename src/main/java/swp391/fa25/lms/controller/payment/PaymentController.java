@@ -15,6 +15,7 @@ import swp391.fa25.lms.service.OrderService;
 import swp391.fa25.lms.util.VNPayUtil;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,399 +32,574 @@ public class PaymentController {
     private final OrderService orderService;
     private final CartService cartService;
     private final VNPayUtil vnPayUtil;
+
     private final LicenseAccountRepository licenseAccountRepo;
     private final LicenseRepository licenseRepo;
     private final LicenseRenewLogRepository licenseRenewLogRepo;
+
+    // ===================== helpers =====================
+
+    private void clearCheckoutSession(HttpSession session) {
+        if (session == null) return;
+        session.removeAttribute("CHECKOUT_MODE");
+        session.removeAttribute("BUY_NOW_TOOL_ID");
+        session.removeAttribute("BUY_NOW_LICENSE_ID");
+        session.removeAttribute("BUY_NOW_QTY");
+        session.removeAttribute("CHECKOUT_SELECTED_IDS");
+    }
+
+    private boolean isVnpSuccess(String code) {
+        return "00".equals(code);
+    }
+
+    /** set cả 2 key để view nào đọc success/successMsg đều chạy */
+    private void flashSuccess(RedirectAttributes ra, String msg) {
+        ra.addFlashAttribute("success", msg);
+        ra.addFlashAttribute("successMsg", msg);
+    }
+
+    private void flashError(RedirectAttributes ra, String msg) {
+        ra.addFlashAttribute("error", msg);
+        ra.addFlashAttribute("errorMsg", msg);
+    }
+
+    private void fillVnpFields(PaymentTransaction tx, Map<String, String> params) {
+        if (tx == null || params == null) return;
+
+        tx.setVnpayResponseCode(params.get("vnp_ResponseCode"));
+
+        // các field này anh đã dùng ở renew => assume entity có setter
+        tx.setVnpayTransactionNo(params.get("vnp_TransactionNo"));
+        tx.setVnpayBankCode(params.get("vnp_BankCode"));
+        tx.setVnpayBankTranNo(params.get("vnp_BankTranNo"));
+        tx.setVnpayCardType(params.get("vnp_CardType"));
+        tx.setVnpayPayDate(params.get("vnp_PayDate"));
+    }
+
+    private String safeVnpMessage(PaymentTransaction tx) {
+        try {
+            String m = tx.getVnpayResponseMessage();
+            return (m == null || m.isBlank()) ? "Vui lòng thử lại hoặc liên hệ Admin." : m;
+        } catch (Exception e) {
+            return "Vui lòng thử lại hoặc liên hệ Admin.";
+        }
+    }
+
+    private boolean isFinalStatus(PaymentTransaction tx) {
+        if (tx == null || tx.getStatus() == null) return false;
+        return tx.getStatus() == PaymentTransaction.TransactionStatus.SUCCESS
+                || tx.getStatus() == PaymentTransaction.TransactionStatus.FAILED;
+    }
+
+    // ===================== SELLER RENEW RETURN =====================
 
     @GetMapping("/seller-return")
     @Transactional
     public String handleSellerPaymentReturn(@RequestParam Map<String, String> params,
                                             HttpSession session,
-                                            RedirectAttributes redirectAttrs) {
+                                            RedirectAttributes ra) {
         try {
-            boolean validHash = vnPayUtil.verifyHash(params);
-            if (!validHash) {
-                redirectAttrs.addFlashAttribute("error", "Chữ ký không hợp lệ! Vui lòng liên hệ Admin.");
+            if (!vnPayUtil.verifyHash(params)) {
+                flashError(ra, "Chữ ký không hợp lệ! Vui lòng liên hệ Admin.");
                 return "redirect:/seller/renew";
             }
 
-            String vnp_ResponseCode = params.get("vnp_ResponseCode");
-            String vnp_TxnRef = params.get("vnp_TxnRef");
-            String vnp_OrderInfo = params.get("vnp_OrderInfo");
+            String vnpCode = params.get("vnp_ResponseCode");
+            String vnpTxnRef = params.get("vnp_TxnRef");
+            String vnpOrderInfo = params.get("vnp_OrderInfo");
 
-            Optional<PaymentTransaction> txOpt = transactionRepo.findByVnpayTxnRef(vnp_TxnRef);
-            if (txOpt.isEmpty()) {
-                redirectAttrs.addFlashAttribute("error", "Không tìm thấy giao dịch!");
+            PaymentTransaction tx = transactionRepo.findByVnpayTxnRef(vnpTxnRef).orElse(null);
+            if (tx == null) {
+                flashError(ra, "Không tìm thấy giao dịch!");
                 return "redirect:/seller/renew";
             }
 
-            PaymentTransaction transaction = txOpt.get();
-            transaction.setVnpayResponseCode(vnp_ResponseCode);
-
-            if ("00".equals(vnp_ResponseCode)) {
-                if (vnp_OrderInfo == null || !vnp_OrderInfo.startsWith("SELLER_")) {
-                    redirectAttrs.addFlashAttribute("error", "Thông tin đơn hàng không hợp lệ!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/seller/renew";
+            // idempotent: refresh return không xử lý lại
+            if (isFinalStatus(tx)) {
+                if (tx.getStatus() == PaymentTransaction.TransactionStatus.SUCCESS) {
+                    flashSuccess(ra, "Giao dịch đã xử lý thành công trước đó.");
+                    return "redirect:/dashboard";
                 }
-
-                String[] parts = vnp_OrderInfo.split("_");
-                if (parts.length != 3) {
-                    redirectAttrs.addFlashAttribute("error", "Thông tin đơn hàng không đúng định dạng!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/seller/renew";
-                }
-
-                int packageId = Integer.parseInt(parts[1]);
-                Long accountId = Long.parseLong(parts[2]);
-
-                SellerPackage pkg = packageRepo.findById(packageId).orElse(null);
-                if (pkg == null) {
-                    redirectAttrs.addFlashAttribute("error", "Gói không tồn tại!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/seller/renew";
-                }
-
-                Account seller = accountRepo.findById(accountId).orElse(null);
-                if (seller == null) {
-                    redirectAttrs.addFlashAttribute("error", "Tài khoản không tồn tại!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/seller/renew";
-                }
-
-                transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
-                transaction.setCompletedAt(LocalDateTime.now());
-                transactionRepo.save(transaction);
-
-                SellerSubscription newSub = new SellerSubscription();
-                newSub.setAccount(seller);
-                newSub.setSellerPackage(pkg);
-                newSub.setStartDate(LocalDateTime.now());
-                newSub.setEndDate(LocalDateTime.now().plusMonths(pkg.getDurationInMonths()));
-                newSub.setPriceAtPurchase(pkg.getPrice());
-                newSub.setActive(true);
-                newSub.setTransaction(transaction);
-
-                subscriptionRepo.save(newSub);
-
-                seller.setSellerActive(true);
-                seller.setSellerExpiryDate(newSub.getEndDate());
-                accountRepo.save(seller);
-
-                session.setAttribute("loggedInAccount", seller);
-
-                redirectAttrs.addFlashAttribute("success",
-                        "Thanh toán thành công! Gói Seller đã được kích hoạt. Bạn có thể bắt đầu bán tool ngay bây giờ!");
-                return "redirect:/dashboard";
-
-            } else {
-                transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                transaction.setCompletedAt(LocalDateTime.now());
-                transactionRepo.save(transaction);
-
-                String errorMsg = transaction.getVnpayResponseMessage();
-                redirectAttrs.addFlashAttribute("error", "Thanh toán thất bại: " + errorMsg);
+                flashError(ra, "Giao dịch đã xử lý thất bại trước đó.");
                 return "redirect:/seller/renew";
             }
+
+            fillVnpFields(tx, params);
+
+            if (!isVnpSuccess(vnpCode)) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Thanh toán thất bại: " + safeVnpMessage(tx));
+                return "redirect:/seller/renew";
+            }
+
+            // success: parse orderInfo: SELLER_<packageId>_<accountId>
+            if (vnpOrderInfo == null || !vnpOrderInfo.startsWith("SELLER_")) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Thông tin đơn hàng không hợp lệ!");
+                return "redirect:/seller/renew";
+            }
+
+            String[] parts = vnpOrderInfo.split("_");
+            if (parts.length != 3) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Thông tin đơn hàng không đúng định dạng!");
+                return "redirect:/seller/renew";
+            }
+
+            int packageId = Integer.parseInt(parts[1]);
+            Long accountId = Long.parseLong(parts[2]);
+
+            SellerPackage pkg = packageRepo.findById(packageId).orElse(null);
+            Account seller = accountRepo.findById(accountId).orElse(null);
+
+            if (pkg == null || seller == null) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, pkg == null ? "Gói không tồn tại!" : "Tài khoản không tồn tại!");
+                return "redirect:/seller/renew";
+            }
+
+            // mark tx success
+            tx.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
+            tx.setCompletedAt(LocalDateTime.now());
+            transactionRepo.save(tx);
+
+            // create subscription
+            SellerSubscription newSub = new SellerSubscription();
+            newSub.setAccount(seller);
+            newSub.setSellerPackage(pkg);
+            newSub.setStartDate(LocalDateTime.now());
+            newSub.setEndDate(LocalDateTime.now().plusMonths(pkg.getDurationInMonths()));
+            newSub.setPriceAtPurchase(pkg.getPrice());
+            newSub.setActive(true);
+            newSub.setTransaction(tx);
+            subscriptionRepo.save(newSub);
+
+            // update seller
+            seller.setSellerActive(true);
+            seller.setSellerExpiryDate(newSub.getEndDate());
+            accountRepo.save(seller);
+
+            session.setAttribute("loggedInAccount", seller);
+
+            flashSuccess(ra, "Thanh toán thành công! Gói Seller đã được kích hoạt. Bạn có thể bắt đầu bán tool ngay bây giờ!");
+            return "redirect:/dashboard";
+
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttrs.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            flashError(ra, "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/seller/renew";
         }
     }
+
+    // ===================== SELLER REGISTRATION RETURN =====================
 
     @GetMapping("/seller-registration-return")
     @Transactional
     public String handleSellerRegistrationReturn(@RequestParam Map<String, String> params,
                                                  HttpSession session,
-                                                 RedirectAttributes redirectAttrs) {
+                                                 RedirectAttributes ra) {
         try {
-            boolean validHash = vnPayUtil.verifyHash(params);
-            if (!validHash) {
-                redirectAttrs.addFlashAttribute("error", "Chữ ký không hợp lệ! Vui lòng liên hệ Admin.");
+            if (!vnPayUtil.verifyHash(params)) {
+                flashError(ra, "Chữ ký không hợp lệ! Vui lòng liên hệ Admin.");
                 return "redirect:/seller/register";
             }
 
-            String vnp_ResponseCode = params.get("vnp_ResponseCode");
-            String vnp_TxnRef = params.get("vnp_TxnRef");
-            String vnp_OrderInfo = params.get("vnp_OrderInfo");
+            String vnpCode = params.get("vnp_ResponseCode");
+            String vnpTxnRef = params.get("vnp_TxnRef");
+            String vnpOrderInfo = params.get("vnp_OrderInfo");
 
-            Optional<PaymentTransaction> txOpt = transactionRepo.findByVnpayTxnRef(vnp_TxnRef);
-            if (txOpt.isEmpty()) {
-                redirectAttrs.addFlashAttribute("error", "Không tìm thấy giao dịch!");
+            PaymentTransaction tx = transactionRepo.findByVnpayTxnRef(vnpTxnRef).orElse(null);
+            if (tx == null) {
+                flashError(ra, "Không tìm thấy giao dịch!");
                 return "redirect:/seller/register";
             }
 
-            PaymentTransaction transaction = txOpt.get();
-            transaction.setVnpayResponseCode(vnp_ResponseCode);
-
-            if ("00".equals(vnp_ResponseCode)) {
-                if (vnp_OrderInfo == null || !vnp_OrderInfo.startsWith("REGISTER_")) {
-                    redirectAttrs.addFlashAttribute("error", "Thông tin đơn hàng không hợp lệ!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/seller/register";
+            // idempotent
+            if (isFinalStatus(tx)) {
+                if (tx.getStatus() == PaymentTransaction.TransactionStatus.SUCCESS) {
+                    flashSuccess(ra, "Giao dịch đã xử lý thành công trước đó.");
+                    return "redirect:/dashboard";
                 }
-
-                String[] parts = vnp_OrderInfo.split("_");
-                if (parts.length != 3) {
-                    redirectAttrs.addFlashAttribute("error", "Thông tin đơn hàng không đúng định dạng!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/seller/register";
-                }
-
-                int packageId = Integer.parseInt(parts[1]);
-                Long accountId = Long.parseLong(parts[2]);
-
-                SellerPackage pkg = packageRepo.findById(packageId).orElse(null);
-                if (pkg == null) {
-                    redirectAttrs.addFlashAttribute("error", "Gói không tồn tại!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/seller/register";
-                }
-
-                Account user = accountRepo.findById(accountId).orElse(null);
-                if (user == null) {
-                    redirectAttrs.addFlashAttribute("error", "Tài khoản không tồn tại!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/seller/register";
-                }
-
-                // Chuyển role thành SELLER và SAVE NGAY
-                Role sellerRole = roleRepo.findByRoleName(Role.RoleName.SELLER)
-                        .orElseThrow(() -> new RuntimeException("Role SELLER không tồn tại!"));
-
-                user.setRole(sellerRole);
-                user.setSellerActive(true);
-                user.setSellerPackage(pkg);
-
-                // SAVE ACCOUNT NGAY ĐỂ COMMIT ROLE VÀO DB
-                accountRepo.saveAndFlush(user);
-
-                // Cập nhật transaction status
-                transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
-                transaction.setCompletedAt(LocalDateTime.now());
-                transactionRepo.save(transaction);
-
-                // Tạo SellerSubscription
-                SellerSubscription newSub = new SellerSubscription();
-                newSub.setAccount(user);
-                newSub.setSellerPackage(pkg);
-                newSub.setStartDate(LocalDateTime.now());
-                newSub.setEndDate(LocalDateTime.now().plusMonths(pkg.getDurationInMonths()));
-                newSub.setPriceAtPurchase(pkg.getPrice());
-                newSub.setActive(true);
-                newSub.setTransaction(transaction);
-                subscriptionRepo.save(newSub);
-
-                // Cập nhật seller expiry date
-                user.setSellerExpiryDate(newSub.getEndDate());
-                accountRepo.saveAndFlush(user);
-
-                // Cập nhật session
-                session.setAttribute("loggedInAccount", user);
-
-                redirectAttrs.addFlashAttribute("success",
-                        "Chúc mừng! Bạn đã đăng ký thành công làm Seller. Bạn có thể bắt đầu bán tool ngay bây giờ!");
-                return "redirect:/dashboard";
-
-            } else {
-                // Thanh toán thất bại
-                transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                transaction.setCompletedAt(LocalDateTime.now());
-                transactionRepo.save(transaction);
-
-                String errorMsg = transaction.getVnpayResponseMessage();
-                redirectAttrs.addFlashAttribute("error", "Thanh toán thất bại: " + errorMsg);
+                flashError(ra, "Giao dịch đã xử lý thất bại trước đó.");
                 return "redirect:/seller/register";
             }
+
+            fillVnpFields(tx, params);
+
+            if (!isVnpSuccess(vnpCode)) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Thanh toán thất bại: " + safeVnpMessage(tx));
+                return "redirect:/seller/register";
+            }
+
+            // REGISTER_<packageId>_<accountId>
+            if (vnpOrderInfo == null || !vnpOrderInfo.startsWith("REGISTER_")) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Thông tin đơn hàng không hợp lệ!");
+                return "redirect:/seller/register";
+            }
+
+            String[] parts = vnpOrderInfo.split("_");
+            if (parts.length != 3) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Thông tin đơn hàng không đúng định dạng!");
+                return "redirect:/seller/register";
+            }
+
+            int packageId = Integer.parseInt(parts[1]);
+            Long accountId = Long.parseLong(parts[2]);
+
+            SellerPackage pkg = packageRepo.findById(packageId).orElse(null);
+            Account user = accountRepo.findById(accountId).orElse(null);
+
+            if (pkg == null || user == null) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, pkg == null ? "Gói không tồn tại!" : "Tài khoản không tồn tại!");
+                return "redirect:/seller/register";
+            }
+
+            Role sellerRole = roleRepo.findByRoleName(Role.RoleName.SELLER)
+                    .orElseThrow(() -> new RuntimeException("Role SELLER không tồn tại!"));
+
+            user.setRole(sellerRole);
+            user.setSellerActive(true);
+            user.setSellerPackage(pkg);
+            accountRepo.saveAndFlush(user);
+
+            // tx success
+            tx.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
+            tx.setCompletedAt(LocalDateTime.now());
+            transactionRepo.save(tx);
+
+            SellerSubscription newSub = new SellerSubscription();
+            newSub.setAccount(user);
+            newSub.setSellerPackage(pkg);
+            newSub.setStartDate(LocalDateTime.now());
+            newSub.setEndDate(LocalDateTime.now().plusMonths(pkg.getDurationInMonths()));
+            newSub.setPriceAtPurchase(pkg.getPrice());
+            newSub.setActive(true);
+            newSub.setTransaction(tx);
+            subscriptionRepo.save(newSub);
+
+            user.setSellerExpiryDate(newSub.getEndDate());
+            accountRepo.saveAndFlush(user);
+
+            session.setAttribute("loggedInAccount", user);
+
+            flashSuccess(ra, "Chúc mừng! Bạn đã đăng ký thành công làm Seller. Bạn có thể bắt đầu bán tool ngay bây giờ!");
+            return "redirect:/dashboard";
 
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttrs.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            flashError(ra, "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/seller/register";
         }
     }
 
+    // ===================== CHECKOUT RETURN =====================
+
     @GetMapping("/checkout-return")
     @Transactional
-    public String handleCheckoutPaymentReturn(@RequestParam Map<String, String> params, HttpSession session, RedirectAttributes redirectAttrs) {
+    public String handleCheckoutPaymentReturn(@RequestParam Map<String, String> params,
+                                              HttpSession session,
+                                              RedirectAttributes ra) {
         try {
-            boolean validHash = vnPayUtil.verifyHash(params);
-            if (!validHash) {
-                redirectAttrs.addFlashAttribute("error", "Chữ ký không hợp lệ! Vui lòng liên hệ Admin.");
+            if (!vnPayUtil.verifyHash(params)) {
+                clearCheckoutSession(session);
+                flashError(ra, "Chữ ký không hợp lệ! Vui lòng liên hệ Admin.");
                 return "redirect:/checkout";
             }
 
-            String vnp_ResponseCode = params.get("vnp_ResponseCode");
-            String vnp_TxnRef = params.get("vnp_TxnRef");
-            String vnp_OrderInfo = params.get("vnp_OrderInfo");
+            String vnpCode = params.get("vnp_ResponseCode");
+            String vnpTxnRef = params.get("vnp_TxnRef");
 
-            PaymentTransaction transaction = transactionRepo.findByVnpayTxnRef(vnp_TxnRef).orElse(null);
-
-            if (transaction == null) {
-                redirectAttrs.addFlashAttribute("error", "Không tìm thấy giao dịch!");
+            PaymentTransaction tx = transactionRepo.findByVnpayTxnRef(vnpTxnRef).orElse(null);
+            if (tx == null) {
+                clearCheckoutSession(session);
+                flashError(ra, "Không tìm thấy giao dịch!");
                 return "redirect:/checkout";
             }
 
-            transaction.setVnpayResponseCode(vnp_ResponseCode);
+            // idempotent
+            if (isFinalStatus(tx)) {
+                clearCheckoutSession(session);
+                if (tx.getStatus() == PaymentTransaction.TransactionStatus.SUCCESS) {
+                    return "redirect:/checkout/success";
+                }
+                return "redirect:/checkout";
+            }
 
-            if ("00".equals(vnp_ResponseCode)) {
-                // Thanh toán thành công
-                transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
-                transaction.setCompletedAt(LocalDateTime.now());
-                transactionRepo.save(transaction);
+            fillVnpFields(tx, params);
 
-                // Xử lý orders: update status, giảm stock, tạo license accounts
-                orderService.processSuccessfulPayment(transaction);
+            if (isVnpSuccess(vnpCode)) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
 
-                // Clear cart
-                Account account = transaction.getAccount();
-                cartService.clearCart(account);
+                // update order + tạo license accounts...
+                orderService.processSuccessfulPayment(tx);
 
-                redirectAttrs.addFlashAttribute("success",
-                        "Thanh toán thành công! Bạn có thể xem thông tin tài khoản trong mục 'Đơn hàng của tôi'.");
+                // dọn cart theo loại checkout
+                Account account = tx.getAccount();
+                String desc = tx.getDescription();
+
+                if (desc != null && desc.startsWith("BUYNOW_")) {
+                    // buy now: không đụng giỏ hàng
+                } else if (desc != null && desc.startsWith("CHECKOUT_SELECTED:")) {
+                    // format chuẩn: CHECKOUT_SELECTED:<id1,id2,...>
+                    String idsCsv = desc.substring("CHECKOUT_SELECTED:".length()).trim();
+                    if (!idsCsv.isBlank()) {
+                        for (String s : idsCsv.split(",")) {
+                            try {
+                                Long cartItemId = Long.parseLong(s.trim());
+                                cartService.removeItem(account, cartItemId);
+                            } catch (Exception ignored) {}
+                        }
+                    } else {
+                        cartService.clearCart(account);
+                    }
+                } else {
+                    cartService.clearCart(account);
+                }
+
+                clearCheckoutSession(session);
+
+                flashSuccess(ra, "Thanh toán thành công! Bạn có thể xem thông tin tài khoản trong mục 'Đơn hàng của tôi'.");
                 return "redirect:/checkout/success";
 
             } else {
-                // Thanh toán thất bại
-                transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                transaction.setCompletedAt(LocalDateTime.now());
-                transactionRepo.save(transaction);
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
 
-                // Update orders thành FAILED
-                orderService.processFailedPayment(transaction);
+                orderService.processFailedPayment(tx);
 
-                String errorMsg = transaction.getVnpayResponseMessage();
-                redirectAttrs.addFlashAttribute("error", "Thanh toán thất bại: " + errorMsg);
+                clearCheckoutSession(session);
+
+                flashError(ra, "Thanh toán thất bại: " + safeVnpMessage(tx));
                 return "redirect:/checkout";
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            redirectAttrs.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            clearCheckoutSession(session);
+            flashError(ra, "Có lỗi xảy ra: " + e.getMessage());
             return "redirect:/checkout";
         }
     }
 
-    /**
-     * VNPay callback for License Renewal
-     * GET /payment/license-renew-return
-     */
+    // ===================== LICENSE RENEW RETURN =====================
+
     @GetMapping("/license-renew-return")
     @Transactional
     public String handleLicenseRenewReturn(@RequestParam Map<String, String> params,
-                                           HttpSession session,
                                            RedirectAttributes ra) {
         try {
-            // 1. Verify hash
-            boolean validHash = vnPayUtil.verifyHash(params);
-            if (!validHash) {
-                ra.addFlashAttribute("error", "Chữ ký không hợp lệ!");
+            if (!vnPayUtil.verifyHash(params)) {
+                flashError(ra, "Chữ ký không hợp lệ!");
                 return "redirect:/customer/license-accounts";
             }
 
-            String vnp_ResponseCode = params.get("vnp_ResponseCode");
-            String vnp_TxnRef = params.get("vnp_TxnRef");
-            String vnp_OrderInfo = params.get("vnp_OrderInfo");
+            String vnpCode = params.get("vnp_ResponseCode");
+            String vnpTxnRef = params.get("vnp_TxnRef");
+            String vnpOrderInfo = params.get("vnp_OrderInfo");
 
-            // 2. Find transaction
-            Optional<PaymentTransaction> txOpt = transactionRepo.findByVnpayTxnRef(vnp_TxnRef);
-            if (txOpt.isEmpty()) {
-                ra.addFlashAttribute("error", "Không tìm thấy giao dịch!");
+            PaymentTransaction tx = transactionRepo.findByVnpayTxnRef(vnpTxnRef).orElse(null);
+            if (tx == null) {
+                flashError(ra, "Không tìm thấy giao dịch!");
                 return "redirect:/customer/license-accounts";
             }
 
-            PaymentTransaction transaction = txOpt.get();
-            transaction.setVnpayResponseCode(vnp_ResponseCode);
-            transaction.setVnpayTransactionNo(params.get("vnp_TransactionNo"));
-            transaction.setVnpayBankCode(params.get("vnp_BankCode"));
-            transaction.setVnpayBankTranNo(params.get("vnp_BankTranNo"));
-            transaction.setVnpayCardType(params.get("vnp_CardType"));
-            transaction.setVnpayPayDate(params.get("vnp_PayDate"));
+            // idempotent
+            if (isFinalStatus(tx)) {
+                if (tx.getStatus() == PaymentTransaction.TransactionStatus.SUCCESS) {
+                    flashSuccess(ra, "Giao dịch đã xử lý thành công trước đó.");
+                } else {
+                    flashError(ra, "Giao dịch đã xử lý thất bại trước đó.");
+                }
+                return "redirect:/customer/license-accounts";
+            }
 
-            if ("00".equals(vnp_ResponseCode)) {
-                // SUCCESS
-                // Parse orderInfo: RENEW_LICENSE_{licenseAccountId}_{licenseId}_{transactionId}
-                if (vnp_OrderInfo == null || !vnp_OrderInfo.startsWith("RENEW_LICENSE_")) {
-                    ra.addFlashAttribute("error", "Thông tin đơn hàng không hợp lệ!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/customer/license-accounts";
+            fillVnpFields(tx, params);
+
+            if (!isVnpSuccess(vnpCode)) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Gia hạn thất bại: " + safeVnpMessage(tx));
+                return "redirect:/customer/license-accounts";
+            }
+
+            // format linh hoạt:
+            // RENEW_LICENSE_<licenseAccountId>_<licenseId> (thường là 4 phần)
+            if (vnpOrderInfo == null || !vnpOrderInfo.startsWith("RENEW_LICENSE_")) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Thông tin đơn hàng không hợp lệ!");
+                return "redirect:/customer/license-accounts";
+            }
+
+            String[] parts = vnpOrderInfo.split("_");
+            if (parts.length < 4) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                flashError(ra, "Thông tin đơn hàng không đúng định dạng!");
+                return "redirect:/customer/license-accounts";
+            }
+
+            Long licenseAccountId = Long.parseLong(parts[2]);
+            Long licenseId = Long.parseLong(parts[3]);
+
+            LicenseAccount licenseAccount = licenseAccountRepo.findById(licenseAccountId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy License Account!"));
+
+            License license = licenseRepo.findById(licenseId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy gói gia hạn!"));
+
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime oldEnd = licenseAccount.getEndDate();
+            LocalDateTime base = (oldEnd != null && oldEnd.isAfter(now)) ? oldEnd : now;
+            LocalDateTime newEnd = base.plusDays(license.getDurationDays());
+
+            licenseAccount.setEndDate(newEnd);
+            licenseAccount.setStatus(LicenseAccount.Status.ACTIVE);
+            licenseAccountRepo.save(licenseAccount);
+
+            LicenseRenewLog renewLog = new LicenseRenewLog();
+            renewLog.setLicenseAccount(licenseAccount);
+            renewLog.setRenewDate(now);
+            renewLog.setNewEndDate(newEnd);
+            renewLog.setAmountPaid(tx.getAmount());
+            renewLog.setTransaction(tx);
+            licenseRenewLogRepo.save(renewLog);
+
+            tx.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
+            tx.setCompletedAt(now);
+            transactionRepo.save(tx);
+
+            String endText = newEnd.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+            flashSuccess(ra, "Gia hạn license thành công! Hạn mới: " + endText);
+            return "redirect:/customer/license-accounts/" + licenseAccountId;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            flashError(ra, "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/customer/license-accounts";
+        }
+    }
+
+    // ===================== REPAY RETURN =====================
+
+    @GetMapping("/repay-return")
+    public String handleRepayReturn(@RequestParam Map<String, String> params,
+                                    RedirectAttributes ra) {
+        try {
+            if (!vnPayUtil.verifyHash(params)) {
+                ra.addFlashAttribute("errorMsg", "Chữ ký không hợp lệ!");
+                return "redirect:/customer/orders";
+            }
+
+            String code = params.get("vnp_ResponseCode");
+            String ref  = params.get("vnp_TxnRef");
+
+            PaymentTransaction tx = transactionRepo.findByVnpayTxnRef(ref).orElse(null);
+            if (tx == null) {
+                ra.addFlashAttribute("errorMsg", "Không tìm thấy giao dịch!");
+                return "redirect:/customer/orders";
+            }
+
+            // fill vnp fields
+            tx.setVnpayResponseCode(code);
+            tx.setVnpayTransactionNo(params.get("vnp_TransactionNo"));
+            tx.setVnpayBankCode(params.get("vnp_BankCode"));
+            tx.setVnpayBankTranNo(params.get("vnp_BankTranNo"));
+            tx.setVnpayCardType(params.get("vnp_CardType"));
+            tx.setVnpayPayDate(params.get("vnp_PayDate"));
+
+            Long orderId = extractOrderIdFromRepayDesc(tx.getDescription());
+
+            // ✅ chốt trạng thái tx trước để không bị “treo”
+            if ("00".equals(code)) {
+                tx.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
+
+                try {
+                    // nếu service có issue cũng không làm tx quay lại PROCESSING
+                    orderService.processSuccessfulPayment(tx);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    ra.addFlashAttribute("errorMsg",
+                            "Thanh toán VNPay thành công nhưng hệ thống xử lý đơn bị lỗi. Vui lòng báo Admin (txnRef=" + ref + ").");
+                    return (orderId != null) ? "redirect:/customer/orders/" + orderId : "redirect:/customer/orders";
                 }
 
-                String[] parts = vnp_OrderInfo.split("_");
-                if (parts.length != 5) { // RENEW_LICENSE_{licenseAccountId}_{licenseId}_{transactionId}
-                    ra.addFlashAttribute("error", "Thông tin đơn hàng không đúng định dạng!");
-                    transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                    transactionRepo.save(transaction);
-                    return "redirect:/customer/license-accounts";
-                }
-
-                Long licenseAccountId = Long.parseLong(parts[2]);
-                Long licenseId = Long.parseLong(parts[3]);
-
-                // 3. Load License Account
-                LicenseAccount licenseAccount = licenseAccountRepo.findById(licenseAccountId)
-                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy License Account!"));
-
-                // 4. Load License package
-                License license = licenseRepo.findById(licenseId)
-                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy gói gia hạn!"));
-
-                // 5. Calculate new end date
-                LocalDateTime oldEndDate = licenseAccount.getEndDate();
-                LocalDateTime now = LocalDateTime.now();
-                
-                // Nếu license đã hết hạn → tính từ hiện tại
-                // Nếu còn hạn → cộng thêm vào end date hiện tại
-                LocalDateTime baseDate = (oldEndDate != null && oldEndDate.isAfter(now)) ? oldEndDate : now;
-                LocalDateTime newEndDate = baseDate.plusDays(license.getDurationDays());
-
-                // 6. Update License Account
-                licenseAccount.setEndDate(newEndDate);
-                licenseAccount.setStatus(LicenseAccount.Status.ACTIVE);
-                licenseAccountRepo.save(licenseAccount);
-
-                // 7. Create Renew Log
-                LicenseRenewLog renewLog = new LicenseRenewLog();
-                renewLog.setLicenseAccount(licenseAccount);
-                renewLog.setRenewDate(LocalDateTime.now());
-                renewLog.setNewEndDate(newEndDate);
-                renewLog.setAmountPaid(transaction.getAmount());
-                renewLog.setTransaction(transaction);
-                licenseRenewLogRepo.save(renewLog);
-
-                // 8. Update transaction
-                transaction.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
-                transaction.setCompletedAt(LocalDateTime.now());
-                transactionRepo.save(transaction);
-
-                ra.addFlashAttribute("success", "Gia hạn license thành công! Hạn mới: " + 
-                        newEndDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-                return "redirect:/customer/license-accounts/" + licenseAccountId;
+                ra.addFlashAttribute("successMsg", "Thanh toán lại thành công!");
+                return (orderId != null) ? "redirect:/customer/orders/" + orderId : "redirect:/customer/orders";
 
             } else {
-                // FAILED
-                transaction.setStatus(PaymentTransaction.TransactionStatus.FAILED);
-                transactionRepo.save(transaction);
+                tx.setStatus(PaymentTransaction.TransactionStatus.FAILED);
+                tx.setCompletedAt(LocalDateTime.now());
+                transactionRepo.save(tx);
 
-                String errorMsg = transaction.getVnpayResponseMessage();
-                ra.addFlashAttribute("error", "Gia hạn thất bại: " + errorMsg);
-                return "redirect:/customer/license-accounts";
+                try {
+                    orderService.processFailedPayment(tx);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    // vẫn OK: tx đã FAILED rồi, không treo
+                }
+
+                ra.addFlashAttribute("errorMsg", "Thanh toán lại thất bại: " + tx.getVnpayResponseMessage());
+                return (orderId != null) ? "redirect:/customer/orders/" + orderId : "redirect:/customer/orders";
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            ra.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
-            return "redirect:/customer/license-accounts";
+            ra.addFlashAttribute("errorMsg", "Có lỗi xảy ra: " + e.getMessage());
+            return "redirect:/customer/orders";
         }
     }
+
+    private Long extractOrderIdFromRepayDesc(String desc) {
+        if (desc ==null)
+            return null;
+        String prefix ="BUYNOW_REPAY_ORDER_";
+        if(!desc.startsWith(prefix))
+            return null;
+        try {
+            return Long.parseLong(desc.substring(prefix.length()).trim());
+        } catch (Exception e){
+            return null;
+        }
+    }
+
 }

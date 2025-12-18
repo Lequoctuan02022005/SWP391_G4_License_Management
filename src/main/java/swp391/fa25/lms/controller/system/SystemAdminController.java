@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Role;
+import swp391.fa25.lms.model.SellerSubscription;
 import swp391.fa25.lms.repository.RoleRepository;
 import swp391.fa25.lms.service.RoleService;
 
@@ -25,6 +26,10 @@ public class SystemAdminController {
 
     private final RoleRepository roleRepository;
     private final RoleService roleService;
+
+    @Autowired
+    private SellerSubscriptionService sellerSubscriptionService;
+
 
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model, RedirectAttributes ra) {
@@ -131,4 +136,36 @@ public class SystemAdminController {
         roleRepository.deleteById(id);
         return "redirect:/admin/roles";
     }
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/financial-report")
+    public String financialReport(
+            @RequestParam(required = false) String seller,
+            @RequestParam(required = false) Long packageId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate toDate,
+            @RequestParam(defaultValue = "0") int page,
+            Model model
+    ) {
+
+        Pageable pageable = PageRequest.of(page, 10);
+
+        Page<SellerSubscription> result =
+                sellerSubscriptionService.filter(
+                        seller, packageId, status, fromDate, toDate, pageable
+                );
+        Long totalRevenue =
+                sellerSubscriptionService.sumRevenue(
+                        seller, packageId, status, fromDate, toDate
+                );
+        model.addAttribute("page", result);
+        model.addAttribute("totalRevenue", totalRevenue);
+
+        return "system/financial-report";
+    }
+
 }

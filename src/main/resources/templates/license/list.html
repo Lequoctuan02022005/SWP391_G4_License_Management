@@ -52,6 +52,10 @@
     <div class="card">
 
         <h1>License Accounts</h1>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a class="btn btn-ghost" th:href="@{/customer/orders}">← Danh sách</a>
+
+        </div>
         <p class="sub">Quản lý các tài khoản license bạn đã mua. Có tìm kiếm, lọc, sắp xếp và phân trang.</p>
 
         <div th:if="${successMsg != null}" class="msg msg-ok" th:text="${successMsg}">OK</div>

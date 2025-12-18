@@ -1,72 +1,216 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <title>Tool Upload Detail</title>
     <meta charset="UTF-8">
-    <title>Review Tool Upload</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
 <body>
 
-<!-- HEADER + SIDEBAR (ADMIN / MOD) -->
-<div th:replace="common/header :: header"></div>
+<!-- SIDEBAR + HEADER -->
+<div th:replace="common/sidebar-header :: role-sidebar">
 
-<div th:fragment="content">
-<div class="container mt-4">
+    <!-- MAIN CONTENT -->
+    <div th:fragment="content">
+        <div class="container-fluid px-4 py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Review Tool Upload</h3>
-        <a th:href="@{/tools/mod/uploads}" class="btn btn-outline-secondary">
-             Back
-        </a>
-    </div>
+            <div class="card shadow-sm">
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h4 class="fw-bold" th:text="${tool.toolName}"></h4>
+                <!-- HEADER -->
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-box"></i> Tool Upload Detail
+                    </h5>
 
-            <p><strong>Seller:</strong>
-                <span th:text="${tool.seller.fullName}"></span>
-            </p>
+                    <span class="badge fs-6 bg-warning"
+                          th:if="${tool.status.name() == 'PENDING'}">PENDING</span>
 
-            <p><strong>Status:</strong>
-                <span th:text="${tool.status}"></span>
-            </p>
+                    <span class="badge fs-6 bg-info"
+                          th:if="${tool.status.name() == 'APPROVED'}">APPROVED</span>
 
-            <hr>
+                    <span class="badge fs-6 bg-danger"
+                          th:if="${tool.status.name() == 'REJECTED'}">REJECTED</span>
 
-            <p><strong>Description</strong></p>
-            <p th:text="${tool.description}"></p>
+                    <span class="badge fs-6 bg-success"
+                          th:if="${tool.status.name() == 'PUBLISHED'}">PUBLISHED</span>
+
+                    <span class="badge fs-6 bg-secondary"
+                          th:unless="${tool.status.name() == 'PENDING'
+                                or tool.status.name() == 'APPROVED'
+                                or tool.status.name() == 'REJECTED'
+                                or tool.status.name() == 'PUBLISHED'}">
+                        <span th:text="${tool.status}"></span>
+                    </span>
+                </div>
+
+                <div class="card-body">
+
+                    <!-- BASIC INFO -->
+                    <div class="row mb-4 w-100">
+                        <div class="col-md-4 text-center">
+                            <img  th:src="${tool.image}"
+                                 class="img-fluid rounded border"
+                                 style="max-height: 220px;"
+                                 alt="Tool Image">
+                        </div>
+
+                        <div class="col-md-8">
+                            <h4 th:text="${tool.toolName}"></h4>
+
+                            <p class="text-muted mb-1">
+                                Category:
+                                <strong th:text="${tool.category.categoryName}"></strong>
+                            </p>
+
+                            <p class="text-muted mb-1">
+                                Seller:
+                                <strong th:text="${tool.seller.fullName}"></strong>
+                            </p>
+
+                            <p class="text-muted mb-1">
+                                Login Method:
+                                <strong th:text="${tool.loginMethod}"></strong>
+                            </p>
+
+                            <p class="text-muted">
+                                Uploaded At:
+                                <strong th:text="${#temporals.format(tool.createdAt,'dd/MM/yyyy HH:mm')}"></strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- DESCRIPTION -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Description</h6>
+                        <p th:text="${tool.description}"></p>
+                    </div>
+
+                    <!-- FILE LIST -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Tool Files</h6>
+
+                        <div th:if="${tool.files == null or tool.files.isEmpty()}"
+                             class="text-muted">
+                            No files uploaded
+                        </div>
+
+                        <table class="table table-bordered"
+                               th:if="${tool.files != null and !tool.files.isEmpty()}">
+                            <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>File Path</th>
+                                <th>File Type</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="f, i : ${tool.files}">
+                                <td th:text="${i.index + 1}"></td>
+
+                                <td class="text-break" th:text="${f.filePath}"></td>
+
+                                <td>
+                                    <span class="badge bg-secondary"
+                                          th:text="${f.fileType}">
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <a th:href="@{${f.filePath}}"
+                                       target="_blank"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-download"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- NOTE (REJECT REASON) -->
+                    <div class="mb-4" th:if="${tool.note != null}">
+                        <h6 class="fw-bold text-danger">Reject Reason</h6>
+                        <div class="alert alert-danger" th:text="${tool.note}"></div>
+                    </div>
+
+                    <!-- ACTIONS -->
+                    <div class="text-end">
+
+                        <!-- MOD ACTION -->
+                        <th:block th:if="${account.role.roleName.name() == 'MOD'
+                                          and tool.status.name() == 'PENDING'}">
+
+                            <form th:action="@{/moderator/tool/{id}/approve(id=${tool.toolId})}"
+                                  method="post"
+                                  class="d-inline">
+                                <button class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Approve
+                                </button>
+                            </form>
+
+                            <button class="btn btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#rejectModal">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </button>
+                        </th:block>
+
+                        <!-- MANAGER ACTION -->
+                        <th:block th:if="${account.role.roleName.name() == 'MANAGER'
+                                          and tool.status.name() == 'APPROVED'}">
+
+                            <form th:action="@{/manager/tool/{id}/publish(id=${tool.toolId})}"
+                                  method="post"
+                                  class="d-inline">
+                                <button class="btn btn-primary">
+                                    <i class="bi bi-upload"></i> Publish
+                                </button>
+                            </form>
+                        </th:block>
+
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </div>
+</div>
 
-    <div class="row">
-        <!-- APPROVE -->
-        <div class="col-md-6">
-            <form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/approve'}"
-                  method="post">
-                <button class="btn btn-success w-100">
-                    Approve
-                </button>
-            </form>
-        </div>
+<!-- REJECT MODAL -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form th:action="@{/moderator/tool/{id}/reject(id=${tool.toolId})}"
+              method="post"
+              class="modal-content">
 
-        <!-- REJECT -->
-        <div class="col-md-6">
-            <form th:action="@{'/tools/mod/uploads/' + ${tool.toolId} + '/reject'}"
-                  method="post">
-                <textarea class="form-control mb-2"
-                          name="note"
-                          placeholder="Reason for rejection..."
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Reject Tool</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <label class="form-label fw-bold">Reject Reason</label>
+                <textarea name="note"
+                          class="form-control"
+                          rows="4"
                           required></textarea>
-                <button class="btn btn-danger w-100">
-                    Reject
-                </button>
-            </form>
-        </div>
-    </div>
+            </div>
 
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger">
+                    Confirm Reject
+                </button>
+            </div>
+
+        </form>
+    </div>
 </div>
-</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

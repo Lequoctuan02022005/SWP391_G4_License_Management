@@ -1,61 +1,16 @@
-<footer th:fragment="footer" class="mt-5 bg-light pt-4 pb-4" xmlns:th="http://www.thymeleaf.org">
-    <style>
-        .footer-container {
-            text-align: center;
-            color: #555;
-            font-size: 14px;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-
-        .footer-links a {
-            color: #555;
-            text-decoration: none;
-        }
-
-        .footer-links a:hover {
-            color: #ff5722;
-        }
-
-        .footer-certificates img {
-            height: 50px;
-            margin: 0 8px;
-        }
-
-        .footer-company {
-            margin-top: 10px;
-            font-weight: 600;
-        }
-
-        .footer-text {
-            margin-top: 5px;
-            line-height: 1.7;
-        }
-    </style>
+<footer th:fragment="footer" class="site-footer mt-5" xmlns:th="http://www.thymeleaf.org">
+    <link th:href="@{/css/footer.css}" rel="stylesheet">
 
     <div class="footer-container">
 
         <!-- TOP LINKS -->
         <div class="footer-links">
             <a href="#">Giới thiệu</a>
-            <a href="#">Điều khoản sử dụng</a>
-            <a href="#">Chính sách bảo mật</a>
-            <a href="#">Chính sách vận chuyển</a>
-            <a href="#">Liên hệ</a>
+
+            <a href="/support">Liên hệ</a>
         </div>
 
-        <!-- CERTIFICATES -->
-        <div class="footer-certificates">
-            <img src="https://down-vn.img.susercontent.com/file/94a0f5e0cbc4661106eb3b02f5089fca" alt="cert1">
-            <img src="https://down-vn.img.susercontent.com/file/5ac706c7b54d6a11e0ac7c969a3f0871" alt="cert2">
-            <img src="https://down-vn.img.susercontent.com/file/7320cd912d48785b0ef1f820457b258b" alt="cert3">
-        </div>
+
 
         <!-- COMPANY INFO -->
         <div class="footer-company">Công ty TNHH ToolMarket</div>

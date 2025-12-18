@@ -11,7 +11,6 @@
 <body>
 <div th:fragment="header">
     <!-- User & Seller Header -->
-
         <!-- Top bar -->
         <div class="navbar-top py-2 px-4 d-flex justify-content-between align-items-center top-bar">
             <div>
@@ -30,19 +29,18 @@
 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav mx-auto">
+                        <li class="nav-item"><a class="nav-link" href="/home">Trang chủ</a></li>
                         <li class="nav-item"><a class="nav-link" href="/toollist">Sản phẩm</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#category">Dịch vụ</a></li>
                         <li class="nav-item"><a class="nav-link" href="/blog">Blogs</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Contact Us</a></li>
                         <li class="nav-item"><a class="nav-link" href="/support">Support</a></li>
                     </ul>
 
                     <div class="d-flex align-items-center">
                         <!-- Wishlist & Cart -->
-                        <a th:href="@{/favorite/list}" class="wishlist-icon position-relative me-3">
-                            <i class="far fa-heart fs-5"></i>
-                            <span id="favoriteCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.75rem;">0</span>
-                        </a>
+<!--                        <a th:href="@{/favorite/list}" class="wishlist-icon position-relative me-3">-->
+<!--                            <i class="far fa-heart fs-5"></i>-->
+<!--                            <span id="favoriteCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.75rem;">0</span>-->
+<!--                        </a>-->
                         <a th:href="@{/cart/view}" class="position-relative me-4">
                             <i class="fas fa-shopping-cart fs-4 text-dark"></i>
                             <span id="cartCountBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.7rem; display:none;">0</span>
@@ -59,15 +57,20 @@
                         <!-- Dropdown nếu đã đăng nhập -->
                         <div th:if="${account != null}" class="dropdown">
                             <a class="d-flex align-items-center text-decoration-none dropdown-toggle fw-bolder" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
-                                <img th:src="${account.images != null ? account.images : 'https://cdn-icons-png.flaticon.com/512/147/147144.png'}" alt="avatar" class="rounded-circle me-2" width="36" height="36">
+                                <img th:src="${account.images != null
+        ? '/uploads/avatar/' + account.images
+        : 'https://cdn-icons-png.flaticon.com/512/147/147144.png'}"
+                                     alt="avatar"
+                                     class="rounded-circle me-2"
+                                     width="36" height="36">
                                 <span th:text="${account.fullName}">User</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                 <li><a class="dropdown-item" th:href="@{/profile}">Thông tin tài khoản</a></li>
                                 <li><a class="dropdown-item" th:href="@{/change-password}">Đổi mật khẩu</a></li>
-                                <li><a class="dropdown-item" th:href="@{/orders}">Đơn hàng đã mua</a></li>
+                                <li><a class="dropdown-item" th:href="@{/customer/orders}">Đơn hàng đã mua</a></li>
                                 <li th:if="${account.role.roleName.name() == 'SELLER'}">
-                                    <a class="dropdown-item fw-semibold" th:href="@{/seller/dashboard}">
+                                    <a class="dropdown-item fw-semibold" th:href="@{/dashboard}">
                                         Seller Dashboard
                                     </a>
                                 </li>
