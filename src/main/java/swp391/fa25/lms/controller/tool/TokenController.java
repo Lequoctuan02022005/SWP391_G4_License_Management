@@ -45,6 +45,7 @@ public class TokenController {
             return "redirect:/tools/seller/add";
         }
 
+        model.addAttribute("isEdit", false);
         model.addAttribute("tokens", pending.getTokens());
         model.addAttribute("quantity", pending.getTool().getQuantity());
         return "tool/token-manage";
@@ -111,7 +112,7 @@ public class TokenController {
             ra.addFlashAttribute("error", "No tool in edit session. Please start from edit form again.");
             return "redirect:/tools/seller";
         }
-
+        model.addAttribute("isEdit", true);
         model.addAttribute("tool", pending.getTool());
         model.addAttribute("tokens", pending.getTokens());
         return "tool/token-manage";

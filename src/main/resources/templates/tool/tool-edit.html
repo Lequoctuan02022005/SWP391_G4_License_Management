@@ -6,17 +6,15 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/tool-form.css">
-    <link th:href="@{/css/home.css}" rel="stylesheet">
 </head>
 
 <body>
 
-<!-- HEADER -->
-<!--<div th:insert="common/header :: header"></div>-->
+<div th:replace="common/sidebar-header :: role-sidebar">
+    <th:block th:fragment="content">
 
-<div class="container mt-4">
-
-    <h2 class="fw-bold mb-4">Edit Tool</h2>
+        <div class="container-fluid px-4 py-4">
+        <h2 class="fw-bold mb-4">Edit Tool</h2>
 
     <form th:action="@{/tools/seller/edit/{id}(id=${tool.toolId})}"
           method="post"
@@ -27,7 +25,6 @@
         <input type="hidden" name="loginMethod" th:value="${tool.loginMethod.name()}">
         <input type="hidden" name="quantity" th:value="${tool.quantity}">
         <input type="hidden" name="note" th:value="${tool.note}">
-        <input type="hidden" name="description" th:value="${tool.description}">
         <input type="hidden" name="category.categoryId" th:value="${tool.category.categoryId}">
 
         <div class="row g-4 align-items-stretch tool-wrapper">
@@ -36,7 +33,7 @@
             <div class="col-md-5 d-flex full-height">
                 <div id="previewBox" class="preview-box">
                     <img th:if="${tool.image != null}"
-                         th:src="@{'/' + ${tool.image}}"
+                         th:src="${tool.image}"
                          id="oldPreview"
                          style="width:100%; height:100%; object-fit:contain;">
                 </div>
@@ -77,18 +74,14 @@
                     </select>
                 </div>
 
-                <!-- Description (edit được nếu USER_PASSWORD) -->
-                <div class="mb-3" th:if="${tool.loginMethod.name() == 'USER_PASSWORD'}">
+                <div class="mb-3">
                     <label class="fw-bold">Description</label>
-                    <textarea class="form-control" name="description" rows="3" required
-                              th:text="${tool.description}"></textarea>
-                </div>
-
-                <!-- Description readonly nếu TOKEN -->
-                <div class="mb-3" th:if="${tool.loginMethod.name() == 'TOKEN'}">
-                    <label class="fw-bold">Description</label>
-                    <textarea class="form-control" rows="3" disabled
-                              th:text="${tool.description}"></textarea>
+                    <textarea class="form-control"
+                              name="description"
+                              rows="3"
+                              required
+                              th:text="${tool.description}">
+                    </textarea>
                 </div>
 
                 <!-- Login Method -->
@@ -156,6 +149,8 @@
         </div>
     </form>
 </div>
+    </th:block>
+        </div>
 
 <!-- JS PREVIEW + LICENSE SCRIPT -->
 <script>

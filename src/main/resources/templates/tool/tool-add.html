@@ -6,20 +6,24 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/tool-form.css">
-    <link th:href="@{/css/home.css}" rel="stylesheet">
 </head>
 
 <body>
 
 <!-- HEADER -->
-<div th:insert="~{common/header :: header}"></div>
+<div th:replace="common/sidebar-header :: role-sidebar">
+    <th:block th:fragment="content">
+        <div class="container-fluid px-4 py-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="fw-bold mb-0">Add New Tool</h2>
 
-<div class="container mt-4">
-
-    <h2 class="fw-bold mb-4">Add New Tool</h2>
-
+            <a href="/toollist" class="btn btn-outline-secondary">
+                ← Back to List
+            </a>
+        </div>
     <form method="post" enctype="multipart/form-data"
-          th:action="@{/tools/seller/add}">
+          th:action="@{/tools/seller/add}"
+          class="bg-white p-4 shadow-sm rounded">
 
         <div class="row g-4 align-items-stretch tool-wrapper">
 
@@ -28,7 +32,7 @@
                 <div id="previewBox" class="preview-box">
 
                     <img th:if="${tool != null && tool.image != null}"
-                         th:src="@{'/' + ${tool.image}}"
+                         th:src="${tool.image}"
                          id="oldPreview">
                 </div>
             </div>
@@ -197,6 +201,7 @@
         el.parentElement.parentElement.remove();
     }
 </script>
-
+    </th:block>
+</div>
 </body>
 </html>
