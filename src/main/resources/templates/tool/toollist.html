@@ -121,77 +121,89 @@
                         </div>
                     </div>
 
-                    <!-- GRID TOOL -->
-                    <div class="tl-grid" th:if="${tools != null and !#lists.isEmpty(tools)}">
-                        <article class="tl-card" th:each="tool : ${tools}" th:if="${isSeller or tool.status.name() == 'PUBLISHED'}">
-                            <div class="tl-card-image-wrapper">
-                                <img th:src="@{${tool.image}}" alt="Tool image" class="tl-card-image" />
-                                <div class="tl-sold-out-overlay" th:if="${tool.availableQuantity != null and tool.availableQuantity == 0}">HẾT HÀNG</div>
-                                <span class="tl-badge" th:switch="${tool.status}">
-                                    <span th:case="'PUBLISHED'" class="tl-badge tl-badge-published">[[${tool.status}]]</span>
-                                    <span th:case="'PENDING'" class="tl-badge tl-badge-pending">[[${tool.status}]]</span>
-                                    <span th:case="'REJECTED'" class="tl-badge tl-badge-rejected">[[${tool.status}]]</span>
-                                    <span th:case="'DEACTIVATED'" class="tl-badge tl-badge-deactivated">[[${tool.status}]]</span>
+                    <div class="table-responsive" th:if="${tools != null and !#lists.isEmpty(tools)}">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Ảnh</th>
+                                <th>Tên Tool</th>
+                                <th>Danh mục</th>
+                                <th>Giá</th>
+                                <th>Tồn kho</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            <tr th:each="tool : ${tools}">
+
+                                <td style="width:100px">
+                                    <img th:src="@{${tool.image}}"
+                                      style="width:80px;height:50px;object-fit:cover"
+                                    alt="tool"/>
+                                </td>
+
+                                <td>
+                                    <strong th:text="${tool.toolName}">Tool name</strong><br/>
+
+                                </td>
+
+                                <td th:text="${tool.category != null ? tool.category.categoryName : '—'}"></td>
+
+                                <td>
+                                <span th:if="${tool.minPrice != null}">
+                                    <span th:text="${#numbers.formatDecimal(tool.minPrice,0,'COMMA',0,'POINT')}"></span>
+                                    <span th:if="${tool.maxPrice != null and tool.maxPrice.compareTo(tool.minPrice) != 0}">
+                                        -
+                                        <span th:text="${#numbers.formatDecimal(tool.maxPrice,0,'COMMA',0,'POINT')}"></span>
+                                    </span>
+                                    đ
                                 </span>
-                            </div>
+                                    <span th:if="${tool.minPrice == null}">Liên hệ</span>
+                                </td>
 
-                            <div class="tl-card-body">
-                                <h3 class="tl-card-title" th:text="${tool.toolName}">Tên tool</h3>
-                                <p class="tl-card-category" th:if="${tool.category != null}">Danh mục: <span th:text="${tool.category.categoryName}">Category</span></p>
-                                <p class="tl-card-seller" th:if="${tool.seller != null}">Seller: <span th:text="${tool.seller.fullName}" class="tl-card-seller-name">Seller Name</span></p>
-                                <p class="tl-card-price">
-                                    Giá:
-                                    <span th:if="${tool.minPrice != null and tool.maxPrice != null and tool.minPrice.compareTo(tool.maxPrice) == 0}">
-                                        <strong th:text="${#numbers.formatDecimal(tool.minPrice, 0, 'COMMA', 0, 'POINT')}">0</strong> đ
-                                    </span>
-                                    <span th:if="${tool.minPrice != null and tool.maxPrice != null and tool.minPrice.compareTo(tool.maxPrice) != 0}">
-                                        <strong th:text="${#numbers.formatDecimal(tool.minPrice, 0, 'COMMA', 0, 'POINT')}">0</strong> -
-                                        <strong th:text="${#numbers.formatDecimal(tool.maxPrice, 0, 'COMMA', 0, 'POINT')}">0</strong> đ
-                                    </span>
-                                    <span th:if="${tool.minPrice == null}"><strong>Liên hệ</strong></span>
-                                </p>
-                                <div class="tl-card-licenses" th:if="${tool.licenses != null and !#lists.isEmpty(tool.licenses)}">
-                                    <p class="tl-card-license-title mb-1">License:</p>
-                                    <ul class="tl-license-list">
-                                        <li th:each="lic : ${tool.licenses}">Gói <span th:text="${lic.durationDays}">0</span> ngày - <span th:text="${#numbers.formatDecimal(lic.price, 0, 'COMMA', 0, 'POINT')}">0</span> đ</li>
-                                    </ul>
-                                </div>
-                                <div class="tl-card-rating" th:if="${tool.totalReviews != null and tool.totalReviews > 0}">
-                                    <div class="stars mb-1">
-                                        <span th:each="i : ${#numbers.sequence(1,5)}">
-                                            <i th:classappend="${i <= (tool.averageRating != null ? tool.averageRating : 0)} ? 'fas fa-star text-warning' : 
-                                            (${i - (tool.averageRating != null ? tool.averageRating : 0) < 1} ? 'fas fa-star-half-alt text-warning' : 'far fa-star text-muted')"></i>
-                                        </span>
-                                    </div>
-                                    <span class="tl-rating-value" th:text="${tool.averageRating != null ? #numbers.formatDecimal(tool.averageRating,1,1) : '0.0'}">0.0</span>
-                                    <span class="tl-rating-count">(<span th:text="${tool.totalReviews != null ? tool.totalReviews : 0}">0</span> đánh giá)</span>
-                                </div>
-                                <div class="tl-card-rating text-muted" th:if="${tool.totalReviews == null or tool.totalReviews == 0}">
-                                    <small>Chưa có đánh giá</small>
-                                </div>
-                                <p class="tl-card-desc" th:text="${tool.description}">Mô tả tool...</p>
-                                <div class="tl-card-stock">Tồn kho: <strong th:text="${tool.availableQuantity != null ? tool.availableQuantity : 0}">0</strong> / <span th:text="${tool.quantity}">0</span></div>
-                            </div>
 
-                            <div class="tl-card-footer">
-                                <a th:href="@{'/tools/detail/' + ${tool.toolId}}" class="tl-btn tl-btn-outline tl-btn-sm">Xem chi tiết</a>
-                                <a th:if="${tool.seller.accountId != currentUserId and tool.availableQuantity != null and tool.availableQuantity > 0}"
-                                   th:href="@{'/tools/detail/' + ${tool.toolId}}" class="tl-btn tl-btn-outline tl-btn-sm"
-                                   sec:authorize="hasRole('CUSTOMER')">Thêm vào giỏ hàng</a>
-                                <button th:if="${tool.availableQuantity == 0}" class="tl-btn tl-btn-outline tl-btn-sm" style="opacity:0.55;cursor:not-allowed" disabled>Hết hàng</button>
-                                <div class="tl-card-actions" sec:authorize="hasRole('SELLER')">
+                                <td>
+                                    <strong th:text="${tool.availableQuantity != null ? tool.availableQuantity : 0}"></strong>
+                                    /
+                                    <span th:text="${tool.quantity}"></span>
+                                </td>
+
+
+                                <td>
+                                <span class="badge"
+                                      th:classappend="
+                                        ${tool.status.name() == 'PUBLISHED'} ? 'bg-success' :
+                                        (${tool.status.name() == 'PENDING'} ? 'bg-warning' :
+                                        (${tool.status.name() == 'REJECTED'} ? 'bg-danger' : 'bg-secondary'))"
+                                      th:text="${tool.status}">
+                                </span>
+                                </td>
+
+
+                                <td class="text-nowrap">
+                                    <a th:href="@{'/tools/detail/' + ${tool.toolId}}"
+                                       class="btn btn-sm btn-outline-primary">Xem</a>
+
+                                    <a th:if="${tool.status.name() != 'PUBLISHED'}"
+                                       th:href="@{'/tools/seller/edit/' + ${tool.toolId}}"
+                                       class="btn btn-sm btn-outline-success">Sửa</a>
+
                                     <form th:if="${tool.status.name() == 'PUBLISHED' or tool.status.name() == 'DEACTIVATED'}"
-                                          th:action="@{'/toollist/toggle/' + ${tool.toolId}}" method="post" class="tl-inline-form">
-                                        <button type="submit" class="tl-btn-status"
-                                                th:classappend="' status-' + ${tool.status.name().toLowerCase()}"
-                                                th:text="${tool.status.name()}"></button>
+                                          th:action="@{'/toollist/toggle/' + ${tool.toolId}}"
+                                          method="post"
+                                          class="d-inline">
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                th:text="${tool.status}">
+                                        </button>
                                     </form>
-                                    <button th:if="${tool.status.name() != 'PUBLISHED' and tool.status.name() != 'DEACTIVATED'}"
-                                            class="tl-btn-status" th:classappend="' status-' + ${tool.status.name().toLowerCase()}" disabled th:text="${tool.status.name()}"></button>
-                                    <a th:if="${tool.status.name() != 'PUBLISHED'}" th:href="@{'/tools/seller/edit/' + ${tool.toolId}}" class="tl-btn tl-btn-success tl-btn-sm">Sửa</a>
-                                </div>
-                            </div>
-                        </article>
+                                </td>
+
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
 
                     <!-- PAGINATION -->
