@@ -14,7 +14,7 @@
 <body>
 
 <!-- CUSTOMER or guest: use top header -->
-<div th:if="${account == null or account.role.roleName.name() == 'CUSTOMER'}">
+<div th:if="${account == null or account.role.roleName.name() == 'CUSTOMER' }">
     <div th:replace="common/header :: header"></div>
 
     <div class="bg-light">
