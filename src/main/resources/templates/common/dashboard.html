@@ -35,14 +35,14 @@
                 <section class="dashboard-grid kpi-section">
                     <div class="card kpi blue">
                         <div class="kpi-icon"><i class="bi bi-people-fill"></i></div>
-                        <span>Tổng tài khoản</span>
+                        <span>Tổng số tài khoản</span>
                         <strong th:text="${totalAccounts}"></strong>
                         <small class="kpi-change">Người dùng hoạt động</small>
                     </div>
 
                     <div class="card kpi green">
                         <div class="kpi-icon"><i class="bi bi-shop"></i></div>
-                        <span>Tổng bán hàng</span>
+                        <span>Tổng số người bán hàng</span>
                         <strong th:text="${totalSellers}"></strong>
                         <small class="kpi-change">Đã đăng ký</small>
                     </div>
@@ -64,23 +64,7 @@
 
                 <!-- QUICK STATS -->
                 <section class="quick-stats">
-                    <div class="stat-box">
-                        <h4>Tình trạng hệ thống</h4>
-                        <div class="stat-bars">
-                            <div class="stat-item">
-                                <span>Users</span>
-                                <div class="progress-bar"><div style="width: 85%"></div></div>
-                            </div>
-                            <div class="stat-item">
-                                <span>Tools</span>
-                                <div class="progress-bar"><div style="width: 72%"></div></div>
-                            </div>
-                            <div class="stat-item">
-                                <span>Activity</span>
-                                <div class="progress-bar"><div style="width: 90%"></div></div>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <div class="stat-box">
                         <h4>Liên kết nhanh</h4>
@@ -305,12 +289,7 @@
                         <small class="kpi-change">Hôm nay</small>
                     </div>
 
-                    <div class="card kpi blue">
-                        <div class="kpi-icon"><i class="bi bi-activity"></i></div>
-                        <span>Trạng thái hệ thống</span>
-                        <strong>Tốt</strong>
-                        <small class="kpi-change">Tất cả hệ thống trực tuyến</small>
-                    </div>
+
                 </section>
 
                 <!-- BÁO CÁO CÔNG CỤ -->
