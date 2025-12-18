@@ -66,7 +66,7 @@
                                 <span class="badge bg-secondary" th:if="${p.status.name() == 'DEACTIVATED'}">DEACTIVATED</span>
                             </td>
                             <td>
-                                <a th:href="@{/seller-packages/edit/{id}(id=${p.id})}"
+                                <a th:href="@{/seller-packages/form(id=${p.id})}"
                                    class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-pencil"></i> Edit
                                 </a>

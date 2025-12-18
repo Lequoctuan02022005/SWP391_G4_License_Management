@@ -170,6 +170,17 @@
                                     <i class="bi bi-upload"></i> Publish
                                 </button>
                             </form>
+                            <button class="btn btn-warning"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#pendingModal">
+                                <i class="bi bi-arrow-clockwise"></i> Set Pending
+                            </button>
+
+                            <button class="btn btn-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#rejectModal">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </button>
                         </th:block>
 
                     </div>
@@ -184,7 +195,11 @@
 <!-- REJECT MODAL -->
 <div class="modal fade" id="rejectModal" tabindex="-1">
     <div class="modal-dialog">
-        <form th:action="@{/moderator/tool/{id}/reject(id=${tool.toolId})}"
+        <form th:action="${
+                account.role.roleName.name() == 'MANAGER'
+                ? '/manager/tool/' + tool.toolId + '/reject'
+                : '/moderator/tool/' + tool.toolId + '/reject'
+            }"
               method="post"
               class="modal-content">
 
@@ -204,6 +219,35 @@
             <div class="modal-footer">
                 <button type="submit" class="btn btn-danger">
                     Confirm Reject
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+<!-- PENDING MODAL (MANAGER) -->
+<div class="modal fade" id="pendingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form th:action="@{/manager/tool/{id}/pending(id=${tool.toolId})}"
+              method="post"
+              class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title text-warning">Set Tool to Pending</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <label class="form-label fw-bold">Note</label>
+                <textarea name="note"
+                          class="form-control"
+                          rows="4"
+                          required></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-warning">
+                    Confirm Pending
                 </button>
             </div>
 

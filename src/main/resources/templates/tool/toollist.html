@@ -156,10 +156,18 @@
                                         <li th:each="lic : ${tool.licenses}">Gói <span th:text="${lic.durationDays}">0</span> ngày - <span th:text="${#numbers.formatDecimal(lic.price, 0, 'COMMA', 0, 'POINT')}">0</span> đ</li>
                                     </ul>
                                 </div>
-                                <div class="tl-card-rating">
-                                    <span class="tl-stars">★</span>
+                                <div class="tl-card-rating" th:if="${tool.totalReviews != null and tool.totalReviews > 0}">
+                                    <div class="stars mb-1">
+                                        <span th:each="i : ${#numbers.sequence(1,5)}">
+                                            <i th:classappend="${i <= (tool.averageRating != null ? tool.averageRating : 0)} ? 'fas fa-star text-warning' : 
+                                            (${i - (tool.averageRating != null ? tool.averageRating : 0) < 1} ? 'fas fa-star-half-alt text-warning' : 'far fa-star text-muted')"></i>
+                                        </span>
+                                    </div>
                                     <span class="tl-rating-value" th:text="${tool.averageRating != null ? #numbers.formatDecimal(tool.averageRating,1,1) : '0.0'}">0.0</span>
                                     <span class="tl-rating-count">(<span th:text="${tool.totalReviews != null ? tool.totalReviews : 0}">0</span> đánh giá)</span>
+                                </div>
+                                <div class="tl-card-rating text-muted" th:if="${tool.totalReviews == null or tool.totalReviews == 0}">
+                                    <small>Chưa có đánh giá</small>
                                 </div>
                                 <p class="tl-card-desc" th:text="${tool.description}">Mô tả tool...</p>
                                 <div class="tl-card-stock">Tồn kho: <strong th:text="${tool.availableQuantity != null ? tool.availableQuantity : 0}">0</strong> / <span th:text="${tool.quantity}">0</span></div>
@@ -343,10 +351,18 @@
                                     <li th:each="lic : ${tool.licenses}">Gói <span th:text="${lic.durationDays}">0</span> ngày - <span th:text="${#numbers.formatDecimal(lic.price, 0, 'COMMA', 0, 'POINT')}">0</span> đ</li>
                                 </ul>
                             </div>
-                            <div class="tl-card-rating">
-                                <span class="tl-stars">★</span>
+                            <div class="tl-card-rating" th:if="${tool.totalReviews != null and tool.totalReviews > 0}">
+                                <div class="stars mb-1">
+                                    <span th:each="i : ${#numbers.sequence(1,5)}">
+                                        <i th:classappend="${i <= (tool.averageRating != null ? tool.averageRating : 0)} ? 'fas fa-star text-warning' : 
+                                        (${i - (tool.averageRating != null ? tool.averageRating : 0) < 1} ? 'fas fa-star-half-alt text-warning' : 'far fa-star text-muted')"></i>
+                                    </span>
+                                </div>
                                 <span class="tl-rating-value" th:text="${tool.averageRating != null ? #numbers.formatDecimal(tool.averageRating,1,1) : '0.0'}">0.0</span>
                                 <span class="tl-rating-count">(<span th:text="${tool.totalReviews != null ? tool.totalReviews : 0}">0</span> đánh giá)</span>
+                            </div>
+                            <div class="tl-card-rating text-muted" th:if="${tool.totalReviews == null or tool.totalReviews == 0}">
+                                <small>Chưa có đánh giá</small>
                             </div>
                             <p class="tl-card-desc" th:text="${tool.description}">Mô tả tool...</p>
                             <div class="tl-card-stock">Tồn kho: <strong th:text="${tool.availableQuantity != null ? tool.availableQuantity : 0}">0</strong> / <span th:text="${tool.quantity}">0</span></div>

@@ -22,6 +22,9 @@ public class ToolListService {
     @Autowired
     private CategoryRepository categoryRepository;
 
+    @Autowired
+    private FeedbackRepository feedbackRepository;
+
     // ======================= USER VIEW (PAGINATED) =======================
     public List<Tool> getToolsForUserPaginated(String keyword,
                                                Long categoryId,
@@ -35,6 +38,7 @@ public class ToolListService {
 
         List<Tool> base = toolListRepository.findByStatus(Tool.Status.PUBLISHED);
         enrichToolPrices(base);
+        enrichToolRatings(base);
 
         List<Tool> filtered = filterTools(
                 base,
@@ -90,6 +94,7 @@ public class ToolListService {
 
         List<Tool> base = toolListRepository.findBySeller_AccountId(sellerId);
         enrichToolPrices(base);
+        enrichToolRatings(base);
 
         List<Tool> filtered = filterTools(
                 base,
@@ -166,6 +171,20 @@ public class ToolListService {
 
             t.setMinPrice(min == null ? null : BigDecimal.valueOf(min));
             t.setMaxPrice(max == null ? null : BigDecimal.valueOf(max));
+        }
+    }
+
+    // ======================= ENRICH RATING =======================
+    private void enrichToolRatings(List<Tool> tools) {
+        if (tools == null) return;
+
+        for (Tool tool : tools) {
+            // Tính trung bình rating từ feedback có status PUBLISHED
+            Double avgRating = feedbackRepository.avgRatingByToolAndStatus(tool, Feedback.Status.PUBLISHED);
+            Long totalReviews = feedbackRepository.countByToolAndStatus(tool, Feedback.Status.PUBLISHED);
+
+            tool.setAverageRating(avgRating != null ? avgRating : 0.0);
+            tool.setTotalReviews(totalReviews);
         }
     }
 

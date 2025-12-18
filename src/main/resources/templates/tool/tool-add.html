@@ -30,7 +30,9 @@
 
 </style>
 <body>
-
+<div th:if="${error}" class="alert alert-danger">
+    <span th:text="${error}"></span>
+</div>
 <div th:replace="common/sidebar-header :: role-sidebar">
     <th:block th:fragment="content">
 
@@ -220,7 +222,7 @@
 
                         <button type="submit" class="btn btn-success px-4">Save Tool</button>
                         <a href="/tools/seller/add?cancel=true"
-                           class="btn btn-secondary px-4">Cancel</a>
+                           class="btn btn-secondary px-4">Clear</a>
 
                     </div>
                 </div>
@@ -228,6 +230,13 @@
         </div>
 
         <script>
+            document.querySelector("form").addEventListener("submit", function (e) {
+                const img = document.querySelector("input[name='imageFile']").files[0];
+                if (img && img.size > 5 * 1024 * 1024) {
+                    e.preventDefault();
+                    alert("Image must be 5MB or less.");
+                }
+            });
             function loadImage(e) {
                 const box = document.getElementById("previewBox");
                 box.innerHTML = "";

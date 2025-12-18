@@ -23,14 +23,14 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     @Query("""
         SELECT AVG(f.rating) FROM Feedback f 
         WHERE f.tool = :tool 
-        AND (f.status = :status OR f.status IS NULL)
+        AND f.status = :status
     """)
     Double avgRatingByToolAndStatus(@Param("tool") Tool tool, @Param("status") Feedback.Status status);
 
     @Query("""
         SELECT COUNT(f) FROM Feedback f 
         WHERE f.tool = :tool 
-        AND (f.status = :status OR f.status IS NULL)
+        AND f.status = :status
     """)
     long countByToolAndStatus(@Param("tool") Tool tool, @Param("status") Feedback.Status status);
 
