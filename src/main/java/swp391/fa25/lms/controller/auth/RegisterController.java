@@ -45,15 +45,25 @@ public class RegisterController {
 
             if (result.hasErrors()) {
                 model.addAttribute("account", account);
+                model.addAttribute(
+                        BindingResult.MODEL_KEY_PREFIX + "account",
+                        result
+                );
                 return "auth/register";
             }
+
 
             boolean success = accountService.registerAccount(account, result);
 
             if (!success || result.hasErrors()) {
                 model.addAttribute("account", account);
+                model.addAttribute(
+                        BindingResult.MODEL_KEY_PREFIX + "account",
+                        result
+                );
                 return "auth/register";
             }
+
 
             redirectAttributes.addFlashAttribute(
                     "infoMessage",
@@ -73,7 +83,8 @@ public class RegisterController {
     }
 
     // ================== VERIFY ==================
-    @GetMapping("/verify")public String showVerifyPage() {
+    @GetMapping("/verify")
+    public String showVerifyPage() {
         return "auth/verify-code";
     }
 
@@ -105,41 +116,103 @@ public class RegisterController {
     }
 
     private void validateAccount(Account account, BindingResult result) {
-        // Validate email
+
+        // ===== EMAIL =====
         if (account.getEmail() == null || account.getEmail().trim().isEmpty()) {
             result.rejectValue("email", "error.email", "Email không được để trống.");
-        } else if (!account.getEmail().trim().matches("^[a-zA-Z0-9._%+-]+@gmail\\.com$")) {
+
+        } else if (!account.getEmail().trim()
+                .matches("^[a-zA-Z0-9._%+-]+@gmail\\.com$")) {
+
             result.rejectValue("email", "error.email", "Email phải có đuôi @gmail.com");
+
+        } else if (accountService.emailExists(account.getEmail().trim())) {
+            // >>> CHECK EMAIL TỒN TẠI <<<
+            result.rejectValue(
+                    "email",
+                    "error.email",
+                    "Email này đã được đăng ký."
+            );
         }
 
-        // Validate fullName
+        // ===== FULL NAME =====
         if (account.getFullName() == null || account.getFullName().trim().isEmpty()) {
             result.rejectValue("fullName", "error.fullName", "Họ và tên không được để trống.");
         } else {
-            String trimmedName = account.getFullName().trim();
-            if (trimmedName.length() < 5 || trimmedName.length() > 20) {
-                result.rejectValue("fullName", "error.fullName", "Họ và tên đầy đủ phải từ 5 đến 20 ký tự.");
+            String name = account.getFullName().trim();
+            if (name.length() < 5 || name.length() > 20) {
+                result.rejectValue(
+                        "fullName",
+                        "error.fullName",
+                        "Họ và tên phải từ 5 đến 20 ký tự."
+                );
             }
         }
 
-        // Validate phone (optional nhưng nếu có thì phải đúng format)
+        // ===== PHONE =====
         if (account.getPhone() != null && !account.getPhone().trim().isEmpty()) {
             if (!account.getPhone().trim().matches("0\\d{9}")) {
-                result.rejectValue("phone", "error.phone", "Số điện thoại phải có 10 chữ số bắt đầu bằng số 0.");
+                result.rejectValue(
+                        "phone",
+                        "error.phone",
+                        "Số điện thoại phải có 10 chữ số và bắt đầu bằng 0."
+                );
             }
         }
 
-        // Validate password
+        // ===== ADDRESS =====
+        if (account.getAddress() != null && account.getAddress().trim().isEmpty()) {
+            result.rejectValue(
+                    "address",
+                    "error.address",
+                    "Địa chỉ không được chỉ chứa khoảng trắng."
+            );
+        }
+
+        // ===== PASSWORD =====
+        // ===== PASSWORD =====
         if (account.getPassword() == null || account.getPassword().trim().isEmpty()) {
-            result.rejectValue("password", "error.password", "Mật khẩu không được để trống.");
-        }if (account.getPassword() != null && !account.getPassword().trim().isEmpty()) {
-            if (account.getConfirmPassword() == null || account.getConfirmPassword().trim().isEmpty()) {
-                result.rejectValue("confirmPassword", "error.confirmPassword", "Vui lòng xác nhận mật khẩu.");
-            } else if (!account.getPassword().equals(account.getConfirmPassword())) {
-                result.rejectValue("confirmPassword", "error.confirmPassword", "Mật khẩu không khớp.");
-            }
+            result.rejectValue(
+                    "password",
+                    "error.password",
+                    "Mật khẩu không được để trống."
+            );
+            return;
+        }
+
+        String password = account.getPassword();
+
+        String passwordRegex =
+                "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$";
+
+        if (!password.matches(passwordRegex)) {
+            result.rejectValue(
+                    "password",
+                    "error.password",
+                    "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt."
+            );
+        }
+
+
+        // ===== CONFIRM PASSWORD =====
+        if (account.getConfirmPassword() == null ||
+                account.getConfirmPassword().trim().isEmpty()) {
+
+            result.rejectValue(
+                    "confirmPassword",
+                    "error.confirmPassword",
+                    "Vui lòng xác nhận mật khẩu."
+            );
+
+        } else if (!account.getPassword()
+                .equals(account.getConfirmPassword())) {
+
+            result.rejectValue(
+                    "confirmPassword",
+                    "error.confirmPassword",
+                    "Mật khẩu xác nhận không khớp."
+            );
         }
     }
 }
 
-        // Check confirm password

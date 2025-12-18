@@ -463,10 +463,14 @@
 </script>
 
 <script th:if="${openAvatarModal}">
-    new bootstrap.Modal(
-        document.getElementById('updateAvatarModal')
-    ).show();
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalEl = document.getElementById('updateAvatarModal');
+        if (modalEl) {
+            new bootstrap.Modal(modalEl).show();
+        }
+    });
 </script>
+
 
 </body>
 </html>

@@ -20,6 +20,10 @@ import java.time.LocalDateTime;
 @RequestMapping("/profile")
 public class ProfileController {
 
+    private static final String[] ALLOWED_IMAGE_EXTENSIONS = {
+            ".jpg", ".jpeg", ".png", ".gif", ".webp"
+    };
+
     private final ProfileService profileService;
     private final PasswordEncoder passwordEncoder;
 
@@ -81,41 +85,85 @@ public class ProfileController {
     // ====================== UPLOAD AVATAR ======================
     @PostMapping("/update-avatar")
     public String uploadAvatar(Authentication auth,
-                               @RequestParam("avatar") MultipartFile file) throws IOException {
+                               @RequestParam("avatar") MultipartFile file,
+                               RedirectAttributes redirectAttributes) {
 
         Account acc = profileService.getByEmail(auth.getName());
 
-        if (!file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
+            redirectAttributes.addFlashAttribute(
+                    "avatarError",
+                    "Vui lòng chọn một file ảnh."
+            );
+            redirectAttributes.addFlashAttribute("openAvatarModal", true);
+            return "redirect:/profile";
+        }
 
-            // Folder uploads/avatar nằm trong project (gốc chạy ứng dụng)
+        String originalFilename = file.getOriginalFilename();
+        String ext = "";
+
+        if (originalFilename != null && originalFilename.contains(".")) {
+            ext = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        }
+
+        boolean valid = false;
+        for (String allowed : ALLOWED_IMAGE_EXTENSIONS) {
+            if (ext.equals(allowed)) {
+                valid = true;
+                break;
+            }
+        }
+
+        if (!valid) {
+            redirectAttributes.addFlashAttribute(
+                    "avatarError",
+                    "Chỉ được upload file ảnh có đuôi: jpg, jpeg, png, gif, webp"
+            );
+            redirectAttributes.addFlashAttribute("openAvatarModal", true);
+            return "redirect:/profile";
+        }
+
+        try {
             String uploadDirPath = System.getProperty("user.dir") + "/uploads/avatar/";
             File uploadDir = new File(uploadDirPath);
             if (!uploadDir.exists()) uploadDir.mkdirs();
 
-            // Xóa avatar cũ nếu có
+            // Xóa avatar cũ
             if (acc.getImages() != null && !acc.getImages().isBlank()) {
                 File oldFile = new File(uploadDir, acc.getImages());
                 if (oldFile.exists()) oldFile.delete();
-            }
-
-            // Lưu file mới
-            String originalFilename = file.getOriginalFilename();
-            String ext = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                ext = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
 
             String fileName = "AVT_" + acc.getAccountId() + "_" + System.currentTimeMillis() + ext;
             File dest = new File(uploadDir, fileName);
             file.transferTo(dest);
 
-            // Cập nhật database
             acc.setImages(fileName);
             acc.setUpdatedAt(LocalDateTime.now());
             profileService.save(acc);
+
+        } catch (IOException e) {
+            redirectAttributes.addFlashAttribute(
+                    "avatarError",
+                    "Lỗi khi upload ảnh. Vui lòng thử lại."
+            );
+            redirectAttributes.addFlashAttribute("openAvatarModal", true);
+            return "redirect:/profile";
         }
 
         return "redirect:/profile?avatarUpdated=true";
     }
+
+    private boolean isValidImageExtension(String filename) {
+        String lower = filename.toLowerCase();
+        for (String ext : ALLOWED_IMAGE_EXTENSIONS) {
+            if (lower.endsWith(ext)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 
 }
