@@ -216,6 +216,20 @@ public class AccountController {
         }
 
         try {
+            Account targetAccount = accountService.getById(id);
+            if (targetAccount == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy tài khoản");
+                return "redirect:/admin/accounts";
+            }
+
+            // Không cho phép deactivate admin account qua update
+            if (targetAccount.getRole() != null && 
+                targetAccount.getRole().getRoleName() == swp391.fa25.lms.model.Role.RoleName.ADMIN &&
+                status == Account.AccountStatus.DEACTIVATED) {
+                ra.addFlashAttribute("error", "Không thể vô hiệu hóa tài khoản Admin!");
+                return "redirect:/admin/accounts/edit/" + id;
+            }
+
             accountService.updateWithRoleFields(id, fullName, phone, address, status, roleId);
             ra.addFlashAttribute("success", "Cập nhật tài khoản thành công!");
             return "redirect:/admin/accounts";
@@ -268,6 +282,25 @@ public class AccountController {
         }
 
         try {
+            Account targetAccount = accountService.getById(id);
+            if (targetAccount == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy tài khoản");
+                return "redirect:/admin/accounts";
+            }
+
+            // Không cho phép deactivate admin account
+            if (targetAccount.getRole() != null && 
+                targetAccount.getRole().getRoleName() == swp391.fa25.lms.model.Role.RoleName.ADMIN) {
+                ra.addFlashAttribute("error", "Không thể vô hiệu hóa tài khoản Admin!");
+                return "redirect:/admin/accounts";
+            }
+
+            // Không cho phép tự deactivate chính mình
+            if (targetAccount.getAccountId().equals(admin.getAccountId())) {
+                ra.addFlashAttribute("error", "Không thể vô hiệu hóa chính tài khoản của bạn!");
+                return "redirect:/admin/accounts";
+            }
+
             accountService.deactivateAccount(id);
             ra.addFlashAttribute("success", "Vô hiệu hóa tài khoản thành công!");
         } catch (Exception e) {

@@ -262,7 +262,8 @@ public class BlogController {
             ra.addFlashAttribute("success", "Tạo blog thành công!");
             return "redirect:/manager/blogs";
         } catch (Exception e) {
-            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            // Hiển thị thông báo lỗi thân thiện (ví dụ ảnh > 5MB, sai định dạng, ...)
+            model.addAttribute("error", e.getMessage());
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("manager", manager);
             model.addAttribute("account", manager); // Sidebar needs this
@@ -369,7 +370,8 @@ public class BlogController {
             ra.addFlashAttribute("success", "Cập nhật blog thành công!");
             return "redirect:/manager/blogs";
         } catch (Exception e) {
-            ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+            // Hiển thị thông báo lỗi thân thiện (ví dụ ảnh > 5MB, sai định dạng, ...)
+            model.addAttribute("error", e.getMessage());
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("isEdit", true);
             model.addAttribute("manager", manager);
@@ -438,12 +440,12 @@ public class BlogController {
     private String saveUploadedFile(MultipartFile file, String folderName) throws IOException {
         // Validate file
         if (file.getSize() > 5 * 1024 * 1024) { // 5MB
-            throw new IOException("File size exceeds maximum limit of 5MB");
+            throw new IOException("Kích thước ảnh tối đa 5MB. Vui lòng chọn file nhỏ hơn.");
         }
         
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IOException("Only image files are allowed");
+            throw new IOException("Chỉ được phép upload file ảnh (JPG, PNG, GIF).");
         }
         
         // Generate unique filename
