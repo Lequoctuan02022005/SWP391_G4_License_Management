@@ -73,19 +73,41 @@ public class CartService {
     }
 
     public void updateQuantity(Account account, Long cartItemId, int quantity) {
-        if (quantity <= 0)
+
+        if (quantity < 1) {
             throw new IllegalArgumentException("Số lượng phải lớn hơn 0");
-
-        CartItem item = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sản phẩm trong giỏ hàng"));
-
-        if (!item.getCart().getAccount().getAccountId().equals(account.getAccountId())) {
-            throw new SecurityException("Không được sửa giỏ hàng của người khác");
         }
 
-        item.setQuantity(quantity);
+        Cart cart = cartRepository.findByAccount(account)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy giỏ hàng"));
+
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm trong giỏ hàng"));
+
+        // ❗ Bảo mật: item phải thuộc cart của user
+        if (!item.getCart().getCartId().equals(cart.getCartId())) {
+            throw new RuntimeException("Không có quyền cập nhật sản phẩm này");
+        }
+
+        Tool tool = item.getTool();
+
+        Integer available = tool.getAvailableQuantity();
+        if (available == null) {
+            throw new IllegalStateException("Sản phẩm chưa thiết lập số lượng tồn kho");
+        }
+
+        // ✅ VALIDATE TỒN KHO
+        if (quantity > available) {
+            throw new IllegalArgumentException(
+                    "Trong kho chỉ còn " + available + " sản phẩm, không thể thêm quá số lượng trong kho"
+            );
+        }
+
+        // OK → update
+        item.setQuantity(quantity); // totalPrice auto recalc
         cartItemRepository.save(item);
     }
+
 
     public void removeItem(Account account, Long cartItemId) {
         CartItem item = cartItemRepository.findById(cartItemId)
