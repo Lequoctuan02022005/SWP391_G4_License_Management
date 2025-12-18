@@ -108,6 +108,9 @@ public interface DashboardRepository extends JpaRepository<Account, Long> {
     @Query("SELECT COUNT(t) FROM Tool t WHERE t.status = 'SUSPECT'")
     long countSuspectTools();
 
+    @Query("SELECT COUNT(t) FROM Tool t WHERE t.status = 'PUBLISHED'")
+    long countPublishedTools();
+
     @Query("SELECT COUNT(b) FROM Blog b WHERE b.status = 'PUBLISHED'")
     long countPublishedBlogs();
 

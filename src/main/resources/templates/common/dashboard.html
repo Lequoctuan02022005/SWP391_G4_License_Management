@@ -6,6 +6,7 @@
 
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <link rel="stylesheet" th:href="@{/css/sidebar-header.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
 </head>
 <body>
@@ -20,140 +21,321 @@
 
             <!-- ================= HEADER ================= -->
             <div class="dashboard-header">
-                <h1>Dashboard</h1>
+                <div class="header-left">
+                    <h1>Bảng điều khiển</h1>
+                    <p class="header-subtitle" th:text="'Chào mừng quay lại, ' + ${account.fullName} + '!'"></p>
+                </div>
                 <span class="role-badge" th:text="${role}"></span>
             </div>
 
-            <!-- ================= ADMIN ================= -->
-            <section th:if="${role == 'ADMIN'}" class="dashboard-grid">
+            <!-- ================= ADMIN DASHBOARD ================= -->
+            <th:block th:if="${role == 'ADMIN'}">
+                
+                <!-- KPI CARDS -->
+                <section class="dashboard-grid kpi-section">
+                    <div class="card kpi blue">
+                        <div class="kpi-icon"><i class="bi bi-people-fill"></i></div>
+                        <span>Tổng số tài khoản</span>
+                        <strong th:text="${totalAccounts}"></strong>
+                        <small class="kpi-change">Người dùng hoạt động</small>
+                    </div>
 
-                <div class="card kpi blue">
-                    <span>Total Accounts</span>
-                    <strong th:text="${totalAccounts}"></strong>
-                </div>
+                    <div class="card kpi green">
+                        <div class="kpi-icon"><i class="bi bi-shop"></i></div>
+                        <span>Tổng số người bán hàng</span>
+                        <strong th:text="${totalSellers}"></strong>
+                        <small class="kpi-change">Đã đăng ký</small>
+                    </div>
 
-                <div class="card kpi green">
-                    <span>Total Sellers</span>
-                    <strong th:text="${totalSellers}"></strong>
-                </div>
+                    <div class="card kpi purple">
+                        <div class="kpi-icon"><i class="bi bi-box-seam"></i></div>
+                        <span>Tổng công cụ</span>
+                        <strong th:text="${totalTools}"></strong>
+                        <small class="kpi-change">Có sẵn</small>
+                    </div>
 
-                <div class="card kpi purple">
-                    <span>Total Tools</span>
-                    <strong th:text="${totalTools}"></strong>
-                </div>
+                    <div class="card kpi red">
+                        <div class="kpi-icon"><i class="bi bi-flag-fill"></i></div>
+                        <span>Tổng báo cáo</span>
+                        <strong th:text="${totalReports}"></strong>
+                        <small class="kpi-change">Cần xem xét</small>
+                    </div>
+                </section>
 
-                <div class="card kpi red">
-                    <span>Total Reports</span>
-                    <strong th:text="${totalReports}"></strong>
-                </div>
+                <!-- QUICK STATS -->
+                <section class="quick-stats">
 
-            </section>
 
-            <!-- ================= SELLER ================= -->
-            <section th:if="${role == 'SELLER'}" class="dashboard-section">
+                    <div class="stat-box">
+                        <h4>Liên kết nhanh</h4>
+                        <div class="quick-links">
+                            <a href="/admin/accounts"><i class="bi bi-people"></i> Manage Accounts</a>
+                            <a href="/admin/roles"><i class="bi bi-shield-check"></i> Manage Roles</a>
+                            <a href="/admin/financial-report"><i class="bi bi-graph-up"></i> Financial Report</a>
+                        </div>
+                    </div>
+                </section>
+            </th:block>
 
-                <div class="card">
-                    <h3>Total Tools</h3>
-                    <p th:text="${totalTools}"></p>
-                </div>
 
-                <div class="card">
-                    <h3>Published Tools</h3>
-                    <p th:text="${publishedTools}"></p>
-                </div>
+            <!-- ================= SELLER DASHBOARD ================= -->
+            <th:block th:if="${role == 'SELLER'}">
 
-                <div class="card">
-                    <h3>Pending / Rejected</h3>
-                    <p th:text="${pendingRejectedTools}"></p>
-                </div>
+                <!-- KPI CARDS -->
+                <section class="dashboard-grid kpi-section">
+                    <div class="card kpi blue">
+                        <div class="kpi-icon"><i class="bi bi-box-seam"></i></div>
+                        <span>Tổng công cụ</span>
+                        <strong th:text="${totalTools}"></strong>
+                        <small class="kpi-change">Sản phẩm của bạn</small>
+                    </div>
 
-                <div class="card">
-                    <h3>Total Revenue</h3>
-                    <p>
-                        <span th:text="${#numbers.formatDecimal(revenue, 0, 'COMMA', 0, 'POINT')}"></span> ₫
-                    </p>
-                </div>
+                    <div class="card kpi green">
+                        <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+                        <span>Được xuất bản</span>
+                        <strong th:text="${publishedTools}"></strong>
+                        <small class="kpi-change">Đang hoạt động</small>
+                    </div>
 
+                    <div class="card kpi warning">
+                        <div class="kpi-icon"><i class="bi bi-clock"></i></div>
+                        <span>Chờ / Bị từ chối</span>
+                        <strong th:text="${pendingRejectedTools}"></strong>
+                        <small class="kpi-change">Cần xem xét</small>
+                    </div>
+
+                    <div class="card kpi success">
+                        <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
+                        <span>Tổng doanh thu</span>
+                        <strong th:text="${#numbers.formatDecimal(revenue, 0, 'COMMA', 0, 'POINT')} + ' ₫'"></strong>
+                        <small class="kpi-change">Tất cả thời gian</small>
+                    </div>
+                </section>
+
+                <!-- TRẠNG THÁI GÓI BÁN HÀNG -->
+                <section class="seller-package">
+                    <div class="package-card">
+                        <div class="package-header">
+                            <h3><i class="bi bi-gift"></i> Seller Package Status</h3>
+
+
+                        </div>
+
+                        <div class="package-content">
+                            <p class="package-info">
+                                Days Left: <strong th:text="${packageDaysLeft} + ' days'"></strong>
+                            </p>
+                            <a th:if="${packageStatus != 'ACTIVE'}" href="/seller/renew" class="btn-renew">
+                                <i class="bi bi-arrow-repeat"></i> Renew Package
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PHÂN TÍCH TRẠNG THÁI CÔNG CỤ -->
                 <div class="full-card">
-                    <h2>Tool Status Breakdown</h2>
-                    <table>
-                        <tr><td>Pending</td><td th:text="${pendingCount}"></td></tr>
-                        <tr><td>Approved</td><td th:text="${approvedCount}"></td></tr>
-                        <tr><td>Published</td><td th:text="${publishedCount}"></td></tr>
-                        <tr><td>Rejected</td><td th:text="${rejectedCount}"></td></tr>
-                        <tr><td>Suspect</td><td th:text="${suspectCount}"></td></tr>
-                        <tr><td>Deactivated</td><td th:text="${deactivatedCount}"></td></tr>
+                    <h2><i class="bi bi-pie-chart"></i> Phân tích trạng thái công cụ</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Pending</span>
+                            <span class="status-count pending" th:text="${pendingCount}"></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Approved</span>
+                            <span class="status-count approved" th:text="${approvedCount}"></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Published</span>
+                            <span class="status-count published" th:text="${publishedCount}"></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Rejected</span>
+                            <span class="status-count rejected" th:text="${rejectedCount}"></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Suspect</span>
+                            <span class="status-count suspect" th:text="${suspectCount}"></span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Deactivated</span>
+                            <span class="status-count deactivated" th:text="${deactivatedCount}"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DOANH THU 5 THÁNG GẦN ĐÂY -->
+                <div class="full-card">
+                    <h2><i class="bi bi-graph-up"></i> Doanh thu 5 tháng gần đây</h2>
+                    <table class="revenue-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="m, i : ${revenueMonths}">
+                                <td th:text="${m}"></td>
+                                <td class="revenue-value" th:text="${#numbers.formatDecimal(revenueValues[i.index], 0, 'COMMA', 0, 'POINT')} + ' ₫'"></td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
 
+            </th:block>
+
+            <!-- ================= MANAGER DASHBOARD ================= -->
+            <th:block th:if="${role == 'MANAGER'}">
+
+                <!-- KPI CARDS -->
+                <section class="dashboard-grid kpi-section">
+                    
+
+                    <div class="card kpi danger">
+                        <div class="kpi-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                        <span>Công cụ đáng ngờ</span>
+                        <strong th:text="${suspectTools}"></strong>
+                        <small class="kpi-change">Cần chú ý</small>
+                    </div>
+
+                    <div class="card kpi blue">
+                        <div class="kpi-icon"><i class="bi bi-check2-circle"></i></div>
+                        <span>Công cụ được xuất bản</span>
+                        <strong th:text="${publishedTools}"></strong>
+                        <small class="kpi-change">Có sẵn ngay</small>
+                    </div>
+
+                    <div class="card kpi success">
+                        <div class="kpi-icon"><i class="bi bi-file-earmark-text"></i></div>
+                        <span>Blog được xuất bản</span>
+                        <strong th:text="${publishedBlogs}"></strong>
+                        <small class="kpi-change">Bài viết hoạt động</small>
+                    </div>
+
+                    <div class="card kpi info">
+                        <div class="kpi-icon"><i class="bi bi-tasks"></i></div>
+                        <span>Tổng công việc</span>
+                        <strong th:text="${pendingTools + suspectTools}"></strong>
+                        <small class="kpi-change">Đang tiến hành</small>
+                    </div>
+                </section>
+
+                <!-- BLOG HÀNG ĐẦU -->
                 <div class="full-card">
-                    <h2>Revenue Last 5 Months</h2>
-                    <table>
-                        <tr th:each="m, i : ${revenueMonths}">
-                            <td th:text="${m}"></td>
-                            <td th:text="${revenueValues[i.index]}"></td>
-                        </tr>
-                    </table>
+                    <h2><i class="bi bi-graph-up"></i> Blog hàng đầu theo lượt xem</h2>
+                    <div th:if="${topBlogs.size() > 0}">
+                        <table class="blog-table">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu đề Blog</th>
+                                    <th class="views-col">Lượt xem</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="b, idx : ${topBlogs}">
+                                    <td>
+                                        <span class="blog-rank" th:text="${idx.count}"></span>
+                                        <span th:text="${b.title}"></span>
+                                    </td>
+                                    <td class="views-col">
+                                        <span class="badge" th:classappend="${idx.count <= 2} ? 'badge-gold' : 'badge-gray'" th:text="${b.viewCount} + ' lượt xem'"></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div th:if="${topBlogs.size() == 0}" class="empty-state">
+                        <p>Chưa có blog nào được xuất bản</p>
+                    </div>
                 </div>
 
+                <!-- HÀNH ĐỘNG NHANH -->
+                <section class="quick-stats">
+                    <div class="stat-box">
+                        <h4>Hành động nhanh</h4>
+                        <div class="quick-links">
+                            <a href="/manager/upload-tools"><i class="bi bi-cloud-upload"></i> Xem yêu cầu tải lên</a>
+                            <a href="/manager/blogs"><i class="bi bi-file-earmark-text"></i> Quản lý Blog</a>
+                            <a href="/manager/statistics"><i class="bi bi-bar-chart"></i> Xem thống kê</a>
+                        </div>
+                    </div>
+                </section>
+
+            </th:block>
+
+            <!-- ================= MOD DASHBOARD ================= -->
+            <th:block th:if="${role == 'MOD'}">
+
+                <!-- BÁO CÁO ĐANG CHỜ -->
+                <section class="dashboard-grid kpi-section">
+                    <div class="card kpi warning">
+                        <div class="kpi-icon"><i class="bi bi-clock"></i></div>
+                        <span>Báo cáo đang chờ</span>
+                        <strong th:text="${pendingTools}"></strong>
+                        <small class="kpi-change">Đang chờ xem xét</small>
+                    </div>
+
+                    <div class="card kpi info">
+                        <div class="kpi-icon"><i class="bi bi-check2-circle"></i></div>
+                        <span>Yêu cầu xem xét</span>
+                        <strong th:text="${totalPendingReports}"></strong>
+                        <small class="kpi-change">Chờ xử lý</small>
+                    </div>
+
+                    <div class="card kpi success">
+                        <div class="kpi-icon"><i class="bi bi-check-all"></i></div>
+                        <span>Đã phê duyệt hôm nay</span>
+                        <strong>-</strong>
+                        <small class="kpi-change">Hôm nay</small>
+                    </div>
+
+
+                </section>
+
+                <!-- BÁO CÁO CÔNG CỤ -->
                 <div class="full-card">
-                    <h2>Seller Package</h2>
-                    <p>Status: <strong th:text="${packageStatus}"></strong></p>
-                    <p>Days Left: <strong th:text="${packageDaysLeft}"></strong></p>
+                    <h2><i class="bi bi-flag"></i> Báo cáo công cụ cần xem xét</h2>
+                    <div th:if="${pendingToolReports.size() > 0}">
+                        <div class="reports-list">
+                            <div th:each="r : ${pendingToolReports}" class="report-item">
+                                <div class="report-header">
+                                    <span class="report-id">#<span th:text="${r.toolReportId}"></span></span>
+                                    <span class="report-reason" th:text="${r.reason}"></span>
+                                </div>
+                                <div class="report-details">
+                                    <p><strong>Công cụ:</strong> <span th:text="${r.tool.toolName}"></span></p>
+                                    <p><strong>Báo cáo bởi:</strong> <span th:text="${r.account.fullName}"></span></p>
+                                    <p><strong>Mô tả:</strong> <span th:text="${r.description}"></span></p>
+                                </div>
+                                <div class="report-actions">
+                                    <a href="#" class="btn-action approve"><i class="bi bi-check"></i> Chấp nhận</a>
+                                    <a href="#" class="btn-action reject"><i class="bi bi-x"></i> Từ chối</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div th:if="${pendingToolReports.size() == 0}" class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Không có báo cáo nào đang chờ</p>
+                    </div>
                 </div>
 
-            </section>
+                <!-- LIÊN KẾT NHANH -->
+                <section class="quick-stats">
+                    <div class="stat-box">
+                        <h4>Công cụ Điều hành</h4>
+                        <div class="quick-links">
+                            <a href="/mod/tools"><i class="bi bi-check2-circle"></i> Xem xét Công cụ</a>
+                            <a href="/moderator/upload-requests"><i class="bi bi-cloud-upload"></i> Yêu cầu Tải lên</a>
+                            <a href="/mod/reports"><i class="bi bi-flag"></i> Xem tất cả Báo cáo</a>
+                        </div>
+                    </div>
+                </section>
 
-            <!-- ================= MANAGER ================= -->
-            <section th:if="${role == 'MANAGER'}" class="dashboard-grid">
-
-                <div class="card kpi warning">
-                    <span>Pending Tools</span>
-                    <strong th:text="${pendingTools}"></strong>
-                </div>
-
-                <div class="card kpi danger">
-                    <span>Suspect Tools</span>
-                    <strong th:text="${suspectTools}"></strong>
-                </div>
-
-                <div class="card kpi success">
-                    <span>Published Blogs</span>
-                    <strong th:text="${publishedBlogs}"></strong>
-                </div>
-
-                <div class="card full">
-                    <h2>Top Blogs</h2>
-                    <table>
-                        <tr th:each="b : ${topBlogs}">
-                            <td th:text="${b.title}"></td>
-                            <td class="right" th:text="${b.viewCount}"></td>
-                        </tr>
-                    </table>
-                </div>
-
-            </section>
-
-            <!-- ================= MOD ================= -->
-            <section th:if="${role == 'MOD'}" class="dashboard-grid">
-
-                <div class="card kpi danger">
-                    <span>Total Pending Reports</span>
-                    <strong th:text="${totalPendingReports}"></strong>
-                </div>
-
-                <div class="card full">
-                    <h2>Tool Reports</h2>
-                    <ul>
-                        <li th:each="r : ${pendingToolReports}">
-                            #<span th:text="${r.toolReportId}"></span>
-                        </li>
-                    </ul>
-                </div>
-
-            </section>
+            </th:block>
 
         </div>
+
 
     </div>
 

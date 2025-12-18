@@ -12,87 +12,82 @@
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-
-        .page-title {
-            font-weight: 700;
-            font-size: 26px;
-            margin-bottom: 20px;
-        }
-
-        .card-custom {
-            border-radius: 12px;
-            padding: 25px;
-            background: #ffffff;
-            box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
-        }
-
-        .btn-primary {
-            padding: 10px 22px;
-            font-weight: 600;
-        }
-
-        .btn-secondary {
-            padding: 10px 22px;
-            font-weight: 600;
-        }
-    </style>
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/sidebar-header.css}">
+    <link rel="stylesheet" th:href="@{/css/admin-pages.css}">
 
 </head>
 
 <body>
 
-<!-- Header -->
-<div th:replace="admin/admin-header :: adminHeader"></div>
+<!-- SIDEBAR HEADER -->
+<div th:replace="common/sidebar-header :: role-sidebar">
 
-<div class="container mt-5" style="max-width: 700px;">
+    <!-- PAGE CONTENT -->
+    <div th:fragment="content">
 
-    <h2 class="page-title">
-        <i class="bi bi-shield-plus me-2"></i> Create New Role
-    </h2>
+        <div class="admin-container">
 
-    <div class="card-custom">
-
-        <form action="/admin/roles/create" method="post" th:object="${role}">
-
-            <!-- Role Name -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Role Name</label>
-
-                <select class="form-select" th:field="*{roleName}">
-                    <option th:each="r : ${T(swp391.fa25.lms.model.Role.RoleName).values()}"
-                            th:value="${r}"
-                            th:text="${r}">
-                    </option>
-                </select>
+            <!-- PAGE HEADER -->
+            <div class="page-header">
+                <div>
+                    <h1><i class="bi bi-shield-plus"></i> Tạo vai trò mới</h1>
+                    <p class="page-subtitle">Thêm một vai trò mới vào hệ thống</p>
+                </div>
             </div>
 
-            <!-- Note -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Note</label>
-                <input type="text"
-                       class="form-control"
-                       th:field="*{note}"
-                       placeholder="Description of this role">
+            <!-- FORM CARD -->
+            <div class="form-card">
+
+                <form action="/admin/roles/create" method="post" th:object="${role}">
+
+                    <!-- Role Name -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-tag"></i> Tên vai trò
+                        </label>
+                        <select class="form-control" th:field="*{roleName}" required>
+                            <option value="">Chọn vai trò...</option>
+                            <option th:each="r : ${T(swp391.fa25.lms.model.Role.RoleName).values()}"
+                                    th:value="${r}"
+                                    th:text="${r}">
+                            </option>
+                        </select>
+                        <small class="form-text">Chọn loại vai trò cho mục nhập này</small>
+                    </div>
+
+                    <!-- Note/Description -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="bi bi-file-earmark-text"></i> Mô tả
+                        </label>
+                        <textarea class="form-control" 
+                                  th:field="*{note}" 
+                                  rows="3"
+                                  placeholder="Nhập mô tả cho vai trò này..."
+                                  required></textarea>
+                        <small class="form-text">Giải thích ngắn gọn về mục đích của vai trò này</small>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="form-buttons">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Tạo vai trò
+                        </button>
+
+                        <a href="/admin/roles" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Hủy
+                        </a>
+                    </div>
+
+                </form>
+
             </div>
 
-            <!-- Buttons -->
-            <div class="mt-4 d-flex gap-3">
-                <button class="btn btn-primary">
-                    <i class="bi bi-check-circle me-1"></i> Create
-                </button>
-
-                <a href="/admin/roles" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left me-1"></i> Back
-                </a>
-            </div>
-
-        </form>
+        </div>
 
     </div>
+
 </div>
 
 </body>

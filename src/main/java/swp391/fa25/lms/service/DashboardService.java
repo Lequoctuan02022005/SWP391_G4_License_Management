@@ -161,6 +161,9 @@ public class DashboardService {
         data.put("suspectTools",
                 dashboardRepository.countSuspectTools());
 
+        data.put("publishedTools",
+                dashboardRepository.countPublishedTools());
+
         data.put("publishedBlogs",
                 dashboardRepository.countPublishedBlogs());
 
