@@ -40,6 +40,7 @@ public class SecurityConfig {
                                 "/",
                                 "/home", "/home/**",
                                 "/verify", "/verify-reset",
+                                "tools/detail/**",
                                 "/support", "/support/**",
                                 "/forgot-password",     // ⭐ đúng URL
                                 "/reset-password",

@@ -17,8 +17,6 @@
 </head>
 <body>
 
-
-
 <!-- Seller: replace entire wrapper and provide the content fragment inside the replaced element -->
 <div th:if="${account.role.roleName.name() == 'SELLER'}" th:replace="common/sidebar-header :: role-sidebar">
         <th:block th:fragment="content">
@@ -320,13 +318,6 @@
             <!-- TOOL GRID CONTENT -->
             <section class="tl-content">
 
-                <!-- TOP BAR -->
-                <div class="tl-top-bar">
-                    <div class="tl-top-right"
-                         th:if="${account != null and account.role.roleName.name() == 'SELLER'}">
-                        <a th:href="@{/tools/seller/add}" class="tl-btn tl-btn-primary">+ Thêm Tool</a>
-                    </div>
-                </div>
 
                 <!-- GRID TOOL -->
                 <div class="tl-grid" th:if="${tools != null and !#lists.isEmpty(tools)}">
