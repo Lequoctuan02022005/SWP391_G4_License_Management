@@ -59,6 +59,8 @@ public class SecurityConfig {
 
                         // Role-based pages
                         .requestMatchers("/admin/accounts/**").hasAnyRole("ADMIN", "MOD")
+                        // Blog & category management: MOD
+                        .requestMatchers("/moderator/blogs/**", "/moderator/blog-categories/**").hasRole("MOD")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/manager/**").hasRole("MANAGER")
 
