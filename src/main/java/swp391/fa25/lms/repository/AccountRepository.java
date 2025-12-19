@@ -36,17 +36,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("UPDATE Account a SET a.status = :status, a.updatedAt = CURRENT_TIMESTAMP WHERE a.accountId = :id")
     int updateStatus(@Param("id") long id, @Param("status") AccountStatus status);
 
-    @Query("""
-           SELECT a FROM Account a
-           WHERE (:q IS NULL OR :q = '' 
-                 OR LOWER(a.email) LIKE LOWER(CONCAT('%', :q, '%'))
-                 OR LOWER(a.fullName) LIKE LOWER(CONCAT('%', :q, '%')))
-             AND (:status IS NULL OR a.status = :status)
-           """)
-    Page<Account> search(@Param("q") String q,
-                         @Param("status") AccountStatus status,
-                         Pageable pageable);
-
     List<Account> findTop8ByStatusOrderByUpdatedAtDesc(AccountStatus status);
 
     @Query("""
@@ -61,19 +50,20 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT a FROM Account a JOIN a.role r WHERE r.roleId = 2 or r.roleId = 1")
     List<Account> findAllSellers();
 
-    // Search with multiple filters (keyword, role, status)
+    /**
+     * Search accounts giới hạn theo danh sách RoleName (dùng cho phân quyền quản lý)
+     */
     @Query("""
            SELECT a FROM Account a
            WHERE (:keyword IS NULL OR :keyword = '' 
                  OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
                  OR LOWER(a.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))
-             AND (:roleId IS NULL OR a.role.roleId = :roleId)
+             AND (a.role.roleName IN :roleNames)
              AND (:status IS NULL OR a.status = :status)
-           ORDER BY a.createdAt DESC
            """)
-    Page<Account> searchWithFilters(@Param("keyword") String keyword,
-                                     @Param("roleId") Integer roleId,
-                                     @Param("status") AccountStatus status,
-                                     Pageable pageable);
+    Page<Account> searchByRoleNames(@Param("keyword") String keyword,
+                                    @Param("roleNames") java.util.List<RoleName> roleNames,
+                                    @Param("status") AccountStatus status,
+                                    Pageable pageable);
 
 }

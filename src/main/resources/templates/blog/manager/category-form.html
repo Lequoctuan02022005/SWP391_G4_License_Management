@@ -15,7 +15,7 @@
 <!-- Header -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h2 th:text="${isEdit != null and isEdit ? 'Edit Category' : 'Create New Category'}">Category Management</h2>
-    <a th:href="@{/manager/blog-categories}" class="btn btn-outline-secondary">
+    <a th:href="@{/moderator/blog-categories}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Back
     </a>
 </div>
@@ -33,7 +33,7 @@
             <div class="card-body">
                 <form method="post"
                       th:object="${category}"
-                      th:action="@{${isEdit != null and isEdit ? '/manager/blog-categories/edit/' + category.categoryId : '/manager/blog-categories/create'}}">
+                      th:action="@{${isEdit != null and isEdit ? '/moderator/blog-categories/edit/' + category.categoryId : '/moderator/blog-categories/create'}}">
 
                     <!-- Hidden fields to preserve data in edit mode -->
                     <input type="hidden" name="categoryId" th:value="${category.categoryId}" th:if="${isEdit != null and isEdit}" />
@@ -103,7 +103,7 @@
 
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-end gap-2">
-                        <a th:href="@{/manager/blog-categories}" class="btn btn-outline-secondary">
+                        <a th:href="@{/moderator/blog-categories}" class="btn btn-outline-secondary">
                             <i class="bi bi-x-circle"></i> Cancel
                         </a>
                         <button type="submit" class="btn btn-primary">

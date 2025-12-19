@@ -36,14 +36,17 @@ public class BlogServiceImpl implements BlogService {
     public BlogDetailDTO createBlog(CreateBlogDTO dto, Long authorId) {
         log.info("Creating blog: {} by author: {}", dto.getTitle(), authorId);
 
-        // Validate author exists and is MANAGER
+        // Validate author exists and is MOD or MANAGER
         Account author = accountRepository.findById(authorId)
                 .orElseThrow(() -> new RuntimeException("Author not found"));
         
         // Check role - getRoleName() returns RoleName enum, not String
-        if (author.getRole() == null || author.getRole().getRoleName() != Role.RoleName.MANAGER) {
+        // Allow MOD and MANAGER to create blogs
+        if (author.getRole() == null || 
+            (author.getRole().getRoleName() != Role.RoleName.MOD && 
+             author.getRole().getRoleName() != Role.RoleName.MANAGER)) {
             String roleStr = author.getRole() != null ? author.getRole().getRoleName().toString() : "NULL";
-            throw new RuntimeException("Only MANAGER can create blogs. Your role: " + roleStr);
+            throw new RuntimeException("Only MOD or MANAGER can create blogs. Your role: " + roleStr);
         }
 
         // Validate category exists
@@ -88,7 +91,7 @@ public class BlogServiceImpl implements BlogService {
         Blog blog = blogRepository.findById(dto.getBlogId())
                 .orElseThrow(() -> new RuntimeException("Blog not found"));
 
-        // Kiểm tra quyền: chỉ author (MANAGER) mới được update
+        // Kiểm tra quyền: chỉ author (MOD hoặc MANAGER) mới được update
         if (!blog.getAuthor().getAccountId().equals(authorId)) {
             throw new RuntimeException("Only the author can update this blog");
         }
@@ -142,7 +145,7 @@ public class BlogServiceImpl implements BlogService {
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new RuntimeException("Blog not found"));
 
-        // Check authorization: only author (MANAGER) can delete
+        // Check authorization: only author (MOD or MANAGER) can delete
         if (!blog.getAuthor().getAccountId().equals(authorId)) {
             throw new RuntimeException("You don't have permission to delete this blog. Only the author can delete.");
         }
@@ -197,7 +200,7 @@ public class BlogServiceImpl implements BlogService {
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new RuntimeException("Blog not found"));
 
-        // Check authorization: only author (MANAGER) can publish
+        // Check authorization: only author (MOD or MANAGER) can publish
         if (!blog.getAuthor().getAccountId().equals(authorId)) {
             throw new RuntimeException("You don't have permission to publish this blog. Only the author can publish.");
         }
@@ -217,7 +220,7 @@ public class BlogServiceImpl implements BlogService {
         Blog blog = blogRepository.findById(blogId)
                 .orElseThrow(() -> new RuntimeException("Blog not found"));
 
-        // Check authorization: only author (MANAGER) can unpublish
+        // Check authorization: only author (MOD or MANAGER) can unpublish
         if (!blog.getAuthor().getAccountId().equals(authorId)) {
             throw new RuntimeException("You don't have permission to unpublish this blog. Only the author can unpublish.");
         }

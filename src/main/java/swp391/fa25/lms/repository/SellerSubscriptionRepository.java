@@ -24,6 +24,11 @@ public interface SellerSubscriptionRepository extends JpaRepository<SellerSubscr
         WHERE
             (:seller IS NULL OR LOWER(s.account.fullName) LIKE LOWER(CONCAT('%', :seller, '%')))
         AND (:packageId IS NULL OR s.sellerPackage.id = :packageId)
+                 AND (
+                        :packageName IS NULL OR
+                        LOWER(s.sellerPackage.packageName)
+                            LIKE LOWER(CONCAT('%', :packageName, '%'))
+                    )
         AND (
             :status IS NULL OR
             (:status = 'ACTIVE' AND s.active = true) OR
@@ -35,6 +40,7 @@ public interface SellerSubscriptionRepository extends JpaRepository<SellerSubscr
     Page<SellerSubscription> filter(
             @Param("seller") String seller,
             @Param("packageId") Long packageId,
+            @Param("packageName") String packageName,
             @Param("status") String status,
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate,
