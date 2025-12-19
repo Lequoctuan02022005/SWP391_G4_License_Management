@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
@@ -70,11 +70,12 @@
 
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
 
-                                <li><a class="dropdown-item" th:href="@{/profile}">Thông tin tài khoản</a></li>
-                                <li><a class="dropdown-item" th:href="@{/change-password}">Đổi mật khẩu</a></li>
-                                <li><a class="dropdown-item" th:href="@{/customer/orders}">Đơn hàng đã mua</a></li>
-                                <li><a class="dropdown-item" th:href="@{/license/renew-history}">Lịch sử gia hạn license</a></li>
-                                <li><a class="dropdown-item" th:href="@{/seller/renew}"> Đăng ký Seller</a></li>
+                                <li><a class="dropdown-item" th:href="@{/profile}">Profile information</a></li>
+                                <li><a class="dropdown-item" th:href="@{/change-password}">Change PassWord</a></li>
+                                <li><a class="dropdown-item" th:href="@{/customer/orders}">Order History</a></li>
+                                <li><a class="dropdown-item" th:href="@{/license/renew-history}">Renew License History</a></li>
+                                <li><a class="dropdown-item" th:href="@{/seller/renew}">Register Seller</a></li>
+                                <li><a class="dropdown-item" th:href="@{/customer/license-accounts}">View License Account</a></li>
                                 <!-- SELLER ONLY -->
                                 <li sec:authorize="hasRole('SELLER')">
                                     <hr class="dropdown-divider">
@@ -82,15 +83,15 @@
                                         Seller Dashboard
                                     </a>
                                     <a class="dropdown-item" th:href="@{/seller/feedbacks}">
-                                        <i class="fas fa-comments me-1"></i> Quản lý Feedback
+                                        <i class="fas fa-comments me-1"></i> Feedback Management
                                     </a>
                                     <a class="dropdown-item" th:href="@{/seller/renew}">
-                                        Gia hạn
+                                        Renew
                                     </a>
                                 </li>
 
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" th:href="@{/logout}">Thoát</a></li>
+                                <li><a class="dropdown-item text-danger" th:href="@{/logout}">Log out</a></li>
                             </ul>
                         </div>
                     </div>
