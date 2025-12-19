@@ -17,8 +17,6 @@
 </head>
 <body>
 
-
-
 <!-- Seller: replace entire wrapper and provide the content fragment inside the replaced element -->
 <div th:if="${account.role.roleName.name() == 'SELLER'}" th:replace="common/sidebar-header :: role-sidebar">
         <th:block th:fragment="content">
