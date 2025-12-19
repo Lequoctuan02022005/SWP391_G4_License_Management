@@ -44,9 +44,6 @@ public class ToolFlowService {
         if (seller == null)
             throw new IllegalStateException("Please login again.");
 
-        if (toolService.existsByToolName(tool.getToolName()))
-            throw new IllegalArgumentException("Tool name already exists.");
-
         Category category = toolService.getCategoryById(categoryId);
 
         String img;

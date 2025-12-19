@@ -13,7 +13,7 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
                     <h5 class="fw-bold mb-0 text-primary"
-                        th:text="${pkg.id != null ? 'Edit Seller Package' : 'Create Seller Package'}">
+                        th:text="${pkg.id != 0 ? 'Edit Seller Package' : 'Create Seller Package'}">
                     </h5>
                 </div>
 
@@ -26,13 +26,15 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Package Name</label>
-                                <input th:field="*{packageName}" class="form-control">
+                                <input th:field="*{packageName}" class="form-control"
+                                th:readonly="${pkg.id != 0}">
                                 <small class="text-danger" th:errors="*{packageName}"></small>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label">Duration (months)</label>
-                                <input type="number" th:field="*{durationInMonths}" class="form-control">
+                                <input type="number" th:field="*{durationInMonths}" class="form-control"
+                                       th:readonly="${pkg.id != 0}">
                                 <small class="text-danger" th:errors="*{durationInMonths}"></small>
                             </div>
 
@@ -45,10 +47,13 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Description</label>
-                                <textarea th:field="*{description}" class="form-control"></textarea>
+                                <textarea th:field="*{description}"
+                                           class="form-control"
+                                           th:readonly="${pkg.id != 0}">
+                                </textarea>
                             </div>
 
-                            <div class="col-md-6" th:if="${pkg.id != null}">
+                            <div class="col-md-6" th:if="${pkg.id != 0}">
                                 <label class="form-label">Status</label>
                                 <select th:field="*{status}" class="form-select">
                                     <option th:each="s : ${statusList}"
@@ -61,7 +66,7 @@
 
         <div class="text-center mt-4">
             <button class="btn btn-primary px-4"
-                    th:text="${pkg.id != null ? 'Update' : 'Save'}">
+                    th:text="${pkg.id != 0 ? 'Update' : 'Save'}">
             </button>
         <a href="/seller-packages" class="btn btn-secondary">Cancel</a>
         </div>

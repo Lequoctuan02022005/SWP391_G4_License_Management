@@ -61,27 +61,41 @@ public class SellerPackageManagementController {
         if (acc == null) {
             return "redirect:/login";
         }
-        SellerPackage pkg =
-                (id == null)
-                        ? new SellerPackage()
-                        : sellerPackageService.getById(id);
+
+        SellerPackage pkg;
+        if (id == null) {
+            pkg = new SellerPackage();
+        } else {
+            pkg = sellerPackageService.getById(id);
+        }
 
         model.addAttribute("pkg", pkg);
         model.addAttribute("statusList", SellerPackage.Status.values());
         return "sellerpackage/package-form";
     }
-
     // ================= SAVE =================
     @PostMapping("/save")
     public String save(@Valid @ModelAttribute("pkg") SellerPackage pkg,
                        BindingResult result,
                        HttpSession session,
                        Model model) {
+
         Account acc = (Account) session.getAttribute("loggedInAccount");
         if (acc == null) {
             return "redirect:/login";
         }
 
+        if (pkg.getId() != 0) {
+            SellerPackage dbPkg = sellerPackageService.getById(pkg.getId());
+
+            dbPkg.setPrice(pkg.getPrice());
+            dbPkg.setStatus(pkg.getStatus());
+
+            sellerPackageService.save(dbPkg);
+            return "redirect:/seller-packages";
+        }
+
+        // CREATE → cho full field
         if (result.hasErrors()) {
             model.addAttribute("statusList", SellerPackage.Status.values());
             return "sellerpackage/package-form";

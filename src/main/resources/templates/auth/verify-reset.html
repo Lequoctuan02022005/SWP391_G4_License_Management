@@ -4,10 +4,16 @@
     <meta charset="UTF-8">
     <title>Xác minh mã đặt lại mật khẩu</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
     <style>
-        body {
-            margin: 0;
-            height: 100vh;
+        .auth-page {
+            min-height: calc(100vh - 120px); /* header height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
 
             background: linear-gradient(
                     135deg,
@@ -15,19 +21,42 @@
                     #764ba2 50%,
                     #89f7fe 100%
             );
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
             overflow: hidden;
-            position: relative;
+        }
+
+        /* Blur background */
+        .auth-page::before,
+        .auth-page::after {
+            content: "";
+            position: absolute;
+            width: 520px;
+            height: 520px;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.55;
+            z-index: 0;
+        }
+
+        .auth-page::before {
+            background: #ff9a9e;
+            top: -160px;
+            left: -160px;
+        }
+
+        .auth-page::after {
+            background: #a18cd1;
+            bottom: -180px;
+            right: -180px;
         }
 
         .card {
-            border-radius: 15px;
-            box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
+            border-radius: 18px;
+            padding: 35px;
+            background: #fff;
+            border: none;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         }
+
         .form-control {
             border-radius: 8px;
             font-size: 1.2rem;
@@ -41,9 +70,13 @@
     </style>
 </head>
 <body>
-<div class="container d-flex align-items-center justify-content-center vh-100">
-    <div class="col-md-5">
-        <div class="card p-4">
+<div th:replace="common/header :: header"></div>
+
+<div class="auth-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card p-4 position-relative" style="z-index:1">
             <h3 class="text-center mb-3 fw-bold">Nhập mã xác minh</h3>
             <p class="text-muted text-center mb-3">
                 Chúng tôi đã gửi mã xác minh tới email của bạn. Vui lòng kiểm tra hộp thư.
@@ -68,6 +101,8 @@
                 </small>
             </div>
         </div>
+    </div>
+</div>
     </div>
 </div>
 </body>
