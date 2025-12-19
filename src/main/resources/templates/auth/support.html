@@ -14,7 +14,7 @@
 <body>
 
 <!-- CUSTOMER or guest: use top header -->
-<div th:if="${account == null or account.role.roleName.name() == 'CUSTOMER' }">
+<div th:if="${account == null or account.role.roleName.name() == 'CUSTOMER' or account.role.roleName.name() == 'GUEST'}">
     <div th:replace="common/header :: header"></div>
 
     <div class="bg-light">
@@ -83,7 +83,7 @@
 
 
 <!-- NON-CUSTOMER: render into sidebar layout and inject content -->
-<div th:if="${account != null and account.role.roleName.name() != 'CUSTOMER'}" th:replace="common/sidebar-header :: role-sidebar">
+<div th:if="${account != null and account.role.roleName.name() != 'CUSTOMER' and account.role.roleName.name() != 'GUEST'}" th:replace="common/sidebar-header :: role-sidebar">
     <th:block th:fragment="content">
         <div class="bg-light">
             <div class="contact-hero">
