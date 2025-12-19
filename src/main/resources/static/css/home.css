@@ -137,7 +137,7 @@ footer {
 .top-bar {
     background-color: #4a4a4a;
     color: white;
-    padding: 10px 0;
+    padding: 0 24px;
     font-size: 14px;
 }
 
@@ -148,6 +148,7 @@ footer {
 
 /* Navbar */
 .navbar {
+    margin-top: 0;
     background-color: white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     padding: 15px 0;
@@ -787,4 +788,34 @@ main {
     color: white !important;
     transform: translateY(-3px);
     box-shadow: 0 8px 25px rgba(33, 37, 41, 0.3);
+}
+/* REGISTER */
+.header-btn-register {
+    border: 1.5px solid #111;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-weight: 600;
+    color: #111;
+    background: #fff;
+    transition: 0.25s;
+}
+
+.header-btn-register:hover {
+    background: #111;
+    color: #fff;
+}
+
+/* LOGIN */
+.header-btn-login {
+    background: #111;
+    color: #fff;
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-weight: 600;
+    transition: 0.25s;
+}
+
+.header-btn-login:hover {
+    background: #000;
+    color: #fff;
 }
