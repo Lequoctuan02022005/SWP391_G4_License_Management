@@ -174,22 +174,28 @@ public class PaymentController {
             tx.setStatus(PaymentTransaction.TransactionStatus.SUCCESS);
             tx.setCompletedAt(LocalDateTime.now());
             transactionRepo.save(tx);
+            LocalDateTime now = LocalDateTime.now();
 
-            // create subscription
+            SellerSubscription last =
+                    subscriptionRepo.findTopByAccountOrderByEndDateDesc(seller)
+                            .orElse(null);
+
+            LocalDateTime base =
+                    (last != null && last.getEndDate().isAfter(now))
+                            ? last.getEndDate()
+                            : now;
+
+// TẠO RECORD MỚI (KHÔNG ĐỤNG RECORD CŨ)
             SellerSubscription newSub = new SellerSubscription();
             newSub.setAccount(seller);
             newSub.setSellerPackage(pkg);
-            newSub.setStartDate(LocalDateTime.now());
-            newSub.setEndDate(LocalDateTime.now().plusMonths(pkg.getDurationInMonths()));
+            newSub.setStartDate(base);
+            newSub.setEndDate(base.plusMonths(pkg.getDurationInMonths()));
             newSub.setPriceAtPurchase(pkg.getPrice());
             newSub.setActive(true);
             newSub.setTransaction(tx);
-            subscriptionRepo.save(newSub);
 
-            // update seller
-            seller.setSellerActive(true);
-            seller.setSellerExpiryDate(newSub.getEndDate());
-            accountRepo.save(seller);
+            subscriptionRepo.save(newSub);
 
             session.setAttribute("loggedInAccount", seller);
 

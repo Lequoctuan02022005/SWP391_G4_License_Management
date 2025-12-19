@@ -81,7 +81,7 @@ public class ToolReviewController {
     @PostMapping("/moderator/tool/{id}/reject")
     public String moderatorReject(
             @PathVariable Long id,
-            @RequestParam("reason") String reason,
+            @RequestParam("note") String reason,
             HttpServletRequest request,
             RedirectAttributes redirect
     ) {

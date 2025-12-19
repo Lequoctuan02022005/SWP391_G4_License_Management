@@ -139,14 +139,12 @@
                                 <input type="number" name="licensePrices"
                                        th:value="${l.price}" class="form-control" required>
                             </div>
+                            <div class="col-2 d-flex align-items-center">
+                                        <span class="remove-license"
+                                              onclick="removeLicense(this)">×</span>
+                            </div>
                         </div>
 
-                        <button type="button"
-                                class="btn btn-outline-danger"
-                                th:if="${#lists.size(tool.licenses) > 1}"
-                                onclick="removeLicense(this)">
-                            Remove
-                        </button>
 
                     </div>
                     <button type="button" onclick="addLicense()"

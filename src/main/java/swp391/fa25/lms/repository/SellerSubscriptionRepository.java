@@ -11,6 +11,7 @@ import swp391.fa25.lms.model.SellerSubscription;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SellerSubscriptionRepository extends JpaRepository<SellerSubscription, Long> {
@@ -67,4 +68,6 @@ public interface SellerSubscriptionRepository extends JpaRepository<SellerSubscr
             LocalDateTime fromDate,
             LocalDateTime toDate
     );
+
+    Optional<SellerSubscription> findTopByAccountOrderByEndDateDesc(Account seller);
 }

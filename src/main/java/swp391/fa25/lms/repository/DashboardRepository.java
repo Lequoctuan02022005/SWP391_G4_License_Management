@@ -7,6 +7,7 @@ import swp391.fa25.lms.model.*;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DashboardRepository extends JpaRepository<Account, Long> {
@@ -132,4 +133,6 @@ public interface DashboardRepository extends JpaRepository<Account, Long> {
         WHERE tr.status = 'PENDING'
     """)
     List<ToolReport> findPendingToolReports();
+
+    Optional<SellerSubscription> findLatestSellerSubscription(Long sellerId);
 }

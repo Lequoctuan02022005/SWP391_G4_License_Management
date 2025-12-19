@@ -83,7 +83,7 @@
                             <tbody>
                             <tr th:each="log, i : ${page.content}">
                                 <td th:text="${i.count}"></td>
-                                <td th:text="${log.licenseAccount.license.licenseName}"></td>
+                                <td th:text="${log.licenseAccount.license.name}"></td>
                                 <td th:text="${#temporals.format(log.renewDate,'dd/MM/yyyy HH:mm')}"></td>
                                 <td th:text="${#temporals.format(log.newEndDate,'dd/MM/yyyy HH:mm')}"></td>
                                 <td th:text="${#numbers.formatDecimal(log.amountPaid,0,'COMMA',0,'POINT')} + ' VND'"></td>
@@ -124,7 +124,7 @@
                                th:href="@{
                                  ?page=${page.number + 1}
                                  &fromDate=${fromDate}
-                                 &toDate=${toDate}
+&toDate=${toDate}
                                  &minAmount=${minAmount}
                                  &maxAmount=${maxAmount}
                                }">
@@ -206,7 +206,7 @@
                     <tbody>
                     <tr th:each="log, i : ${page.content}">
                         <td th:text="${i.count}"></td>
-                        <td th:text="${log.licenseAccount.license.licenseName}"></td>
+                        <td th:text="${log.licenseAccount?.license?.name ?: 'N/A'}"></td>
                         <td th:text="${#temporals.format(log.renewDate,'dd/MM/yyyy HH:mm')}"></td>
                         <td th:text="${#temporals.format(log.newEndDate,'dd/MM/yyyy HH:mm')}"></td>
                         <td th:text="${#numbers.formatDecimal(log.amountPaid,0,'COMMA',0,'POINT')} + ' VND'"></td>
@@ -216,8 +216,40 @@
                     </tr>
                     </tbody>
                 </table>
-            </div>
+            </div><!-- PAGINATION -->
+            <div class="card-footer bg-white d-flex justify-content-between">
+                <span>
+                    Page <b th:text="${page.number + 1}"></b> /
+                    <b th:text="${page.totalPages}"></b> —
+                    Total <b th:text="${page.totalElements}"></b> records
+                </span>
 
+                <div class="btn-group">
+                    <a class="btn btn-outline-secondary"
+                       th:if="${page.hasPrevious()}"
+                       th:href="@{
+                         ?page=${page.number - 1}
+                         &fromDate=${fromDate}
+                         &toDate=${toDate}
+                         &minAmount=${minAmount}
+                         &maxAmount=${maxAmount}
+                       }">
+                        « Previous
+                    </a>
+
+                    <a class="btn btn-outline-secondary"
+                       th:if="${page.hasNext()}"
+                       th:href="@{
+                         ?page=${page.number + 1}
+                         &fromDate=${fromDate}
+                         &toDate=${toDate}
+                         &minAmount=${minAmount}
+                         &maxAmount=${maxAmount}
+                       }">
+                        Next »
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </th:block>

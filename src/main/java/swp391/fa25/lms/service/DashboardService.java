@@ -7,6 +7,7 @@ import swp391.fa25.lms.repository.DashboardRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -124,16 +125,20 @@ public class DashboardService {
         data.put("revenueValues", revenueValues);
 
         // ===== SELLER PACKAGE =====
-        Account sellerAccount =
-                dashboardRepository.findSellerAccount(sellerId);
+        Optional<SellerSubscription> optLast =
+                dashboardRepository.findLatestSellerSubscription(sellerId);
 
-        if (sellerAccount.getSellerExpiryDate() != null) {
+        if (optLast.isPresent()) {
+
+            LocalDateTime endDate = optLast.get().getEndDate();
+            LocalDateTime now = LocalDateTime.now();
 
             long daysLeft = ChronoUnit.DAYS.between(
-                    LocalDate.now(),
-                    sellerAccount.getSellerExpiryDate().toLocalDate()
+                    now.toLocalDate(),
+                    endDate.toLocalDate()
             );
 
+            data.put("packageDaysLeft", Math.max(daysLeft, 0));
             data.put("packageDaysLeft", daysLeft);
 
             if (daysLeft <= 0) {

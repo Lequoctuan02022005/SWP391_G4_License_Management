@@ -21,7 +21,7 @@ import java.time.LocalDate;
 @RequestMapping("/license/renew-history")
 @RequiredArgsConstructor
 public class RenewLicenseHistoryController {
- private final LicenseRenewLogService service;
+    private final LicenseRenewLogService service;
 
     @PreAuthorize("hasAnyRole('CUSTOMER','SELLER')")
     @GetMapping
