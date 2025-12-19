@@ -619,15 +619,24 @@ public class AccountService {
 
     //admin_crud account
     public Page<Account> getAll(Pageable pageable) {
-        return accountRepo.findAll(pageable);
+        java.util.List<Role.RoleName> roles = java.util.List.of(
+                Role.RoleName.MOD,
+                Role.RoleName.MANAGER
+        );
+        return accountRepo.searchByRoleNames(null, roles, null, pageable);
+    }
+
+    // moderator_crud account - MOD chỉ xem CUSTOMER & SELLER
+    public Page<Account> getAllForModerator(Pageable pageable) {
+        java.util.List<Role.RoleName> roles = java.util.List.of(
+                Role.RoleName.CUSTOMER,
+                Role.RoleName.SELLER
+        );
+        return accountRepo.searchByRoleNames(null, roles, null, pageable);
     }
 
     public Account getById(Long id) {
         return accountRepo.findById(id).orElse(null);
-    }
-
-    public Page<Account> search(String keyword, Pageable pageable) {
-        return accountRepo.search(keyword,null, pageable);
     }
 
     public Account create(Account account) {
@@ -651,14 +660,15 @@ public class AccountService {
         account.setCreatedAt(LocalDateTime.now());
         account.setUpdatedAt(LocalDateTime.now());
 
+        // Khi ADMIN / MOD tạo tài khoản mới:
+        // - Tự động verified = true (không cần xác minh email)
+        // - Mặc định ACTIVE
         if (account.getStatus() == null) {
             account.setStatus(Account.AccountStatus.ACTIVE);
         }
-
-        // Set verified to true by default for admin-created accounts
-        if (account.getVerified() == null) {
-            account.setVerified(true);
-        }
+        account.setVerified(true);
+        account.setVerificationCode(null);
+        account.setCodeExpiry(null);
 
         return accountRepo.save(account);
     }
@@ -685,13 +695,6 @@ public class AccountService {
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
         acc.setRole(role);
-    }
-
-
-
-
-    public void delete(Long id) {
-        accountRepo.deleteById(id);
     }
 
     /**
@@ -737,15 +740,25 @@ public class AccountService {
     }
 
     /**
-     * Search accounts with multiple filters
-     * @param keyword Search in email, fullName
-     * @param roleId Filter by role
-     * @param status Filter by status
-     * @param pageable Pagination
-     * @return Page of accounts
+     * Search accounts với filter cho ADMIN: chỉ MOD & MANAGER
      */
     public Page<Account> searchWithFilters(String keyword, Integer roleId, Account.AccountStatus status, Pageable pageable) {
-        return accountRepo.searchWithFilters(keyword, roleId, status, pageable);
+        java.util.List<Role.RoleName> roles = java.util.List.of(
+                Role.RoleName.MOD,
+                Role.RoleName.MANAGER
+        );
+        return accountRepo.searchByRoleNames(keyword, roles, status, pageable);
+    }
+
+    /**
+     * Search accounts với filter cho MOD: chỉ CUSTOMER & SELLER
+     */
+    public Page<Account> searchWithFiltersForModerator(String keyword, Integer roleId, Account.AccountStatus status, Pageable pageable) {
+        java.util.List<Role.RoleName> roles = java.util.List.of(
+                Role.RoleName.CUSTOMER,
+                Role.RoleName.SELLER
+        );
+        return accountRepo.searchByRoleNames(keyword, roles, status, pageable);
     }
 
 }

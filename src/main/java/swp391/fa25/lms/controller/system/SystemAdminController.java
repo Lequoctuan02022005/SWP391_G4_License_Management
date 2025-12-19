@@ -146,6 +146,7 @@ public class SystemAdminController {
     public String financialReport(
             @RequestParam(required = false) String seller,
             @RequestParam(required = false) Long packageId,
+            @RequestParam(required = false) String packageName,
             @RequestParam(required = false) String status,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -161,7 +162,7 @@ public class SystemAdminController {
 
         Page<SellerSubscription> result =
                 sellerSubscriptionService.filter(
-                        seller, packageId, status, fromDate, toDate, pageable
+                        seller, packageId , packageName,status, fromDate, toDate, pageable
                 );
         Long totalRevenue =
                 sellerSubscriptionService.sumRevenue(

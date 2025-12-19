@@ -15,10 +15,33 @@
         .blog-card {
             transition: transform 0.2s, box-shadow 0.2s;
             height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         .blog-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .blog-card .card-body {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .blog-card .card-text {
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 4.5em;
+        }
+        .blog-card .card-title {
+            min-height: 3em;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .sidebar-widget {
             margin-bottom: 1.5rem;

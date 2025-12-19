@@ -30,7 +30,7 @@ import java.util.UUID;
 
 /**
  * Public pages: /blog/**
- * Manager pages: /manager/blogs/**
+ * Moderator pages: /moderator/blogs/**
  */
 @Controller
 @RequiredArgsConstructor
@@ -110,16 +110,16 @@ public class BlogController {
     }
 
     // ========================================
-    // MANAGER PAGES - /manager/blogs/**
+    // MODERATOR PAGES - /moderator/blogs/**
     // ========================================
 
     /**
-     * Trang quản lý blog (danh sách)
-     * GET /manager/blogs
+     * Trang quản lý blog (danh sách) - MOD
+     * GET /moderator/blogs
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    @GetMapping("/manager/blogs")
-    public String blogManager(
+    @PreAuthorize("hasRole('MOD')")
+    @GetMapping("/moderator/blogs")
+    public String blogList(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String status,
@@ -129,22 +129,22 @@ public class BlogController {
             Model model,
             RedirectAttributes ra) {
 
-        Account manager = (Account) session.getAttribute("loggedInAccount");
-        if (manager == null) {
+        Account moderator = (Account) session.getAttribute("loggedInAccount");
+        if (moderator == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         
-        Page<BlogListItemDTO> blogs = blogService.getBlogsByAuthor(manager.getAccountId(), pageable);
+        Page<BlogListItemDTO> blogs = blogService.getBlogsByAuthor(moderator.getAccountId(), pageable);
         
         // Check if any filter is applied
         boolean hasFilter = (categoryId != null) || (keyword != null && !keyword.trim().isEmpty()) || (status != null && !status.trim().isEmpty());
         
         if (hasFilter) {
             // If filtering, get ALL blogs from author first to calculate correct total
-            List<BlogListItemDTO> allBlogs = blogService.getBlogsByAuthor(manager.getAccountId(), 
+            List<BlogListItemDTO> allBlogs = blogService.getBlogsByAuthor(moderator.getAccountId(), 
                     PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.DESC, "createdAt"))).getContent();
             
             // Apply filters
@@ -187,21 +187,21 @@ public class BlogController {
         model.addAttribute("totalPages", blogs.getTotalPages());
         model.addAttribute("totalBlogs", blogs.getTotalElements());
         model.addAttribute("pageSize", size);
-        model.addAttribute("manager", manager);
-        model.addAttribute("account", manager); // Sidebar needs this
+        model.addAttribute("moderator", moderator);
+        model.addAttribute("account", moderator); // Sidebar needs this
 
         return "blog/manager/blog-list";
     }
 
     /**
-     * Form tạo blog mới
-     * GET /manager/blogs/create
+     * Form tạo blog mới - MOD
+     * GET /moderator/blogs/create
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    @GetMapping("/manager/blogs/create")
+    @PreAuthorize("hasRole('MOD')")
+    @GetMapping("/moderator/blogs/create")
     public String createBlogForm(HttpSession session, Model model, RedirectAttributes ra) {
-        Account manager = (Account) session.getAttribute("loggedInAccount");
-        if (manager == null) {
+        Account moderator = (Account) session.getAttribute("loggedInAccount");
+        if (moderator == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
@@ -211,18 +211,18 @@ public class BlogController {
         
         model.addAttribute("blog", dto);
         model.addAttribute("categories", categoryService.getActiveCategories());
-        model.addAttribute("manager", manager);
-        model.addAttribute("account", manager); // Sidebar needs this
+        model.addAttribute("moderator", moderator);
+        model.addAttribute("account", moderator); // Sidebar needs this
 
         return "blog/manager/blog-form";
     }
 
     /**
-     * Xử lý tạo blog mới
-     * POST /manager/blogs/create
+     * Xử lý tạo blog mới - MOD
+     * POST /moderator/blogs/create
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    @PostMapping("/manager/blogs/create")
+    @PreAuthorize("hasRole('MOD')")
+    @PostMapping("/moderator/blogs/create")
     public String createBlog(
             @Valid @ModelAttribute("blog") CreateBlogDTO dto,
             BindingResult result,
@@ -232,16 +232,16 @@ public class BlogController {
             Model model,
             RedirectAttributes ra) {
 
-        Account manager = (Account) session.getAttribute("loggedInAccount");
-        if (manager == null) {
+        Account moderator = (Account) session.getAttribute("loggedInAccount");
+        if (moderator == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
 
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getActiveCategories());
-            model.addAttribute("manager", manager);
-            model.addAttribute("account", manager); // Sidebar needs this
+            model.addAttribute("moderator", moderator);
+            model.addAttribute("account", moderator); // Sidebar needs this
             return "blog/manager/blog-form";
         }
 
@@ -258,33 +258,33 @@ public class BlogController {
                 dto.setBannerImage(bannerPath);
             }
             
-            blogService.createBlog(dto, manager.getAccountId());
+            blogService.createBlog(dto, moderator.getAccountId());
             ra.addFlashAttribute("success", "Tạo blog thành công!");
-            return "redirect:/manager/blogs";
+            return "redirect:/moderator/blogs";
         } catch (Exception e) {
             // Hiển thị thông báo lỗi thân thiện (ví dụ ảnh > 5MB, sai định dạng, ...)
             model.addAttribute("error", e.getMessage());
             model.addAttribute("categories", categoryService.getActiveCategories());
-            model.addAttribute("manager", manager);
-            model.addAttribute("account", manager); // Sidebar needs this
+            model.addAttribute("moderator", moderator);
+            model.addAttribute("account", moderator); // Sidebar needs this
             return "blog/manager/blog-form";
         }
     }
 
     /**
-     * Form chỉnh sửa blog
-     * GET /manager/blogs/edit/{id}
+     * Form chỉnh sửa blog - MOD
+     * GET /moderator/blogs/edit/{id}
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    @GetMapping("/manager/blogs/edit/{id}")
+    @PreAuthorize("hasRole('MOD')")
+    @GetMapping("/moderator/blogs/edit/{id}")
     public String editBlogForm(
             @PathVariable Long id,
             HttpSession session,
             Model model,
             RedirectAttributes ra) {
 
-        Account manager = (Account) session.getAttribute("loggedInAccount");
-        if (manager == null) {
+        Account moderator = (Account) session.getAttribute("loggedInAccount");
+        if (moderator == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
@@ -307,22 +307,22 @@ public class BlogController {
             model.addAttribute("blog", updateDTO);
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("isEdit", true);
-            model.addAttribute("manager", manager);
-            model.addAttribute("account", manager); // Sidebar needs this
+            model.addAttribute("moderator", moderator);
+            model.addAttribute("account", moderator); // Sidebar needs this
 
             return "blog/manager/blog-form";
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Không tìm thấy blog: " + e.getMessage());
-            return "redirect:/manager/blogs";
+            return "redirect:/moderator/blogs";
         }
     }
 
     /**
-     * Xử lý cập nhật blog
-     * POST /manager/blogs/edit/{id}
+     * Xử lý cập nhật blog - MOD
+     * POST /moderator/blogs/edit/{id}
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    @PostMapping("/manager/blogs/edit/{id}")
+    @PreAuthorize("hasRole('MOD')")
+    @PostMapping("/moderator/blogs/edit/{id}")
     public String updateBlog(
             @PathVariable Long id,
             @Valid @ModelAttribute("blog") UpdateBlogDTO dto,
@@ -333,8 +333,8 @@ public class BlogController {
             Model model,
             RedirectAttributes ra) {
 
-        Account manager = (Account) session.getAttribute("loggedInAccount");
-        if (manager == null) {
+        Account moderator = (Account) session.getAttribute("loggedInAccount");
+        if (moderator == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
@@ -342,8 +342,8 @@ public class BlogController {
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("isEdit", true);
-            model.addAttribute("manager", manager);
-            model.addAttribute("account", manager); // Sidebar needs this
+            model.addAttribute("moderator", moderator);
+            model.addAttribute("account", moderator); // Sidebar needs this
             return "blog/manager/blog-form";
         }
 
@@ -366,72 +366,72 @@ public class BlogController {
                 dto.setBannerImage(bannerPath);
             }
             
-            blogService.updateBlog(dto, manager.getAccountId());
+            blogService.updateBlog(dto, moderator.getAccountId());
             ra.addFlashAttribute("success", "Cập nhật blog thành công!");
-            return "redirect:/manager/blogs";
+            return "redirect:/moderator/blogs";
         } catch (Exception e) {
             // Hiển thị thông báo lỗi thân thiện (ví dụ ảnh > 5MB, sai định dạng, ...)
             model.addAttribute("error", e.getMessage());
             model.addAttribute("categories", categoryService.getActiveCategories());
             model.addAttribute("isEdit", true);
-            model.addAttribute("manager", manager);
-            model.addAttribute("account", manager); // Sidebar needs this
+            model.addAttribute("moderator", moderator);
+            model.addAttribute("account", moderator); // Sidebar needs this
             return "blog/manager/blog-form";
         }
     }
 
     /**
-     * Xóa blog
-     * GET /manager/blogs/delete/{id}
+     * Xóa blog - MOD
+     * GET /moderator/blogs/delete/{id}
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    @GetMapping("/manager/blogs/delete/{id}")
+    @PreAuthorize("hasRole('MOD')")
+    @GetMapping("/moderator/blogs/delete/{id}")
     public String deleteBlog(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes ra) {
 
-        Account manager = (Account) session.getAttribute("loggedInAccount");
-        if (manager == null) {
+        Account moderator = (Account) session.getAttribute("loggedInAccount");
+        if (moderator == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
 
         try {
-            blogService.deleteBlog(id, manager.getAccountId());
+            blogService.deleteBlog(id, moderator.getAccountId());
             ra.addFlashAttribute("success", "Xóa blog thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
 
-        return "redirect:/manager/blogs";
+        return "redirect:/moderator/blogs";
     }
 
     /**
-     * Xuất bản blog
-     * GET /manager/blogs/publish/{id}
+     * Xuất bản blog - MOD
+     * GET /moderator/blogs/publish/{id}
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    @GetMapping("/manager/blogs/publish/{id}")
+    @PreAuthorize("hasRole('MOD')")
+    @GetMapping("/moderator/blogs/publish/{id}")
     public String publishBlog(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes ra) {
 
-        Account manager = (Account) session.getAttribute("loggedInAccount");
-        if (manager == null) {
+        Account moderator = (Account) session.getAttribute("loggedInAccount");
+        if (moderator == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
 
         try {
-            blogService.publishBlog(id, manager.getAccountId());
+            blogService.publishBlog(id, moderator.getAccountId());
             ra.addFlashAttribute("success", "Xuất bản blog thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
 
-        return "redirect:/manager/blogs";
+        return "redirect:/moderator/blogs";
     }
 
     /**
@@ -471,29 +471,29 @@ public class BlogController {
     }
 
     /**
-     * Hủy xuất bản blog
-     * GET /manager/blogs/unpublish/{id}
+     * Hủy xuất bản blog - MOD
+     * GET /moderator/blogs/unpublish/{id}
      */
-    @PreAuthorize("hasRole('MANAGER')")
-    @GetMapping("/manager/blogs/unpublish/{id}")
+    @PreAuthorize("hasRole('MOD')")
+    @GetMapping("/moderator/blogs/unpublish/{id}")
     public String unpublishBlog(
             @PathVariable Long id,
             HttpSession session,
             RedirectAttributes ra) {
 
-        Account manager = (Account) session.getAttribute("loggedInAccount");
-        if (manager == null) {
+        Account moderator = (Account) session.getAttribute("loggedInAccount");
+        if (moderator == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
 
         try {
-            blogService.unpublishBlog(id, manager.getAccountId());
+            blogService.unpublishBlog(id, moderator.getAccountId());
             ra.addFlashAttribute("success", "Hủy xuất bản blog thành công!");
         } catch (Exception e) {
             ra.addFlashAttribute("error", "Lỗi: " + e.getMessage());
         }
 
-        return "redirect:/manager/blogs";
+        return "redirect:/moderator/blogs";
     }
 }

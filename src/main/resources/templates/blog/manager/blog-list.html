@@ -14,7 +14,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h2>Blog List</h2>
     <div>
-        <a th:href="@{/manager/blogs/create}" class="btn btn-primary">
+        <a th:href="@{/moderator/blogs/create}" class="btn btn-primary">
             <i class="bi bi-plus-circle"></i> Create New Blog
         </a>
     </div>
@@ -33,7 +33,7 @@
 <!-- Filters -->
 <div class="card mb-3">
     <div class="card-body">
-        <form th:action="@{/manager/blogs}" method="get" class="row g-3">
+        <form th:action="@{/moderator/blogs}" method="get" class="row g-3">
             <div class="col-md-2">
                 <label class="form-label">Status</label>
                 <select name="status" class="form-select">
@@ -73,7 +73,7 @@
                     <button type="submit" class="btn btn-primary flex-grow-1">
                         <i class="bi bi-search"></i> Search
                     </button>
-                    <a th:href="@{/manager/blogs}" class="btn btn-outline-secondary">
+                    <a th:href="@{/moderator/blogs}" class="btn btn-outline-secondary">
                         <i class="bi bi-x-circle"></i>
                     </a>
                 </div>
@@ -140,14 +140,14 @@
                                 <i class="bi bi-eye"></i>
                             </a>
                             
-                            <a th:href="@{/manager/blogs/edit/{id}(id=${blog.blogId})}" 
+                            <a th:href="@{/moderator/blogs/edit/{id}(id=${blog.blogId})}" 
                                class="btn btn-sm btn-outline-primary" 
                                title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             
                             <a th:if="${blog.status != 'PUBLISHED'}" 
-                               th:href="@{/manager/blogs/publish/{id}(id=${blog.blogId})}" 
+                               th:href="@{/moderator/blogs/publish/{id}(id=${blog.blogId})}" 
                                class="btn btn-sm btn-outline-success" 
                                title="Publish"
                                onclick="return confirm('Are you sure you want to publish this blog?')">
@@ -155,14 +155,14 @@
                             </a>
                             
                             <a th:if="${blog.status == 'PUBLISHED'}" 
-                               th:href="@{/manager/blogs/unpublish/{id}(id=${blog.blogId})}" 
+                               th:href="@{/moderator/blogs/unpublish/{id}(id=${blog.blogId})}" 
                                class="btn btn-sm btn-outline-warning" 
                                title="Unpublish"
                                onclick="return confirm('Are you sure you want to unpublish this blog?')">
                                 <i class="bi bi-x-circle"></i>
                             </a>
                             
-                            <a th:href="@{/manager/blogs/delete/{id}(id=${blog.blogId})}" 
+                            <a th:href="@{/moderator/blogs/delete/{id}(id=${blog.blogId})}" 
                                class="btn btn-sm btn-outline-danger" 
                                title="Delete"
                                onclick="return confirm('Are you sure you want to delete this blog? This action cannot be undone!')">
@@ -189,14 +189,14 @@
             <ul class="pagination justify-content-center">
                 <!-- Previous Button -->
                 <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                    <a class="page-link" th:href="@{/manager/blogs(page=${currentPage - 1}, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}">
+                    <a class="page-link" th:href="@{/moderator/blogs(page=${currentPage - 1}, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}">
                         <i class="bi bi-chevron-left"></i>
                     </a>
                 </li>
                 
                 <!-- First Page -->
                 <li th:if="${currentPage > 2}" class="page-item">
-                    <a class="page-link" th:href="@{/manager/blogs(page=0, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}">1</a>
+                    <a class="page-link" th:href="@{/moderator/blogs(page=0, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}">1</a>
                 </li>
                 <li th:if="${currentPage > 3}" class="page-item disabled">
                     <span class="page-link">...</span>
@@ -206,7 +206,7 @@
                 <li th:each="i : ${#numbers.sequence(startPage, endPage)}" 
                     class="page-item" 
                     th:classappend="${i == currentPage} ? 'active'">
-                    <a class="page-link" th:href="@{/manager/blogs(page=${i}, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}" th:text="${i + 1}">1</a>
+                    <a class="page-link" th:href="@{/moderator/blogs(page=${i}, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}" th:text="${i + 1}">1</a>
                 </li>
                 
                 <!-- Last Page -->
@@ -214,12 +214,12 @@
                     <span class="page-link">...</span>
                 </li>
                 <li th:if="${currentPage < totalPages - 3}" class="page-item">
-                    <a class="page-link" th:href="@{/manager/blogs(page=${totalPages - 1}, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}" th:text="${totalPages}">Last</a>
+                    <a class="page-link" th:href="@{/moderator/blogs(page=${totalPages - 1}, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}" th:text="${totalPages}">Last</a>
                 </li>
                 
                 <!-- Next Button -->
                 <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled'">
-                    <a class="page-link" th:href="@{/manager/blogs(page=${currentPage + 1}, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}">
+                    <a class="page-link" th:href="@{/moderator/blogs(page=${currentPage + 1}, size=${pageSize}, status=${selectedStatus}, categoryId=${selectedCategory}, keyword=${keyword})}">
                         <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
