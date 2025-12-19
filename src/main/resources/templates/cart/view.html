@@ -186,31 +186,51 @@
   }
 
   async function updateQty(input) {
-    const id = input.dataset.id;
-    let qty = parseInt(input.value, 10);
+      const id = input.dataset.id;
+      let newQty = parseInt(input.value, 10);
 
-    if (!qty || qty < 1) {
-      qty = 1;
-      input.value = 1;
-    }
-
-    try {
-      const res = await fetch("/cart/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ cartItemId: id, quantity: qty }),
-      });
-
-      if (res.ok) {
-        await res.json().catch(() => null);
-        location.reload();
-      } else {
-        const errorData = await res.json().catch(() => ({}));
-        alert("Cập nhật thất bại: " + (errorData.message || res.status));
+      if (isNaN(newQty) || newQty < 1) {
+          input.value = input.defaultValue || 1; // nếu không có defaultValue thì về 1
+          return;
       }
-    } catch (e) {
-      alert("Lỗi kết nối: " + e.message);
-    }
+
+      // Lưu lại giá trị cũ trước khi gửi (rất quan trọng!)
+      const oldQty = input.defaultValue ? parseInt(input.defaultValue) : newQty;
+
+      try {
+          const res = await fetch("/cart/update", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                  cartItemId: id,
+                  quantity: newQty
+              }),
+          });
+
+          const data = await res.json();
+
+          if (res.ok && data.success) {
+              // Thành công → cập nhật defaultValue và reload để đồng bộ tổng tiền
+              input.defaultValue = newQty;
+              location.reload(); // vẫn reload để cập nhật tổng tiền, count, v.v.
+          } else {
+              // Lỗi từ backend (ví dụ: vượt tồn kho)
+              const message = data.message || "Cập nhật số lượng thất bại.";
+              alert(message);
+
+              // Khôi phục lại giá trị cũ
+              input.value = oldQty;
+
+              // Focus lại để người dùng sửa ngay
+              input.focus();
+              input.select(); // bôi đen số để dễ sửa
+          }
+      } catch (e) {
+          // Lỗi mạng hoặc parse JSON
+          alert("Lỗi kết nối, vui lòng thử lại.");
+          input.value = oldQty; // vẫn khôi phục
+          console.error("Update quantity error:", e);
+      }
   }
 
   async function removeItem(id) {
