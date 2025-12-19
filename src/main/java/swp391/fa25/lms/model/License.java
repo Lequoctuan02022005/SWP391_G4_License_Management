@@ -30,8 +30,8 @@ public class License {
     private Double price;
 
     @OneToMany(mappedBy = "license")
-    @JsonIgnoreProperties({"license", "tool"})
-    private List<CustomerOrder> customerOrders;
+    @JsonIgnoreProperties({"license", "order"})
+    private List<OrderLicense> orderLicenses; // Quan hệ với Order thông qua OrderLicense
 
     private LocalDateTime createdAt;
 
@@ -42,22 +42,13 @@ public class License {
     public License() {
     }
 
-    public License(Long licenseId, String name, Tool tool, Integer durationDays, Double price, List<CustomerOrder> customerOrders, LocalDateTime createdAt) {
+    public License(Long licenseId, String name, Tool tool, Integer durationDays, Double price, List<OrderLicense> orderLicenses, LocalDateTime createdAt) {
         this.licenseId = licenseId;
         this.name = name;
         this.tool = tool;
         this.durationDays = durationDays;
         this.price = price;
-        this.customerOrders = customerOrders;
-        this.createdAt = createdAt;
-    }
-
-    public License(String name, Tool tool, Integer durationDays, Double price, List<CustomerOrder> orders, LocalDateTime createdAt) {
-        this.name = name;
-        this.tool = tool;
-        this.durationDays = durationDays;
-        this.price = price;
-        this.customerOrders = orders;
+        this.orderLicenses = orderLicenses;
         this.createdAt = createdAt;
     }
 
@@ -102,12 +93,12 @@ public class License {
         this.price = price;
     }
 
-    public List<CustomerOrder> getCustomerOrders() {
-        return customerOrders;
+    public List<OrderLicense> getOrderLicenses() {
+        return orderLicenses;
     }
 
-    public void setCustomerOrders(List<CustomerOrder> customerOrders) {
-        this.customerOrders = customerOrders;
+    public void setOrderLicenses(List<OrderLicense> orderLicenses) {
+        this.orderLicenses = orderLicenses;
     }
 
     public LocalDateTime getCreatedAt() {

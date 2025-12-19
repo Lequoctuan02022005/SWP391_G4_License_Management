@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Giỏ hàng của bạn</title>
+  <title>Your cart</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
@@ -16,13 +16,13 @@
 
 <main class="container my-5">
   <h2 class="mb-4 text-primary">
-    <i class="fas fa-shopping-cart me-2"></i>Giỏ hàng của bạn
+    <i class="fas fa-shopping-cart me-2"></i>Your cart
   </h2>
 
   <!-- EMPTY -->
   <div th:if="${items == null or items.isEmpty()}" class="text-center py-5 bg-light rounded">
     <i class="fas fa-shopping-cart fa-5x text-muted mb-4"></i>
-    <h4 class="text-muted">Giỏ hàng trống</h4>
+    <h4 class="text-muted">Your cart is empty</h4>
     <a th:href="@{/toollist}" class="btn btn-primary btn-lg">Tiếp tục mua sắm</a>
   </div>
 
@@ -30,7 +30,7 @@
   <div th:if="${items != null and !items.isEmpty()}">
 
     <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-      <div class="text-muted small">Tick chọn sản phẩm muốn thanh toán</div>
+      <div class="text-muted small">Tick the products you want to pay for</div>
     </div>
 
     <div class="table-responsive">
@@ -40,11 +40,11 @@
           <th style="width:56px;" class="text-center">
             <input class="form-check-input" type="checkbox" id="selectAll" />
           </th>
-          <th>Sản phẩm</th>
+          <th>Product</th>
           <th>License</th>
-          <th class="text-nowrap">Giá</th>
-          <th style="width:130px;">Số lượng</th>
-          <th class="text-nowrap">Tổng</th>
+          <th class="text-nowrap">Price</th>
+          <th style="width:130px;">Quantity</th>
+          <th class="text-nowrap">Total</th>
           <th style="width:90px;"></th>
         </tr>
         </thead>
@@ -118,21 +118,21 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 bg-light p-4 rounded">
       <div>
         <div class="text-muted">
-          Đã chọn: <span id="selectedCount" class="fw-bold">0</span> sản phẩm
+          Selected: <span id="selectedCount" class="fw-bold">0</span> products
         </div>
         <div class="fs-5">
-          Tổng thanh toán:
+          Total payment:
           <span id="selectedTotal" class="text-danger fw-bold fs-3">0 VND</span>
         </div>
       </div>
 
       <div class="d-flex gap-2">
         <button class="btn btn-outline-danger btn-lg" type="button" onclick="removeSelected()">
-          <i class="bi bi-trash me-2"></i>Xoá đã chọn
+          <i class="bi bi-trash me-2"></i>Delete selected
         </button>
 
         <button class="btn btn-success btn-lg px-5" type="button" onclick="goCheckoutSelected()">
-          <i class="fas fa-credit-card me-2"></i>Thanh toán
+          <i class="fas fa-credit-card me-2"></i>Pay
         </button>
       </div>
     </div>
@@ -215,7 +215,7 @@
               location.reload(); // vẫn reload để cập nhật tổng tiền, count, v.v.
           } else {
               // Lỗi từ backend (ví dụ: vượt tồn kho)
-              const message = data.message || "Cập nhật số lượng thất bại.";
+              const message = data.message || "Update quantity failed.";
               alert(message);
 
               // Khôi phục lại giá trị cũ
@@ -227,14 +227,14 @@
           }
       } catch (e) {
           // Lỗi mạng hoặc parse JSON
-          alert("Lỗi kết nối, vui lòng thử lại.");
+          alert("Connection error, please try again.");
           input.value = oldQty; // vẫn khôi phục
           console.error("Update quantity error:", e);
       }
   }
 
   async function removeItem(id) {
-    if (!confirm("Xóa sản phẩm này khỏi giỏ hàng?")) return;
+    if (!confirm("Delete this product from your cart?")) return;
 
     try {
       const res = await fetch("/cart/remove", {
@@ -248,18 +248,18 @@
         location.reload();
       } else {
         const errorData = await res.json().catch(() => ({}));
-        alert("Xóa thất bại: " + (errorData.message || res.status));
+        alert("Delete failed: " + (errorData.message || res.status));
       }
     } catch (e) {
-      alert("Xóa thất bại: " + e.message);
+      alert("Delete failed: " + e.message);
     }
   }
 
   async function removeSelected() {
     const ids = getSelectedIds();
-    if (ids.length === 0) return alert("Bạn chưa chọn sản phẩm nào.");
+    if (ids.length === 0) return alert("You haven't selected any products.");
 
-    if (!confirm(`Xóa ${ids.length} sản phẩm đã chọn khỏi giỏ hàng?`)) return;
+    if (!confirm(`Delete ${ids.length} selected products from your cart?`)) return;
 
     for (const id of ids) {
       try {
@@ -279,11 +279,11 @@
     const ids = getSelectedIds();
 
     if (ids.length === 0) {
-      alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.");
+      alert("Please select at least 1 product to pay.");
       return;
     }
 
-    // Nếu controller checkout của anh đang đọc param khác (vd: items=...), đổi "selected" thành "items" là xong.
+    // If the checkout controller is reading a different param (e.g., items=...), change "selected" to "items" is done.
     window.location.href = "/checkout?selected=" + encodeURIComponent(ids.join(","));
   }
 

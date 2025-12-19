@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Lịch sử đơn hàng</title>
+    <title>Order History</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -28,7 +28,7 @@
          ">
 
         <div class="orders-card">
-            <h1 class="orders-title">Lịch sử đơn hàng</h1>
+            <h1 class="orders-title">Order History</h1>
 
             <div class="orders-top-links">
                 <a class="o-btn o-btn-ghost" th:href="@{/customer/license-accounts}">
@@ -37,7 +37,7 @@
             </div>
 
             <p class="orders-sub">
-                Xem các đơn hàng/transaction của bạn. Có thể tìm kiếm, lọc và sắp xếp theo nhiều tiêu chí.
+                View your orders/transactions. You can search, filter and sort by multiple criteria.
             </p>
 
             <!-- FLASH -->
@@ -54,54 +54,54 @@
             <!-- FILTER -->
             <form th:action="@{/customer/orders}" method="get" class="orders-row">
                 <div class="orders-field">
-                    <label class="orders-label">Tìm kiếm</label>
+                    <label class="orders-label">Search</label>
                     <input class="orders-input" type="text" name="q"
                            placeholder="Tool / License / OrderId / txnRef..." th:value="${qVal}">
                 </div>
 
                 <div class="orders-field">
-                    <label class="orders-label">Trạng thái đơn</label>
+                    <label class="orders-label">Order Status</label>
                     <select class="orders-select" name="status">
-                        <option value="" th:selected="${statusVal == ''}">Tất cả</option>
+                        <option value="" th:selected="${statusVal == ''}">All</option>
                         <option value="PENDING" th:selected="${statusVal == 'PENDING'}">PENDING</option>
                         <option value="SUCCESS" th:selected="${statusVal == 'SUCCESS'}">SUCCESS</option>
                         <option value="FAILED"  th:selected="${statusVal == 'FAILED'}">FAILED</option>
                     </select>
                 </div>
 
-                <!-- chỉ lọc NGÀY -->
+                <!-- Date filter only -->
                 <div class="orders-field">
-                    <label class="orders-label">Từ ngày</label>
+                    <label class="orders-label">From Date</label>
                     <input class="orders-input" type="date" name="from" th:value="${fromParam}">
                 </div>
 
                 <div class="orders-field">
-                    <label class="orders-label">Đến ngày</label>
+                    <label class="orders-label">To Date</label>
                     <input class="orders-input" type="date" name="to" th:value="${toParam}">
                 </div>
 
                 <div class="orders-field">
-                    <label class="orders-label">Sắp xếp theo</label>
+                    <label class="orders-label">Sort By</label>
                     <select class="orders-select" name="sort">
-                        <option value="createdAt" th:selected="${sortVal == 'createdAt'}">Ngày tạo</option>
-                        <option value="price" th:selected="${sortVal == 'price'}">Giá</option>
-                        <option value="toolName" th:selected="${sortVal == 'toolName'}">Tên Tool</option>
-                        <option value="licenseName" th:selected="${sortVal == 'licenseName'}">Tên License</option>
+                        <option value="createdAt" th:selected="${sortVal == 'createdAt'}">Created Date</option>
+                        <option value="price" th:selected="${sortVal == 'price'}">Price</option>
+                        <option value="toolName" th:selected="${sortVal == 'toolName'}">Tool Name</option>
+                        <option value="licenseName" th:selected="${sortVal == 'licenseName'}">License Name</option>
                         <option value="orderId" th:selected="${sortVal == 'orderId'}">Order ID</option>
-                        <option value="orderStatus" th:selected="${sortVal == 'orderStatus'}">Trạng thái đơn</option>
+                        <option value="orderStatus" th:selected="${sortVal == 'orderStatus'}">Order Status</option>
                     </select>
                 </div>
 
                 <div class="orders-field">
-                    <label class="orders-label">Chiều</label>
+                    <label class="orders-label">Direction</label>
                     <select class="orders-select" name="dir">
-                        <option value="desc" th:selected="${dirVal == 'desc'}">Giảm dần</option>
-                        <option value="asc"  th:selected="${dirVal == 'asc'}">Tăng dần</option>
+                        <option value="desc" th:selected="${dirVal == 'desc'}">Descending</option>
+                        <option value="asc"  th:selected="${dirVal == 'asc'}">Ascending</option>
                     </select>
                 </div>
 
                 <div class="orders-field">
-                    <label class="orders-label">Kích thước trang</label>
+                    <label class="orders-label">Page Size</label>
                     <select class="orders-select" name="size">
                         <option value="5"  th:selected="${safeSize == 5}">5</option>
                         <option value="10" th:selected="${safeSize == 10}">10</option>
@@ -111,7 +111,7 @@
 
                 <div class="orders-field">
                     <label class="orders-label">&nbsp;</label>
-                    <button class="o-btn o-btn-primary" type="submit">Lọc</button>
+                    <button class="o-btn o-btn-primary" type="submit">Filter</button>
                 </div>
 
                 <div class="orders-field">
@@ -125,8 +125,8 @@
 
             <!-- EMPTY -->
             <div th:if="${pageData == null or pageData.totalElements == 0}" class="orders-empty">
-                <b>Chưa có đơn hàng nào.</b>
-                <div class="orders-muted">Khi bạn mua license/tool, đơn hàng sẽ xuất hiện ở đây.</div>
+                <b>No orders yet.</b>
+                <div class="orders-muted">When you purchase a license/tool, orders will appear here.</div>
             </div>
 
             <!-- TABLE -->
@@ -164,7 +164,7 @@
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${qVal},status=${statusVal},from=${fromParam},to=${toParam},sort='price',dir=${sortVal=='price' ? (dirVal=='asc'?'desc':'asc') : 'asc'})}">
-                                Giá
+                                Price
                                 <span class="orders-arrow"
                                       th:text="${sortVal=='price' ? (dirVal=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
@@ -173,7 +173,7 @@
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${qVal},status=${statusVal},from=${fromParam},to=${toParam},sort='orderStatus',dir=${sortVal=='orderStatus' ? (dirVal=='asc'?'desc':'asc') : 'asc'})}">
-                                Trạng thái
+                                Status
                                 <span class="orders-arrow"
                                       th:text="${sortVal=='orderStatus' ? (dirVal=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
@@ -182,13 +182,13 @@
                         <th class="orders-th">
                             <a class="orders-sortlink"
                                th:href="@{/customer/orders(page=0,size=${baseSize},q=${qVal},status=${statusVal},from=${fromParam},to=${toParam},sort='createdAt',dir=${sortVal=='createdAt' ? (dirVal=='asc'?'desc':'asc') : 'asc'})}">
-                                Ngày tạo
+                                Created Date
                                 <span class="orders-arrow"
                                       th:text="${sortVal=='createdAt' ? (dirVal=='asc'?'↑':'↓') : '↕'}">↕</span>
                             </a>
                         </th>
 
-                        <th class="orders-th">Hành động</th>
+                        <th class="orders-th">Actions</th>
                     </tr>
                     </thead>
 
@@ -200,12 +200,12 @@
                             txStatus=${(o.transaction != null and o.transaction.status != null) ? o.transaction.status.toString() : ''},
                             txBusy=${txStatus == 'PENDING' or txStatus == 'PROCESSING'},
 
-                            laId=${(o.licenseAccount != null) ? o.licenseAccount.licenseAccountId : null},
-                            laUsed=${(o.licenseAccount != null and o.licenseAccount.used != null) ? o.licenseAccount.used : false},
-                            laStatus=${(o.licenseAccount != null and o.licenseAccount.status != null) ? o.licenseAccount.status.toString() : ''},
-                            laRevoked=${laStatus == 'REVOKED'},
-
-                            canUse=${isSuccess and laId != null and !laUsed and !laRevoked}
+                            hasLA=${o.licenseAccounts != null and !o.licenseAccounts.isEmpty()},
+                            laCount=${hasLA ? o.licenseAccounts.size() : 0},
+                            unusedLAs=${hasLA ? o.licenseAccounts.?[used == false and status != null and status.toString() == 'ACTIVE' and (status.toString() != 'REVOKED')] : null},
+                            hasUnusedLA=${unusedLAs != null and !unusedLAs.isEmpty()},
+                            allUsed=${hasLA and (o.licenseAccounts.?[used == false].isEmpty() or o.licenseAccounts.?[used == false].size() == 0)},
+                            canUse=${isSuccess and hasUnusedLA}
                         ">
 
                         <td class="orders-td">
@@ -219,7 +219,16 @@
                             </div>
                         </td>
 
-                        <td class="orders-td" th:text="${o.license != null ? o.license.name : '(N/A)'}">License</td>
+                        <td class="orders-td">
+                            <div th:if="${o.licenses != null and !o.licenses.isEmpty()}">
+                                <div th:each="ol : ${o.licenses}">
+                                    <span th:text="${ol.license.name}">License</span>
+                                    <span th:if="${ol.quantity > 1}" th:text="' (x' + ${ol.quantity} + ')'">(x5)</span>
+                                    <span th:unless="${ol == o.licenses[o.licenses.size() - 1]}">, </span>
+                                </div>
+                            </div>
+                            <div th:if="${o.licenses == null or o.licenses.isEmpty()}">(N/A)</div>
+                        </td>
 
                         <td class="orders-td">
                             <b th:text="${o.price != null ? (#numbers.formatDecimal(o.price, 0, 'COMMA', 0, 'POINT') + ' VND') : '(N/A)'}">0 VND</b>
@@ -234,7 +243,7 @@
                             <span class="o-badge o-b-null" th:if="${o.orderStatus == null}">N/A</span>
 
                             <div class="orders-muted" th:if="${txBusy}">
-                                Đang xử lý thanh toán...
+                                Processing payment...
                             </div>
                         </td>
 
@@ -245,11 +254,11 @@
                         <td class="orders-td actions-cell">
                             <div class="o-actions">
 
-                                <!-- Xem chi tiết (SUCCESS) -->
+                                <!-- View details (SUCCESS) -->
                                 <a class="o-action o-action-view"
                                    th:if="${isSuccess}"
                                    th:href="@{/customer/orders/{id}(id=${o.orderId})}"
-                                   title="Xem chi tiết">
+                                   title="View details">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
 
@@ -261,56 +270,55 @@
                                     <i class="fa-regular fa-star"></i> Feedback
                                 </a>
 
-                                <!-- Báo cáo (SUCCESS) -->
+                                <!-- Report (SUCCESS) -->
                                 <a class="o-action o-action-danger"
                                    th:if="${isSuccess}"
                                    th:href="@{/support/create(orderId=${o.orderId})}"
-                                   title="Báo cáo">
-                                    <i class="fa-regular fa-flag"></i> Báo cáo
+                                   title="Report">
+                                    <i class="fa-regular fa-flag"></i> Report
                                 </a>
 
 
-                                <!-- ✅ DÙNG DỊCH VỤ: POST -->
+                                <!-- ✅ USE SERVICE: POST - Activate ALL unused LicenseAccounts in order -->
                                 <form th:if="${canUse}"
-                                      th:action="@{/customer/license-accounts/{id}/use(id=${laId})}"
+                                      th:action="@{/customer/orders/{id}/use-all-license-accounts(id=${o.orderId})}"
                                       method="post"
                                       style="display:inline;"
-                                      onsubmit="return confirm('Xác nhận dùng dịch vụ cho đơn hàng này?');">
+                                      th:onsubmit="'return confirm(\'Confirm using service for ALL (' + ${unusedLAs.size()} + ') unused LicenseAccounts in this order?\');'">
                                     <input type="hidden" th:if="${_csrf != null}"
                                            th:name="${_csrf.parameterName}"
                                            th:value="${_csrf.token}" />
-                                    <input type="hidden" name="orderId" th:value="${o.orderId}"/>
-                                    <button type="submit" class="o-action o-action-success" title="Dùng dịch vụ">
-                                        <i class="fa-solid fa-play"></i> Dùng
+                                    <button type="submit" class="o-action o-action-success" title="Use service for all unused LicenseAccounts">
+                                        <i class="fa-solid fa-play"></i> Use
                                     </button>
                                 </form>
 
-                                <!-- Nếu đã dùng -->
+                                <!-- If all used -->
                                 <span class="o-action o-action-success disabled"
-                                      th:if="${isSuccess and laId != null and laUsed}"
-                                      title="Đã dùng">
-                                    <i class="fa-solid fa-check"></i> Đã dùng
+                                      th:if="${isSuccess and hasLA and allUsed}"
+                                      title="All LicenseAccounts used">
+                                    <i class="fa-solid fa-check"></i> Used
                                 </span>
 
-                                <!-- Nếu bị REVOKED -->
-                                <span class="o-action o-action-danger disabled"
-                                      th:if="${isSuccess and laId != null and laRevoked}"
-                                      title="LicenseAccount đã bị thu hồi">
-                                    <i class="fa-solid fa-ban"></i> REVOKED
+                                <!-- If no LicenseAccount -->
+                                <span class="o-action o-action-disabled disabled"
+                                      th:if="${isSuccess and !hasLA}"
+                                      title="No LicenseAccount yet">
+                                    <i class="fa-solid fa-ban"></i> No LicenseAccount
                                 </span>
 
-                                <!-- Thanh toán lại nếu KHÔNG SUCCESS -->
+                                <!-- Repay if NOT SUCCESS -->
                                 <form th:if="${!isSuccess}"
                                       th:action="@{/customer/orders/{id}/repay(id=${o.orderId})}"
                                       method="post"
                                       style="display:inline;"
-                                      onsubmit="return confirm('Xác nhận thanh toán lại đơn hàng này qua VNPay?');">
+                                      onsubmit="return confirm('Confirm repaying this order via VNPay?');">
                                     <input type="hidden" th:if="${_csrf != null}"
                                            th:name="${_csrf.parameterName}"
                                            th:value="${_csrf.token}" />
-                                    <button type="submit" class="o-action o-action-danger" title="Thanh toán lại">
+                                    <button type="submit" class="o-action o-action-danger" title="Repay">
                                         <i th:class="${txBusy} ? 'fa-solid fa-hourglass-half' : 'fa-solid fa-rotate-right'"></i>
-                                        <span th:text="${txBusy} ? ' Thanh toán lại' : ' Thanh toán lại'">Thanh toán lại</span>
+                                        <span th:text="${txBusy} ? ' Repay' : ' Repay'">Repay</span>
                                     </button>
                                 </form>
 
@@ -326,15 +334,15 @@
                      th:with="cur=${pageData.number}, total=${pageData.totalPages}, sizeVal=${pageData.size}">
 
                     <div class="orders-muted">
-                        Tổng: <b th:text="${pageData.totalElements}">0</b> đơn ·
-                        Trang <b th:text="${cur + 1}">1</b>/<b th:text="${total}">1</b>
+                        Total: <b th:text="${pageData.totalElements}">0</b> orders ·
+                        Page <b th:text="${cur + 1}">1</b>/<b th:text="${total}">1</b>
                     </div>
 
                     <div class="orders-page-links">
                         <a class="o-pill"
                            th:classappend="${pageData.first} ? ' disabled' : ''"
                            th:href="@{/customer/orders(page=${cur > 0 ? cur - 1 : 0},size=${sizeVal},q=${qVal},status=${statusVal},from=${fromParam},to=${toParam},sort=${sortVal},dir=${dirVal})}">
-                            ← Trước
+                            ← Previous
                         </a>
 
                         <a th:each="i : ${#numbers.sequence(0, total - 1)}"
@@ -348,7 +356,7 @@
                         <a class="o-pill"
                            th:classappend="${pageData.last} ? ' disabled' : ''"
                            th:href="@{/customer/orders(page=${cur + 1 < total ? cur + 1 : cur},size=${sizeVal},q=${qVal},status=${statusVal},from=${fromParam},to=${toParam},sort=${sortVal},dir=${dirVal})}">
-                            Sau →
+                            Next →
                         </a>
                     </div>
                 </div>

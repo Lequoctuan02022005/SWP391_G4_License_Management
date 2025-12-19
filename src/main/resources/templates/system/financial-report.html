@@ -19,7 +19,7 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold mb-0">Financial Report (Seller Package)</h5>
                     <span class="text-muted small">
-                        Tổng bản ghi: <b th:text="${page.totalElements}">0</b>
+                        Total records: <b th:text="${page.totalElements}">0</b>
                     </span>
                 </div>
                 <div class="card-body border-bottom">
@@ -27,7 +27,7 @@
                         <div class="col-md-4">
                             <div class="card border-success shadow-sm">
                                 <div class="card-body">
-                                    <div class="text-muted small">Tổng doanh thu</div>
+                                    <div class="text-muted small">Total Revenue</div>
                                     <h4 class="fw-bold text-success mb-0"
                                         th:text="${#numbers.formatDecimal(totalRevenue,0,'COMMA',0,'POINT')} + ' VND'">
                                         0 VND
@@ -47,7 +47,7 @@
                             <input type="text"
                                    name="seller"
                                    class="form-control"
-                                   placeholder="Nhập tên seller"
+                                   placeholder="Enter seller name"
                                    th:value="${param.seller}">
                         </div>
 
@@ -158,7 +158,7 @@
 
                         <tr th:if="${page.totalElements == 0}">
                             <td colspan="7" class="text-center text-muted py-4">
-                                Không có dữ liệu
+                                No data
                             </td>
                         </tr>
                         </tbody>
@@ -168,7 +168,7 @@
                 <!-- PAGINATION -->
                 <div class="card-footer bg-white d-flex justify-content-between align-items-center">
                     <span class="small text-muted">
-                        Trang <b th:text="${page.number + 1}">1</b> /
+                        Page <b th:text="${page.number + 1}">1</b> /
                         <b th:text="${page.totalPages}">1</b>
                     </span>
 
@@ -176,14 +176,14 @@
                         <a class="btn btn-outline-secondary"
                            th:classappend="${!page.hasPrevious()} ? ' disabled' : ''"
                            th:href="@{(
-                             page=${page.number + 1},
+                             page=${page.number - 1},
                              seller=${param.seller},
                              packageId=${param.packageId},
                              status=${param.status},
                              fromDate=${param.fromDate},
                              toDate=${param.toDate}
                            )}">
-                            « Trước
+                            « Previous
                         </a>
 
                         <a class="btn btn-outline-secondary"
@@ -196,7 +196,7 @@
                                     fromDate=${param.fromDate},
                                     toDate=${param.toDate}
                               )}">
-                            Sau »
+                            Next »
                         </a>
                     </div>
                 </div>

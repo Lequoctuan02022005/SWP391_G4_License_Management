@@ -31,8 +31,8 @@
             <!-- PAGE HEADER -->
             <div class="page-header">
                 <div>
-                    <h1><i class="bi bi-pencil-square"></i> Chỉnh sửa vai trò</h1>
-                    <p class="page-subtitle">Cập nhật thông tin vai trò</p>
+                    <h1><i class="bi bi-pencil-square"></i> Edit role</h1>
+                    <p class="page-subtitle">Update role information</p>
                 </div>
             </div>
 
@@ -44,7 +44,7 @@
                     <!-- Role ID (Read Only) -->
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="bi bi-hash"></i> ID vai trò
+                            <i class="bi bi-hash"></i> Role ID
                         </label>
                         <input type="text" 
                                class="form-control" 
@@ -56,44 +56,44 @@
                     <!-- Role Name (Read Only) -->
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="bi bi-tag"></i> Tên vai trò
+                            <i class="bi bi-tag"></i> Role name
                         </label>
                         <input type="text" 
                                class="form-control" 
                                th:value="${role.roleName}" 
                                readonly
                                disabled>
-                        <small class="form-text">Tên vai trò không thể thay đổi</small>
+                        <small class="form-text">Role name cannot be changed</small>
                     </div>
 
                     <!-- Description -->
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="bi bi-file-earmark-text"></i> Mô tả
+                            <i class="bi bi-file-earmark-text"></i> Description
                         </label>
                         <textarea class="form-control" 
                                   name="note" 
                                   rows="3"
                                   th:value="${role.note}"
-                                  placeholder="Nhập mô tả cho vai trò này..."
+                                  placeholder="Enter description for this role..."
                                   required></textarea>
-                        <small class="form-text">Cập nhật mô tả vai trò khi cần</small>
+                        <small class="form-text">Update role description when needed</small>
                     </div>
 
                     <!-- Buttons -->
                     <div class="form-buttons">
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Lưu thay đổi
+                            <i class="bi bi-save"></i> Save changes
                         </button>
 
                         <a th:href="@{/admin/roles/delete/{id}(id=${role.roleId})}" 
                            class="btn btn-danger"
-                           onclick="return confirm('Bạn có chắc chắn muốn xóa vai trò này? Hành động này không thể hoàn tác.');">
-                            <i class="bi bi-trash"></i> Xóa vai trò
+                           onclick="return confirm('Are you sure you want to delete this role? This action cannot be undone.');">
+                            <i class="bi bi-trash"></i> Delete role
                         </a>
 
                         <a href="/admin/roles" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Hủy
+                            <i class="bi bi-arrow-left"></i> Cancel
                         </a>
                     </div>
 

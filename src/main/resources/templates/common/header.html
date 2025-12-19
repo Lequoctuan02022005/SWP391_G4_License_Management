@@ -29,9 +29,9 @@
 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav mx-auto">
-                        <li class="nav-item"><a class="nav-link" href="/home">Trang chủ</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/toollist">Sản phẩm</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/blog">Blogs</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/toollist">Products</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/blog">Blog</a></li>
                         <li class="nav-item"><a class="nav-link" href="/support">Support</a></li>
                     </ul>
 
@@ -70,11 +70,11 @@
 
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
 
-                                <li><a class="dropdown-item" th:href="@{/profile}">Thông tin tài khoản</a></li>
-                                <li><a class="dropdown-item" th:href="@{/change-password}">Đổi mật khẩu</a></li>
-                                <li><a class="dropdown-item" th:href="@{/customer/orders}">Đơn hàng đã mua</a></li>
-                                <li><a class="dropdown-item" th:href="@{/license/renew-history}">Lịch sử gia hạn license</a></li>
-                                <li><a class="dropdown-item" th:href="@{/seller/renew}"> Đăng ký Seller</a></li>
+                                <li><a class="dropdown-item" th:href="@{/profile}">Account information</a></li>
+                                <li><a class="dropdown-item" th:href="@{/change-password}">Change password</a></li>
+                                <li><a class="dropdown-item" th:href="@{/customer/orders}">Purchased orders</a></li>
+                                <li><a class="dropdown-item" th:href="@{/license/renew-history}">License renewal history</a></li>
+                                <li><a class="dropdown-item" th:href="@{/seller/renew}"> Register Seller</a></li>
                                 <!-- SELLER ONLY -->
                                 <li sec:authorize="hasRole('SELLER')">
                                     <hr class="dropdown-divider">
@@ -82,15 +82,15 @@
                                         Seller Dashboard
                                     </a>
                                     <a class="dropdown-item" th:href="@{/seller/feedbacks}">
-                                        <i class="fas fa-comments me-1"></i> Quản lý Feedback
+                                        <i class="fas fa-comments me-1"></i> Manage Feedback
                                     </a>
                                     <a class="dropdown-item" th:href="@{/seller/renew}">
-                                        Gia hạn
+                                        Renew
                                     </a>
                                 </li>
 
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" th:href="@{/logout}">Thoát</a></li>
+                                <li><a class="dropdown-item text-danger" th:href="@{/logout}">Logout</a></li>
                             </ul>
                         </div>
                     </div>
@@ -104,7 +104,7 @@
             const wishlistLink = document.getElementById("wishlistLink");
 
             if (!badge || !wishlistLink) {
-                console.error("Không tìm thấy badge hoặc wishlist link");
+                console.error("Cannot find badge or wishlist link");
                 return;
             }
 
@@ -116,9 +116,9 @@
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
                         const count = await res.json();
                         badge.textContent = count;
-                        console.log("Favorite count từ API:", count);
+                        console.log("Favorite count from API:", count);
                     } catch (error) {
-                        console.error("Lỗi khi load favorite count:", error);
+                        console.error("Error when loading favorite count:", error);
                         badge.textContent = "0";
                     }
                 };
@@ -132,7 +132,7 @@
                 e.preventDefault();
                 await window.loadFavoriteCount();
                 const count = parseInt(badge.textContent) || 0;
-                console.log("Favorite count khi click:", count);
+                console.log("Favorite count when click:", count);
                 if (count > 0) {
                     window.location.href = "/favorite/list";
                 } else {

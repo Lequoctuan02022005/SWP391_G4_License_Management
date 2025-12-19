@@ -13,11 +13,12 @@ import java.util.Optional;
 @Repository
 public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Long> {
 
-    @EntityGraph(attributePaths = {"tool", "license", "transaction"})
+    @EntityGraph(attributePaths = {"tool", "licenses", "licenses.license", "transaction"})
     @Query("""
     SELECT o FROM CustomerOrder o
     LEFT JOIN o.tool t
-    LEFT JOIN o.license l
+    LEFT JOIN o.licenses ol
+    LEFT JOIN ol.license l
     LEFT JOIN o.transaction tx
     WHERE o.account.accountId = :accountId
       AND (:status IS NULL OR o.orderStatus = :status)
@@ -42,6 +43,6 @@ public interface CustomerOrderRepository extends JpaRepository<CustomerOrder, Lo
     );
 
 
-    @EntityGraph(attributePaths = {"tool", "license", "transaction", "licenseAccount", "account"})
+    @EntityGraph(attributePaths = {"tool", "licenses", "licenses.license", "transaction", "account"})
     Optional<CustomerOrder> findByOrderIdAndAccount_AccountId(Long orderId, Long accountId);
 }

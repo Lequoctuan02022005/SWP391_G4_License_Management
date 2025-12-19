@@ -2,7 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
-    <title th:text="${tool.toolName}">Chi tiết sản phẩm</title>
+    <title th:text="${tool.toolName}">Product Details</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link
@@ -19,7 +19,7 @@
     />
     <link th:href="@{/css/home.css}" rel="stylesheet" />
 
-    <!-- CSRF Meta Tags (chỉ có khi đã login) -->
+    <!-- CSRF Meta Tags (only when logged in) -->
     <meta name="_csrf" th:content="${_csrf.token}" th:if="${_csrf != null}" />
     <meta
       name="_csrf_header"
@@ -92,49 +92,49 @@
             class="tool-image img-fluid"
           />
           <div th:if="${tool.availableQuantity == 0}" class="text-center mt-3">
-            <span class="badge bg-danger fs-3 px-5 py-3">HẾT HÀNG</span>
+            <span class="badge bg-danger fs-3 px-5 py-3">OUT OF STOCK</span>
           </div>
         </div>
 
         <!-- RIGHT: INFO -->
         <div class="col-md-6">
           <p class="fs-5 mb-2">
-            <strong>Người bán:</strong>
+            <strong>Seller:</strong>
             <span th:text="${tool.seller.fullName}">Seller</span>
           </p>
 
           <p class="fs-5 mb-4">
-            <strong>Kho còn:</strong>
+            <strong>Stock Available:</strong>
             <strong class="text-success" th:text="${tool.availableQuantity}"
               >0</strong
             >
-            sản phẩm
+            items
           </p>
 
           <!-- PRICE -->
           <div class="price-box mb-4">
-            <span id="priceDisplay">Chọn gói để xem giá</span>
+            <span id="priceDisplay">Select package to view price</span>
           </div>
 
           <!-- LICENSE -->
           <div class="mb-4">
-            <p class="fw-bold fs-5 mb-3">Chọn gói License:</p>
+            <p class="fw-bold fs-5 mb-3">Select License Package:</p>
             <div class="d-flex flex-wrap gap-3">
               <button
                 type="button"
                 class="license-btn text-center"
                 th:each="lic : ${tool.licenses}"
-                th:text="'Gói ' + ${lic.durationDays} + ' ngày'"
+                th:text="${lic.durationDays} + ' days'"
                 th:data-price="${lic.price}"
                 th:data-id="${lic.licenseId}"
                 onclick="chooseLicense(this)"
               >
-                Gói 30 ngày
+                30 days
               </button>
             </div>
           </div>
 
-          <!-- ACTION BUTTONS (chỉ cho CUSTOMER) -->
+          <!-- ACTION BUTTONS (only for CUSTOMER) -->
           <div
             th:if="${#authorization.expression('hasRole(''CUSTOMER'')')}"
             class="d-flex gap-3"
@@ -147,7 +147,7 @@
             >
               <i class="fas fa-cart-plus me-2"></i>
               <span
-                th:text="${tool.availableQuantity == 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng'}"
+                th:text="${tool.availableQuantity == 0 ? 'Out of Stock' : 'Add to Cart'}"
               ></span>
             </button>
 
@@ -157,29 +157,29 @@
                     th:disabled="${tool.availableQuantity == 0}"
                     onclick="buyNow()"
             >
-              <i class="fas fa-shopping-cart me-2"></i> Mua Ngay
+              <i class="fas fa-shopping-cart me-2"></i> Buy Now
             </button>
 
           </div>
 
-          <!-- Không phải CUSTOMER -->
+          <!-- Not CUSTOMER -->
           <div
             th:unless="${#authorization.expression('hasRole(''CUSTOMER'')')}"
             class="alert alert-info mt-3"
           >
-            <i class="fas fa-info-circle"></i> Bạn không thể mua sản phẩm này.
+            <i class="fas fa-info-circle"></i> You cannot purchase this product.
           </div>
         </div>
       </div>
 
-      <!-- TABS: Mô tả + Đánh giá -->
+      <!-- TABS: Description + Reviews -->
       <ul class="nav nav-tabs mt-5" id="detailTab">
         <li class="nav-item">
-          <a class="nav-link active" data-bs-toggle="tab" href="#desc">Mô tả</a>
+          <a class="nav-link active" data-bs-toggle="tab" href="#desc">Description</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" data-bs-toggle="tab" href="#review"
-            >Đánh giá (<span th:text="${#lists.size(tool.feedbacks)}">0</span
+            >Reviews (<span th:text="${#lists.size(tool.feedbacks)}">0</span
             >)</a
           >
         </li>
@@ -188,7 +188,7 @@
       <div class="tab-content tab-content-box">
         <div id="desc" class="tab-pane fade show active">
           <div th:utext="${tool.description}">
-            Mô tả sản phẩm sẽ hiện ở đây...
+            Product description will appear here...
           </div>
         </div>
 
@@ -198,7 +198,7 @@
             class="text-center py-5 text-muted"
           >
             <i class="fas fa-comment-slash fa-3x mb-3"></i>
-            <p>Chưa có đánh giá nào.</p>
+            <p>No reviews yet.</p>
           </div>
 
           <div th:each="fb : ${tool.feedbacks}" class="border-bottom pb-3 mb-3">
@@ -207,7 +207,7 @@
               <div>
                 <strong>
                   <i class="fas fa-user-circle text-primary"></i>
-                  <span th:text="${fb.account != null ? fb.account.fullName : 'Ẩn danh'}">Khách hàng</span>
+                  <span th:text="${fb.account != null ? fb.account.fullName : 'Anonymous'}">Customer</span>
                 </strong>
               </div>
               <small
@@ -224,7 +224,7 @@
               </span>
               <span th:text="${fb.rating} + '/5'"></span>
             </div>
-            <p class="mt-2 mb-3" th:text="${fb.comment != null && !fb.comment.isEmpty() ? fb.comment : '(Không có nhận xét)'}"></p>
+            <p class="mt-2 mb-3" th:text="${fb.comment != null && !fb.comment.isEmpty() ? fb.comment : '(No comment)'}"></p>
 
             <!-- Seller Reply (if exists) -->
             <div th:with="reply=${@feedbackReplyService.getReplyByFeedbackId(fb.feedbackId).orElse(null)}">
@@ -235,15 +235,15 @@
                   <div>
                     <strong class="text-success">
                       <i class="fas fa-store"></i>
-                      <span th:text="${reply.seller != null ? reply.seller.fullName : 'Người bán'}">Seller</span>
-                      <span class="badge bg-success ms-2" style="font-size: 0.7rem;">Người bán</span>
+                      <span th:text="${reply.seller != null ? reply.seller.fullName : 'Seller'}">Seller</span>
+                      <span class="badge bg-success ms-2" style="font-size: 0.7rem;">Seller</span>
                     </strong>
                   </div>
                   <small class="text-muted">
                     <i class="far fa-clock"></i>
                     <span th:text="${#temporals.format(reply.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
                     <span th:if="${reply.updatedAt != null}" class="fst-italic">
-                      (đã chỉnh sửa)
+                      (edited)
                     </span>
                   </small>
                 </div>
@@ -255,12 +255,12 @@
       </div>
     </div>
 
-    <!-- Modal yêu cầu đăng nhập -->
+    <!-- Login Required Modal -->
     <div class="modal fade" id="loginModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header border-0">
-            <h5 class="modal-title">Yêu cầu đăng nhập</h5>
+            <h5 class="modal-title">Login Required</h5>
             <button
               type="button"
               class="btn-close"
@@ -269,7 +269,7 @@
           </div>
           <div class="modal-body text-center py-4">
             <i class="fas fa-user-lock fa-3x text-primary mb-3"></i>
-            <p>Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.</p>
+            <p>You need to login to add products to cart.</p>
           </div>
           <div class="modal-footer border-0 justify-content-center">
             <button
@@ -277,15 +277,15 @@
               class="btn btn-secondary"
               data-bs-dismiss="modal"
             >
-              Hủy
+              Cancel
             </button>
-            <a href="/login" class="btn btn-primary">Đăng nhập ngay</a>
+            <a href="/login" class="btn btn-primary">Login Now</a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Form ẩn fallback khi AJAX lỗi -->
+    <!-- Hidden form fallback when AJAX fails -->
     <form
       id="addToCartForm"
       th:action="@{/cart/add}"
@@ -320,19 +320,19 @@
         document.getElementById("priceDisplay").innerHTML =
           price > 0
             ? new Intl.NumberFormat("vi-VN").format(price) + " VND"
-            : '<span class="text-success fw-bold">MIỄN PHÍ</span>';
+            : '<span class="text-success fw-bold">FREE</span>';
         document.getElementById("licenseIdInput").value = btn.dataset.id;
       }
 
-      // Tự động chọn gói đầu tiên
+      // Auto-select first package
       document.addEventListener("DOMContentLoaded", () => {
         const first = document.querySelector(".license-btn");
         if (first) chooseLicense(first);
       });
 
-      // Thêm vào giỏ hàng - ĐÃ FIX 100% CSRF + fallback + badge
+      // Add to cart - FIXED 100% CSRF + fallback + badge
       async function addToCart() {
-        if (available <= 0) return alert("Sản phẩm đã hết hàng!");
+        if (available <= 0) return alert("Product is out of stock!");
 
         if (!isLoggedIn) {
           new bootstrap.Modal(document.getElementById("loginModal")).show();
@@ -340,7 +340,7 @@
         }
 
         const activeBtn = document.querySelector(".license-btn.active");
-        if (!activeBtn) return alert("Vui lòng chọn gói license!");
+        if (!activeBtn) return alert("Please select a license package!");
 
         const licenseId = activeBtn.dataset.id;
 
@@ -371,12 +371,12 @@
           const data = await res.json();
 
           if (res.ok && data.success) {
-            alert("Thêm vào giỏ hàng thành công!");
+            alert("Added to cart successfully!");
             if (typeof window.updateCartBadge === "function") {
               window.updateCartBadge();
             }
           } else {
-            alert(data.message || "Không thể thêm vào giỏ");
+            alert(data.message || "Cannot add to cart");
           }
         } catch (err) {
           console.error(err);
@@ -386,7 +386,7 @@
       }
 
       async function buyNow() {
-        if (available <= 0) return alert("Sản phẩm đã hết hàng!");
+        if (available <= 0) return alert("Product is out of stock!");
 
         if (!isLoggedIn) {
           new bootstrap.Modal(document.getElementById("loginModal")).show();
@@ -394,7 +394,7 @@
         }
 
         const activeBtn = document.querySelector(".license-btn.active");
-        if (!activeBtn) return alert("Vui lòng chọn gói license!");
+        if (!activeBtn) return alert("Please select a license package!");
 
         const licenseId = activeBtn.dataset.id;
 
@@ -422,14 +422,14 @@
 
           const data = await res.json();
           if (res.ok && data.success) {
-            // sang trang confirm buy-now
+            // redirect to confirm buy-now page
             window.location.href = data.redirectUrl || "/checkout/buy-now/confirm";
           } else {
-            alert(data.message || "Không thể mua ngay");
+            alert(data.message || "Cannot buy now");
           }
         } catch (e) {
           console.error(e);
-          alert("Có lỗi khi mua ngay, vui lòng thử lại!");
+          alert("Error occurred when buying, please try again!");
         }
       }
 

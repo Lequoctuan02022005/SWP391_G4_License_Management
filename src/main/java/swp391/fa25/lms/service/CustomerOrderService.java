@@ -23,7 +23,7 @@ public class CustomerOrderService {
             "price", "price",
             "createdAt", "createdAt",
             "toolName", "tool.toolName",
-            "licenseName", "license.name",
+            "licenseName", "licenses.license.name", // ✅ Sửa để sort theo OrderLicense → License
             "orderStatus", "orderStatus"
     );
 

@@ -4,6 +4,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import swp391.fa25.lms.model.*;
+import swp391.fa25.lms.repository.CustomerOrderRepository;
 import swp391.fa25.lms.repository.LicenseAccountRepository;
 import swp391.fa25.lms.repository.LicenseRenewLogRepository;
 import swp391.fa25.lms.repository.LicenseRepository;
@@ -20,15 +21,18 @@ public class CustomerLicenseAccountService {
     private final LicenseRepository licenseRepo;
     private final LicenseRenewLogRepository renewLogRepo;
     private final ToolRepository toolRepo;
+    private final CustomerOrderRepository orderRepo;
 
     public CustomerLicenseAccountService(LicenseAccountRepository laRepo,
                                          LicenseRepository licenseRepo,
                                          LicenseRenewLogRepository renewLogRepo,
-                                         ToolRepository toolRepo) {
+                                         ToolRepository toolRepo,
+                                         CustomerOrderRepository orderRepo) {
         this.laRepo = laRepo;
         this.licenseRepo = licenseRepo;
         this.renewLogRepo = renewLogRepo;
         this.toolRepo = toolRepo;
+        this.orderRepo = orderRepo;
     }
 
     // tools for filter (list page)
@@ -177,11 +181,92 @@ public class CustomerLicenseAccountService {
             throw new IllegalArgumentException("License Account này đã được dùng rồi.");
         }
 
-        la.setUsed(true);
-        // nếu model có field usedAt thì set thêm:
-        // la.setUsedAt(LocalDateTime.now());
+        // ✅ Set startDate và endDate khi kích hoạt
+        LocalDateTime now = LocalDateTime.now();
+        la.setStartDate(now);
+        
+        // Tính endDate dựa trên durationDays của License
+        if (la.getLicense() != null && la.getLicense().getDurationDays() != null) {
+            Integer durationDays = la.getLicense().getDurationDays();
+            la.setEndDate(now.plusDays(durationDays));
+        } else {
+            // Nếu không có durationDays, không set endDate (hoặc có thể throw exception)
+            throw new IllegalArgumentException("License không có thông tin durationDays.");
+        }
 
+        la.setUsed(true);
         laRepo.save(la);
+    }
+
+    /**
+     * ✅ Kích hoạt TẤT CẢ LicenseAccount trong một Order
+     * Chỉ kích hoạt những account chưa được dùng và đang ACTIVE
+     */
+    @Transactional
+    public int useAllLicenseAccountsInOrder(Long accountId, Long orderId) {
+        // Kiểm tra order thuộc về account này
+        CustomerOrder order = orderRepo.findByOrderIdAndAccount_AccountId(orderId, accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Order không tồn tại hoặc không thuộc về bạn"));
+
+        if (order.getOrderStatus() != CustomerOrder.OrderStatus.SUCCESS) {
+            throw new IllegalArgumentException("Chỉ có thể dùng dịch vụ khi đơn hàng đã SUCCESS.");
+        }
+
+        // Lấy tất cả LicenseAccount của order này
+        List<LicenseAccount> licenseAccounts = laRepo.findByOrder_OrderId(orderId)
+                .stream()
+                .filter(la -> la.getOrder() != null && la.getOrder().getOrderId().equals(orderId))
+                .filter(la -> la.getOrder().getAccount().getAccountId().equals(accountId)) // Đảm bảo thuộc về account này
+                .toList();
+
+        if (licenseAccounts.isEmpty()) {
+            throw new IllegalArgumentException("Không có LicenseAccount nào trong order này.");
+        }
+
+        int activatedCount = 0;
+        List<String> errors = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (LicenseAccount la : licenseAccounts) {
+            try {
+                // Chỉ kích hoạt những account chưa được dùng và đang ACTIVE
+                if (Boolean.TRUE.equals(la.getUsed())) {
+                    continue; // Bỏ qua những account đã được dùng
+                }
+                if (la.getStatus() == LicenseAccount.Status.REVOKED) {
+                    errors.add("LicenseAccount ID " + la.getLicenseAccountId() + " đã bị REVOKED.");
+                    continue;
+                }
+                if (la.getStatus() != LicenseAccount.Status.ACTIVE) {
+                    errors.add("LicenseAccount ID " + la.getLicenseAccountId() + " không ở trạng thái ACTIVE.");
+                    continue;
+                }
+
+                // ✅ Set startDate và endDate khi kích hoạt
+                la.setStartDate(now);
+                
+                // Tính endDate dựa trên durationDays của License
+                if (la.getLicense() != null && la.getLicense().getDurationDays() != null) {
+                    Integer durationDays = la.getLicense().getDurationDays();
+                    la.setEndDate(now.plusDays(durationDays));
+                } else {
+                    errors.add("LicenseAccount ID " + la.getLicenseAccountId() + " không có thông tin durationDays.");
+                    continue;
+                }
+
+                la.setUsed(true);
+                laRepo.save(la);
+                activatedCount++;
+            } catch (Exception e) {
+                errors.add("Lỗi khi kích hoạt LicenseAccount ID " + la.getLicenseAccountId() + ": " + e.getMessage());
+            }
+        }
+
+        if (activatedCount == 0 && !errors.isEmpty()) {
+            throw new IllegalArgumentException("Không thể kích hoạt LicenseAccount nào. " + String.join(" ", errors));
+        }
+
+        return activatedCount;
     }
 
 }

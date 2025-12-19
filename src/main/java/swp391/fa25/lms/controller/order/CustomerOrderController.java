@@ -13,11 +13,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.CustomerOrder;
 import swp391.fa25.lms.model.Feedback;
+import swp391.fa25.lms.model.LicenseAccount;
 import swp391.fa25.lms.model.PaymentTransaction;
+
+import java.util.List;
 import swp391.fa25.lms.repository.AccountRepository;
 import swp391.fa25.lms.repository.CustomerOrderRepository;
 import swp391.fa25.lms.repository.FeedbackRepository;
+import swp391.fa25.lms.repository.LicenseAccountRepository;
+import swp391.fa25.lms.repository.OrderLicenseRepository;
 import swp391.fa25.lms.repository.PaymentTransactionRepository;
+import swp391.fa25.lms.service.CustomerLicenseAccountService;
 import swp391.fa25.lms.service.CustomerOrderService;
 import swp391.fa25.lms.util.VNPayUtil;
 
@@ -35,11 +41,13 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class CustomerOrderController {
 
     private final CustomerOrderService orderService;
+    private final CustomerLicenseAccountService licenseAccountService;
     private final AccountRepository accountRepo;
     private final FeedbackRepository feedbackRepo;
-
     private final PaymentTransactionRepository transactionRepo;
     private final CustomerOrderRepository orderRepo;
+    private final OrderLicenseRepository orderLicenseRepo;
+    private final LicenseAccountRepository licenseAccountRepo;
     private final VNPayUtil vnPayUtil;
 
     @Value("${vnpay.returnUrlCheckout}")
@@ -53,16 +61,22 @@ public class CustomerOrderController {
     );
 
     public CustomerOrderController(CustomerOrderService orderService,
+                                   CustomerLicenseAccountService licenseAccountService,
                                    AccountRepository accountRepo,
                                    FeedbackRepository feedbackRepo,
                                    PaymentTransactionRepository transactionRepo,
                                    CustomerOrderRepository orderRepo,
+                                   OrderLicenseRepository orderLicenseRepo,
+                                   LicenseAccountRepository licenseAccountRepo,
                                    VNPayUtil vnPayUtil) {
         this.orderService = orderService;
+        this.licenseAccountService = licenseAccountService;
         this.accountRepo = accountRepo;
         this.feedbackRepo = feedbackRepo;
         this.transactionRepo = transactionRepo;
         this.orderRepo = orderRepo;
+        this.orderLicenseRepo = orderLicenseRepo;
+        this.licenseAccountRepo = licenseAccountRepo;
         this.vnPayUtil = vnPayUtil;
     }
 
@@ -119,6 +133,12 @@ public class CustomerOrderController {
 
         var pageData = orderService.getMyOrders(accountId, q, st, fromDt, toDt, page, size, sort, dir);
 
+        // Load OrderLicense và LicenseAccount cho mỗi order
+        pageData.getContent().forEach(order -> {
+            order.setLicenses(orderLicenseRepo.findByOrder_OrderId(order.getOrderId()));
+            order.setLicenseAccounts(licenseAccountRepo.findByOrder_OrderId(order.getOrderId()));
+        });
+
         model.addAttribute("pageData", pageData);
         model.addAttribute("q", q);
         model.addAttribute("statusStr", status == null ? "" : status.trim());
@@ -139,6 +159,11 @@ public class CustomerOrderController {
         Long accountId = currentAccountId(auth);
 
         CustomerOrder order = orderService.getMyOrderDetail(accountId, orderId);
+        
+        // Load OrderLicense và LicenseAccount vào order
+        order.setLicenses(orderLicenseRepo.findByOrder_OrderId(orderId));
+        order.setLicenseAccounts(licenseAccountRepo.findByOrder_OrderId(orderId));
+        
         model.addAttribute("order", order);
 
         if (order.getTransaction() != null) {
@@ -170,13 +195,44 @@ public class CustomerOrderController {
 
         CustomerOrder order = orderService.getMyOrderDetail(accountId, orderId);
 
-        if (order.getOrderStatus() != CustomerOrder.OrderStatus.SUCCESS || order.getLicenseAccount() == null) {
+        // Load LicenseAccount từ order
+        List<LicenseAccount> licenseAccounts = licenseAccountRepo.findByOrder_OrderId(orderId);
+
+        if (order.getOrderStatus() != CustomerOrder.OrderStatus.SUCCESS 
+                || licenseAccounts == null 
+                || licenseAccounts.isEmpty()) {
             model.addAttribute("msg", "MSG-25: No active license found for this order.");
             return "license/account/error";
         }
 
-        return "redirect:/customer/license-accounts/" + order.getLicenseAccount().getLicenseAccountId()
+        // Lấy account đầu tiên hoặc redirect đến danh sách accounts của order này
+        LicenseAccount firstAccount = licenseAccounts.get(0);
+        return "redirect:/customer/license-accounts/" + firstAccount.getLicenseAccountId()
                 + "?backOrderId=" + orderId;
+    }
+
+    // ====================== USE ALL LICENSE ACCOUNTS IN ORDER ======================
+    @PostMapping("/{orderId}/use-all-license-accounts")
+    @Transactional
+    public String useAllLicenseAccounts(@PathVariable Long orderId,
+                                         Authentication auth,
+                                         RedirectAttributes ra) {
+        Long accountId = currentAccountId(auth);
+
+        try {
+            int activatedCount = licenseAccountService.useAllLicenseAccountsInOrder(accountId, orderId);
+            
+            ra.addFlashAttribute("successMsg", 
+                String.format("Đã kích hoạt thành công %d LicenseAccount trong đơn hàng này.", activatedCount));
+            ra.addFlashAttribute("success", 
+                String.format("Đã kích hoạt thành công %d LicenseAccount trong đơn hàng này.", activatedCount));
+            
+            return "redirect:/customer/orders/" + orderId;
+        } catch (IllegalArgumentException ex) {
+            ra.addFlashAttribute("errorMsg", ex.getMessage());
+            ra.addFlashAttribute("error", ex.getMessage());
+            return "redirect:/customer/orders/" + orderId;
+        }
     }
 
     // ====================== ✅ REPAY (BỎ CHẶN) ======================

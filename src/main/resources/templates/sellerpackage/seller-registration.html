@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Đăng ký trở thành Seller</title>
+    <title>Register as Seller</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -22,8 +22,8 @@
 
     <div class="premium-container">
 
-        <h2 class="fw-bold text-center mb-2 title">Đăng ký trở thành Seller</h2>
-        <p class="text-center subtitle">Chọn gói phù hợp để bắt đầu bán tool trên nền tảng</p>
+        <h2 class="fw-bold text-center mb-2 title">Register as Seller</h2>
+        <p class="text-center subtitle">Choose a suitable package to start selling tools on the platform</p>
 
         <!-- Success message -->
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -41,13 +41,13 @@
 
         <div class="alert-premium">
             <i class="bi bi-info-circle"></i>
-            <span>Bạn đang đăng ký trở thành Seller. Sau khi thanh toán thành công, bạn sẽ có quyền bán tool trên hệ thống.</span>
+            <span>You are registering to become a Seller. After successful payment, you will have the right to sell tools on the system.</span>
         </div>
 
-        <!-- Không có gói Seller -->
+        <!-- No Seller Package Available -->
         <div class="alert-warning-premium" th:if="${packages.size() == 0}">
             <i class="bi bi-info-circle"></i>
-            Hiện chưa có gói Seller nào đang mở bán. Vui lòng liên hệ Admin.
+            Currently, there are no Seller packages available for sale. Please contact Admin.
         </div>
 
         <form method="post" th:action="@{/seller/register}">
@@ -65,7 +65,7 @@
 
                         <p class="duration">
                             <i class="bi bi-clock"></i>
-                            <span th:text="${p.durationInMonths} + ' tháng'"></span>
+                            <span th:text="${p.durationInMonths} + ' months'"></span>
                         </p>
 
                         <h4 class="price" th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'POINT')} + ' VND'"></h4>
@@ -77,10 +77,10 @@
             </div>
 
             <button id="submitBtn" type="submit" class="btn-premium mt-4 w-100 fw-bold" style="display: none;">
-                Thanh toán qua VNPay
+                Pay via VNPay
             </button>
 
-            <a href="/home" class="btn-back w-100 mt-3">Quay lại trang chủ</a>
+            <a href="/home" class="btn-back w-100 mt-3">Back to Home</a>
         </form>
     </div>
 </div>
@@ -110,14 +110,14 @@
         const selectedPackage = document.getElementById("selectedPackage").value;
         if (!selectedPackage || selectedPackage === '') {
             e.preventDefault();
-            alert('Vui lòng chọn một gói trước khi thanh toán!');
+            alert('Please select a package before payment!');
             return false;
         }
         
         // Show loading
         const btn = document.getElementById("submitBtn");
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang chuyển đến VNPay...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Redirecting to VNPay...';
     });
 </script>
 

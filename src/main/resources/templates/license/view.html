@@ -73,10 +73,10 @@
             <h1>License Account #<span th:text="${la.licenseAccountId}">0</span></h1>
 
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <a class="btn btn-ghost" th:href="@{/customer/license-accounts}">← Danh sách</a>
+                <a class="btn btn-ghost" th:href="@{/customer/license-accounts}">← List</a>
                 <a class="btn btn-dark" th:if="${la.order != null}"
                    th:href="@{/customer/orders/{id}(id=${la.order.orderId})}">
-                    ← Back to order
+                    ← Back to Order
                 </a>
             </div>
         </div>
@@ -106,7 +106,7 @@
                 <div class="value">
                     <b th:text="${la.license != null ? la.license.name : '(N/A)'}">License</b>
                     <div class="muted" th:if="${la.license != null and la.license.durationDays != null}">
-                        Duration: <span th:text="${la.license.durationDays}">0</span> ngày
+                        Duration: <span th:text="${la.license.durationDays}">0</span> days
                     </div>
                 </div>
             </div>
@@ -144,7 +144,7 @@
                     <div th:if="${la.token != null}">
                         <div class="muted">Token</div>
                         <b th:text="${la.token}">token</b>
-                        <div class="muted" style="margin-top:6px;">(Tool TOKEN không cho edit credential)</div>
+                        <div class="muted" style="margin-top:6px;">(Tool TOKEN does not allow editing credentials)</div>
                     </div>
 
                     <!-- USER/PASS + 👁 -->
@@ -169,14 +169,14 @@
                                             type="button"
                                             class="pwd-btn"
                                             onclick="togglePwdField('laPwdInput','laPwdBtn')">
-                                        👁 Xem
+                                        👁 View
                                     </button>
                                 </div>
 
                             </div>
                         </div>
 
-                        <div class="muted" style="margin-top:6px;">Nếu muốn đổi mật khẩu, bấm “Edit”.</div>
+                        <div class="muted" style="margin-top:6px;">If you want to change the password, click “Edit”.</div>
                     </div>
 
                 </div>
@@ -207,7 +207,7 @@
                 </div>
 
                 <div class="muted" style="margin-top:8px;">
-                    Nếu hết hạn: hệ thống có thể hiển thị EXPIRED và vẫn cho Renew (tuỳ rule backend).
+                    If expired: the system may display EXPIRED and still allow Renew (depends on backend rules).
                 </div>
             </div>
 
@@ -231,14 +231,14 @@
 
             <div class="field">
                 <label>Username</label>
-                <input type="text" th:field="*{username}" placeholder="Nhập username" required minlength="3" maxlength="255">
+                <input type="text" th:field="*{username}" placeholder="Enter username" required minlength="3" maxlength="255">
                 <div class="err" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">err</div>
             </div>
 
             <div class="field">
                 <label>Password</label>
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <input id="pwd" type="password" th:field="*{password}" placeholder="Nhập mật khẩu mới"
+                    <input id="pwd" type="password" th:field="*{password}" placeholder="Enter new password"
                            required minlength="4" maxlength="255" style="flex:1;">
                     <button type="button" class="close" onclick="togglePwd()">👁</button>
                 </div>
@@ -269,20 +269,20 @@
             <input type="hidden" name="licenseAccountId" th:value="${la.licenseAccountId}"/>
 
             <div class="field">
-                <label>Chọn gói gia hạn</label>
+                <label>Select renewal package</label>
                 <select name="licenseId" required>
-                    <option value="" selected>-- Chọn gói --</option>
+                    <option value="" selected>-- Select package --</option>
                     <option th:each="p : ${renewPackages}"
                             th:value="${p.licenseId}"
-                            th:text="${p.name + ' · ' + (p.durationDays != null ? p.durationDays : 0) + ' ngày · ' + (p.price != null ? p.price : 0) + ' VND'}">
+                            th:text="${p.name + ' · ' + (p.durationDays != null ? p.durationDays : 0) + ' days · ' + (p.price != null ? p.price : 0) + ' VND'}">
                     </option>
                 </select>
                 <div class="err" th:if="${renewError != null}" th:text="${renewError}">err</div>
             </div>
 
             <div class="rowbtn">
-                <button class="btn btn-ghost" type="button" onclick="closeModal('renewModal')">Đóng</button>
-                <button class="btn btn-dark" type="submit">Thanh toán qua VNPay</button>
+                <button class="btn btn-ghost" type="button" onclick="closeModal('renewModal')">Close</button>
+                <button class="btn btn-dark" type="submit">Pay via VNPay</button>
             </div>
         </form>
     </div>
@@ -309,7 +309,7 @@
         el.type = hidden ? 'text' : 'password';
 
         if(btn){
-            btn.textContent = hidden ? 'Ẩn' : 'Hiện';
+            btn.textContent = hidden ? 'Hide' : 'Show';
         }
     }
 

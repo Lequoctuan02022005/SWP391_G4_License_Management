@@ -67,12 +67,12 @@
             <h1>License Account #<span th:text="${la.licenseAccountId}">0</span></h1>
 
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <a class="btn btn-ghost" th:href="@{/customer/license-accounts}">← Danh sách</a>
+                <a class="btn btn-ghost" th:href="@{/customer/license-accounts}">← List</a>
 
                 <a class="btn btn-dark"
                    th:if="${la.order != null}"
                    th:href="@{/customer/orders/}">
-                    ← Back to order
+                    ← Back to Order
                 </a>
             </div>
         </div>
@@ -99,7 +99,7 @@
                 <div class="value">
                     <b th:text="${la.license != null ? la.license.name : '(N/A)'}">License</b>
                     <div class="muted" th:if="${la.license != null and la.license.durationDays != null}">
-                        Duration: <span th:text="${la.license.durationDays}">0</span> ngày
+                        Duration: <span th:text="${la.license.durationDays}">0</span> days
                     </div>
                 </div>
             </div>
@@ -137,7 +137,7 @@
                     <div th:if="${la.token != null}">
                         <div class="muted">Token</div>
                         <b class="mono" th:text="${la.token}">token</b>
-                        <div class="muted" style="margin-top:6px;">(Tool TOKEN không cho edit credential)</div>
+                        <div class="muted" style="margin-top:6px;">(Tool TOKEN does not allow editing credentials)</div>
                     </div>
 
                     <!-- USER/PASS -->
@@ -164,16 +164,16 @@
                                     <button type="button"
                                             class="pwd-btn"
                                             onclick="togglePwdField('laPwdInput', this)">
-                                        👁 <span class="muted" style="font-weight:900;">Xem</span>
+                                        👁 <span class="muted" style="font-weight:900;">View</span>
                                     </button>
                                 </div>
 
-                                <div class="muted" style="margin-top:6px;">(Ẩn/Hiện mật khẩu)</div>
+                                <div class="muted" style="margin-top:6px;">(Hide/Show password)</div>
                             </div>
                         </div>
 
                         <div class="muted" style="margin-top:6px;">
-                            Tip: nếu muốn đổi mật khẩu, bấm “Edit”.
+                            Tip: if you want to change the password, click “Edit”.
                         </div>
                     </div>
 
@@ -208,7 +208,7 @@
                 </div>
 
                 <div class="muted" style="margin-top:8px;">
-                    Nếu hết hạn: hệ thống có thể hiển thị EXPIRED và vẫn cho Renew (tuỳ rule backend).
+                    If expired: the system may display EXPIRED and still allow Renew (depends on backend rules).
                 </div>
             </div>
 
@@ -278,19 +278,19 @@
             <input type="hidden" name="licenseAccountId" th:value="${la.licenseAccountId}"/>
 
             <div class="field">
-                <label>Chọn gói gia hạn</label>
+                <label>Select renewal package</label>
                 <select name="licenseId" required>
-                    <option value="" selected>-- Chọn gói --</option>
+                    <option value="" selected>-- Select package --</option>
                     <option th:each="p : ${renewPackages}"
                             th:value="${p.licenseId}"
-                            th:text="${p.name + ' · ' + (p.durationDays != null ? p.durationDays : 0) + ' ngày · ' + (p.price != null ? p.price : 0) + ' VND'}">
+                            th:text="${p.name + ' · ' + (p.durationDays != null ? p.durationDays : 0) + ' days · ' + (p.price != null ? p.price : 0) + ' VND'}">
                     </option>
                 </select>
                 <div class="err" th:if="${renewError != null}" th:text="${renewError}">err</div>
             </div>
 
             <div class="muted">
-                Bấm “Pay via VNPay” để đi tới flow thanh toán (backend sẽ init transaction).
+                Click “Pay via VNPay” to go to the payment flow (backend will init transaction).
             </div>
 
             <div class="rowbtn">
