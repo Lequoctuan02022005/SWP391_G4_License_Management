@@ -209,27 +209,6 @@ body {
 
 /* =========================================================
    STATUS BADGE
-========================================================= */
-.badge {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 12px;
-    border-radius: 999px;
-}
-
-.bg-success {
-    background: #dcfce7 !important;
-    color: #166534 !important;
-}
-
-.bg-warning {
-    background: #fef3c7 !important;
-    color: #92400e !important;
-}
-
-.bg-danger {
-    background: #fee2e2 !important;
-    color: #991b1b !important;
 }
 
 .bg-secondary {
