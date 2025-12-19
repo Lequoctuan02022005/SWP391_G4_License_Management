@@ -14,21 +14,52 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.model.Account;
+import swp391.fa25.lms.model.Role;
 import swp391.fa25.lms.repository.RoleRepository;
 import swp391.fa25.lms.service.AccountService;
 
 /**
- * Account Management Controller - Admin Only
- * Quản lý tài khoản: /admin/accounts/**
+ * Account Management Controller
+ * - Admin: quản lý MOD, MANAGER
+ * - Mod: quản lý CUSTOMER, SELLER
  */
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/admin/accounts")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN','MOD')")
 public class AccountController {
 
     private final AccountService accountService;
     private final RoleRepository roleRepository;
+
+    /**
+     * Helper method: Lấy danh sách role được phép quản lý theo role hiện tại
+     */
+    private java.util.List<Role> getAllowedRoles(Role.RoleName currentRole) {
+        var allRoles = roleRepository.findAll();
+        if (currentRole == Role.RoleName.ADMIN) {
+            return allRoles.stream()
+                    .filter(r -> r.getRoleName() == Role.RoleName.MOD
+                            || r.getRoleName() == Role.RoleName.MANAGER)
+                    .toList();
+        } else if (currentRole == Role.RoleName.MOD) {
+            return allRoles.stream()
+                    .filter(r -> r.getRoleName() == Role.RoleName.CUSTOMER
+                            || r.getRoleName() == Role.RoleName.SELLER)
+                    .toList();
+        }
+        return java.util.List.of();
+    }
+
+    /**
+     * Helper method: Kiểm tra quyền quản lý account dựa trên role
+     */
+    private boolean canManageAccount(Role.RoleName currentRole, Role.RoleName targetRole) {
+        return (currentRole == Role.RoleName.ADMIN &&
+                (targetRole == Role.RoleName.MOD || targetRole == Role.RoleName.MANAGER))
+                || (currentRole == Role.RoleName.MOD &&
+                (targetRole == Role.RoleName.CUSTOMER || targetRole == Role.RoleName.SELLER));
+    }
 
     /**
      * Danh sách account với search, filter và phân trang
@@ -45,8 +76,8 @@ public class AccountController {
             Model model,
             RedirectAttributes ra) {
 
-        Account admin = (Account) session.getAttribute("loggedInAccount");
-        if (admin == null) {
+        Account current = (Account) session.getAttribute("loggedInAccount");
+        if (current == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
@@ -55,6 +86,9 @@ public class AccountController {
             // Tạo Pageable với sort theo createdAt desc
             Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
             Pageable pageable = PageRequest.of(page, size, sort);
+
+            // Xác định role hiện tại
+            Role.RoleName currentRole = current.getRole() != null ? current.getRole().getRoleName() : null;
 
             // Convert status string to enum
             Account.AccountStatus accountStatus = null;
@@ -68,17 +102,31 @@ public class AccountController {
 
             // Lấy tất cả accounts với filter
             Page<Account> accountPage;
-            
+
             if ((keyword != null && !keyword.trim().isEmpty()) || roleId != null || accountStatus != null) {
-                // Apply filters
-                accountPage = accountService.searchWithFilters(keyword, roleId, accountStatus, pageable);
+                // Apply filters theo role hiện tại
+                if (currentRole == Role.RoleName.ADMIN) {
+                    accountPage = accountService.searchWithFilters(keyword, roleId, accountStatus, pageable);
+                } else if (currentRole == Role.RoleName.MOD) {
+                    accountPage = accountService.searchWithFiltersForModerator(keyword, roleId, accountStatus, pageable);
+                } else {
+                    ra.addFlashAttribute("error", "Bạn không có quyền xem danh sách tài khoản.");
+                    return "redirect:/home";
+                }
             } else {
-                // No filter, get all
-                accountPage = accountService.getAll(pageable);
+                // No filter, get all theo role hiện tại
+                if (currentRole == Role.RoleName.ADMIN) {
+                    accountPage = accountService.getAll(pageable);
+                } else if (currentRole == Role.RoleName.MOD) {
+                    accountPage = accountService.getAllForModerator(pageable);
+                } else {
+                    ra.addFlashAttribute("error", "Bạn không có quyền xem danh sách tài khoản.");
+                    return "redirect:/home";
+                }
             }
 
-            // Load roles for filter dropdown
-            var roles = roleRepository.findAll();
+            // Load roles cho dropdown filter theo role hiện tại
+            java.util.List<Role> roles = getAllowedRoles(currentRole);
 
             model.addAttribute("accounts", accountPage.getContent());
             model.addAttribute("currentPage", page);
@@ -89,13 +137,13 @@ public class AccountController {
             model.addAttribute("selectedRole", roleId);
             model.addAttribute("selectedStatus", status);
             model.addAttribute("roles", roles);
-            model.addAttribute("account", admin); // Sidebar needs this
+            model.addAttribute("account", current); // Sidebar needs this
 
             return "system/account-list";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi tải danh sách tài khoản: " + e.getMessage());
             model.addAttribute("accounts", new java.util.ArrayList<>());
-            model.addAttribute("account", admin);
+            model.addAttribute("account", current);
             return "system/account-list";
         }
     }
@@ -106,15 +154,25 @@ public class AccountController {
      */
     @GetMapping("/create")
     public String createForm(HttpSession session, Model model, RedirectAttributes ra) {
-        Account admin = (Account) session.getAttribute("loggedInAccount");
-        if (admin == null) {
+        Account current = (Account) session.getAttribute("loggedInAccount");
+        if (current == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
 
-        model.addAttribute("account", admin); // Sidebar needs this
+        Role.RoleName currentRole = current.getRole() != null ? current.getRole().getRoleName() : null;
+
+        // Chỉ ADMIN và MOD được tạo account
+        if (currentRole != Role.RoleName.ADMIN && currentRole != Role.RoleName.MOD) {
+            ra.addFlashAttribute("error", "Bạn không có quyền tạo tài khoản.");
+            return "redirect:/home";
+        }
+
+        java.util.List<Role> roles = getAllowedRoles(currentRole);
+
+        model.addAttribute("account", current); // Sidebar needs this
         model.addAttribute("newAccount", new Account());
-        model.addAttribute("roles", roleRepository.findAll());
+        model.addAttribute("roles", roles);
         model.addAttribute("isEdit", false);
 
         return "system/account-form";
@@ -130,29 +188,47 @@ public class AccountController {
             BindingResult result,
             HttpSession session,
             Model model,
-            RedirectAttributes ra) {
+            RedirectAttributes ra,
+            @RequestParam(name = "roleId", required = false) Integer roleId) {
 
-        Account admin = (Account) session.getAttribute("loggedInAccount");
-        if (admin == null) {
+        Account current = (Account) session.getAttribute("loggedInAccount");
+        if (current == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
+        Role.RoleName currentRole = current.getRole() != null ? current.getRole().getRoleName() : null;
 
         if (result.hasErrors()) {
-            model.addAttribute("account", admin);
-            model.addAttribute("roles", roleRepository.findAll());
+            model.addAttribute("account", current);
+            model.addAttribute("roles", getAllowedRoles(currentRole));
             model.addAttribute("isEdit", false);
             return "system/account-form";
         }
 
         try {
+            // Đảm bảo đã chọn role (dựa trên tham số roleId từ form)
+            if (roleId == null) {
+                throw new RuntimeException("Vui lòng chọn vai trò cho tài khoản.");
+            }
+
+            // Lấy role thực tế từ DB để kiểm tra
+            Role targetRole = roleRepository.findById(roleId)
+                    .orElseThrow(() -> new RuntimeException("Role không tồn tại"));
+
+            if (!canManageAccount(currentRole, targetRole.getRoleName())) {
+                throw new RuntimeException("Bạn không có quyền tạo tài khoản với vai trò này.");
+            }
+
+            // Gán role đã kiểm tra vào account
+            newAccount.setRole(targetRole);
+
             accountService.create(newAccount);
             ra.addFlashAttribute("success", "Tạo tài khoản thành công!");
             return "redirect:/admin/accounts";
         } catch (Exception e) {
             model.addAttribute("error", "Lỗi: " + e.getMessage());
-            model.addAttribute("account", admin);
-            model.addAttribute("roles", roleRepository.findAll());
+            model.addAttribute("account", current);
+            model.addAttribute("roles", getAllowedRoles(currentRole));
             model.addAttribute("isEdit", false);
             return "system/account-form";
         }
@@ -169,11 +245,12 @@ public class AccountController {
             Model model,
             RedirectAttributes ra) {
 
-        Account admin = (Account) session.getAttribute("loggedInAccount");
-        if (admin == null) {
+        Account current = (Account) session.getAttribute("loggedInAccount");
+        if (current == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
+        Role.RoleName currentRole = current.getRole() != null ? current.getRole().getRoleName() : null;
 
         try {
             Account acc = accountService.getById(id);
@@ -182,9 +259,16 @@ public class AccountController {
                 return "redirect:/admin/accounts";
             }
 
-            model.addAttribute("account", admin); // Sidebar needs this
+            // Kiểm tra quyền chỉnh sửa tài khoản này
+            Role.RoleName targetRole = acc.getRole() != null ? acc.getRole().getRoleName() : null;
+            if (!canManageAccount(currentRole, targetRole)) {
+                ra.addFlashAttribute("error", "Bạn không có quyền chỉnh sửa tài khoản này.");
+                return "redirect:/admin/accounts";
+            }
+
+            model.addAttribute("account", current);
             model.addAttribute("editAccount", acc);
-            model.addAttribute("roles", roleRepository.findAll());
+            model.addAttribute("roles", getAllowedRoles(currentRole));
             model.addAttribute("isEdit", true);
 
             return "system/account-form";
@@ -209,17 +293,35 @@ public class AccountController {
             HttpSession session,
             RedirectAttributes ra) {
 
-        Account admin = (Account) session.getAttribute("loggedInAccount");
-        if (admin == null) {
+        Account current = (Account) session.getAttribute("loggedInAccount");
+        if (current == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
+        Role.RoleName currentRole = current.getRole() != null ? current.getRole().getRoleName() : null;
 
         try {
             Account targetAccount = accountService.getById(id);
             if (targetAccount == null) {
                 ra.addFlashAttribute("error", "Không tìm thấy tài khoản");
                 return "redirect:/admin/accounts";
+            }
+
+            Role.RoleName targetCurrentRole = targetAccount.getRole() != null ? targetAccount.getRole().getRoleName() : null;
+
+            // Không cho phép chỉnh sửa tài khoản ngoài phạm vi quản lý
+            if (!canManageAccount(currentRole, targetCurrentRole)) {
+                ra.addFlashAttribute("error", "Bạn không có quyền chỉnh sửa tài khoản này.");
+                return "redirect:/admin/accounts";
+            }
+
+            // Không cho phép gán role mới ngoài phạm vi quản lý
+            Role newRole = roleRepository.findById(roleId)
+                    .orElseThrow(() -> new RuntimeException("Role không tồn tại"));
+
+            if (!canManageAccount(currentRole, newRole.getRoleName())) {
+                ra.addFlashAttribute("error", "Bạn không có quyền gán vai trò này cho tài khoản.");
+                return "redirect:/admin/accounts/edit/" + id;
             }
 
             // Không cho phép deactivate admin account qua update
@@ -249,13 +351,27 @@ public class AccountController {
             HttpSession session,
             RedirectAttributes ra) {
 
-        Account admin = (Account) session.getAttribute("loggedInAccount");
-        if (admin == null) {
+        Account current = (Account) session.getAttribute("loggedInAccount");
+        if (current == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
 
         try {
+            Account targetAccount = accountService.getById(id);
+            if (targetAccount == null) {
+                ra.addFlashAttribute("error", "Không tìm thấy tài khoản");
+                return "redirect:/admin/accounts";
+            }
+
+            Role.RoleName currentRole = current.getRole() != null ? current.getRole().getRoleName() : null;
+            Role.RoleName targetRole = targetAccount.getRole() != null ? targetAccount.getRole().getRoleName() : null;
+
+            if (!canManageAccount(currentRole, targetRole)) {
+                ra.addFlashAttribute("error", "Bạn không có quyền kích hoạt tài khoản này.");
+                return "redirect:/admin/accounts";
+            }
+
             accountService.activateAccount(id);
             ra.addFlashAttribute("success", "Kích hoạt tài khoản thành công!");
         } catch (Exception e) {
@@ -275,8 +391,8 @@ public class AccountController {
             HttpSession session,
             RedirectAttributes ra) {
 
-        Account admin = (Account) session.getAttribute("loggedInAccount");
-        if (admin == null) {
+        Account current = (Account) session.getAttribute("loggedInAccount");
+        if (current == null) {
             ra.addFlashAttribute("error", "Vui lòng đăng nhập");
             return "redirect:/login";
         }
@@ -288,6 +404,14 @@ public class AccountController {
                 return "redirect:/admin/accounts";
             }
 
+            Role.RoleName currentRole = current.getRole() != null ? current.getRole().getRoleName() : null;
+            Role.RoleName targetRole = targetAccount.getRole() != null ? targetAccount.getRole().getRoleName() : null;
+
+            if (!canManageAccount(currentRole, targetRole)) {
+                ra.addFlashAttribute("error", "Bạn không có quyền vô hiệu hóa tài khoản này.");
+                return "redirect:/admin/accounts";
+            }
+
             // Không cho phép deactivate admin account
             if (targetAccount.getRole() != null && 
                 targetAccount.getRole().getRoleName() == swp391.fa25.lms.model.Role.RoleName.ADMIN) {
@@ -296,7 +420,7 @@ public class AccountController {
             }
 
             // Không cho phép tự deactivate chính mình
-            if (targetAccount.getAccountId().equals(admin.getAccountId())) {
+            if (targetAccount.getAccountId().equals(current.getAccountId())) {
                 ra.addFlashAttribute("error", "Không thể vô hiệu hóa chính tài khoản của bạn!");
                 return "redirect:/admin/accounts";
             }

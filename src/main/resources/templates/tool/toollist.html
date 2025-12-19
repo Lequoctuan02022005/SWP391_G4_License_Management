@@ -392,6 +392,41 @@
             </section>
 
         </section>
+        <!-- PAGINATION -->
+        <div class="pagination" th:if="${totalPages >= 1}">
+            <a th:if="${currentPage > 1}"
+               th:href="@{'/toollist?page=' + (${currentPage - 1})
+       + '&keyword=' + ${keyword}
+       + '&categoryId=' + ${categoryId}
+       + '&loginMethod=' + ${loginMethod}
+       + '&author=' + ${author}
+       + '&priceMin=' + ${priceMin}
+       + '&priceMax=' + ${priceMax}
+       + '&sort=' + ${sort}}">&laquo;</a>
+
+            <span th:each="i : ${#numbers.sequence(1, totalPages)}">
+        <a th:href="@{'/toollist?page=' + ${i}
+           + '&keyword=' + ${keyword}
+           + '&categoryId=' + ${categoryId}
+           + '&loginMethod=' + ${loginMethod}
+           + '&author=' + ${author}
+           + '&priceMin=' + ${priceMin}
+           + '&priceMax=' + ${priceMax}
+           + '&sort=' + ${sort}}"
+           th:text="${i}"
+           th:classappend="${i == currentPage} ? 'active'"></a>
+    </span>
+
+            <a th:if="${currentPage < totalPages}"
+               th:href="@{'/toollist?page=' + (${currentPage + 1})
+       + '&keyword=' + ${keyword}
+       + '&categoryId=' + ${categoryId}
+       + '&loginMethod=' + ${loginMethod}
+       + '&author=' + ${author}
+       + '&priceMin=' + ${priceMin}
+       + '&priceMax=' + ${priceMax}
+       + '&sort=' + ${sort}}">&raquo;</a>
+        </div>
     </main>
 
 </div>
