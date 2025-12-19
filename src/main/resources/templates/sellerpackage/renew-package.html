@@ -1,134 +1,171 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
-    <title>Nâng cấp tài khoản Seller</title>
+    <title>Seller Package</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
     <link rel="stylesheet" th:href="@{/css/renew-package.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
 </head>
 
 <body>
-<div th:replace="common/sidebar-header :: role-sidebar">
-    <th:block th:fragment="content">
 
-<div class="page-wrapper">
+<!-- ================= SELLER (SIDEBAR) ================= -->
+<th:block th:if="${isSellerRole}">
+    <div th:replace="common/sidebar-header :: role-sidebar">
+        <th:block th:fragment="content">
+            <div class="page-wrapper">
+                <div class="premium-container">
 
-    <div class="premium-container">
+                    <h2 class="fw-bold text-center title">Renew Seller Package</h2>
+                    <p class="text-center subtitle">Choose a package to continue selling</p>
 
-        <h2 class="fw-bold text-center mb-2 title">Update To Seller </h2>
-        <p class="text-center subtitle">Choose Seller Package To Use Feature</p>
+                    <!-- ===== ALERTS ===== -->
+                    <div class="alert-premium" th:if="${expired}">
+                        Your seller subscription has expired. Please renew to continue.
+                    </div>
 
-        <!-- Success message -->
-        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
-            <span th:text="${success}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+                    <div class="alert-warning-premium" th:if="${#lists.isEmpty(packages)}">
+                        No seller packages are available at the moment.
+                    </div>
 
-        <!-- Error message -->
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+                    <!-- ===== FORM ===== -->
+                    <form th:action="@{/seller/renew}" method="post" id="packageForm">
 
-        <div class="alert-premium" th:if="${isNewSeller}">
-            <i class="bi bi-exclamation-triangle"></i>
-            <span>Please Choose Seller Package To Become Seller.</span>
-        </div>
+                        <div class="row g-4">
+                            <div class="col-md-4" th:each="pkg : ${packages}">
+                                <div class="package-card"
+                                     th:attr="data-id=${pkg.id}"
+                                     onclick="selectPackage(this)">
 
-        <div class="alert-premium" th:if="${!isNewSeller and expired}">
-            <i class="bi bi-exclamation-triangle"></i>
-            <span>Your Seller package has expired. Please renew to continue selling the tool.</span>
-        </div>
+                                    <div>
+                                        <div class="package-header">
+                                            <h4 th:text="${pkg.packageName}"></h4>
+                                            <div class="duration"
+                                                 th:text="|Duration: ${pkg.durationInMonths} months|"></div>
+                                        </div>
 
-        <div class="alert alert-info" th:if="${!isNewSeller and !expired}">
-            <i class="bi bi-info-circle me-2"></i>
-            <span>Your Seller plan expires on: <strong th:text="${#temporals.format(currentExpiry, 'dd/MM/yyyy HH:mm')}"></strong></span>
-        </div>
+                                        <div class="price"
+                                             th:text="${#numbers.formatDecimal(pkg.price,0,'COMMA',0,'POINT')} + ' VND'">
+                                        </div>
 
-        <!-- Không có gói Seller -->
-        <div class="alert-warning-premium" th:if="${packages.size() == 0}">
-            <i class="bi bi-info-circle"></i>
-            Currently, no Seller packages are available for purchase. Please contact the Admin.
-        </div>
+                                        <div class="desc"
+                                             th:if="${pkg.description != null}"
+                                             th:text="${pkg.description}">
+                                        </div>
+                                    </div>
 
-        <form method="post" th:action="@{/seller/renew}">
-            <input type="hidden" name="packageId" id="selectedPackage">
-
-            <div class="row gy-4 gx-4 justify-content-center">
-
-                <!-- Card Package -->
-                <div class="col-md-4" th:each="p : ${packages}">
-                    <div class="package-card" th:data-id="${p.id}" onclick="selectPackage(this)">
-
-                        <div class="package-header">
-                            <h4 class="fw-bold" th:text="${p.packageName}"></h4>
+                                </div>
+                            </div>
                         </div>
 
-                        <p class="duration">
-                            <i class="bi bi-clock"></i>
-                            <span th:text="${p.durationInMonths} + ' tháng'"></span>
-                        </p>
+                        <input type="hidden" name="packageId" id="selectedPackageId">
 
-                        <h4 class="price" th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'POINT')} + ' VND'"></h4>
+                        <div class="action-area">
+                            <button type="submit" class="btn-premium" id="submitBtn">
+                                Renew & Pay
+                            </button>
 
-                        <p class="desc" th:text="${p.description}"></p>
+                            <div class="mt-3">
+                                <a href="/dashboard" class="btn-back">← Back</a>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </th:block>
+    </div>
+</th:block>
+
+<!-- ================= CUSTOMER (HEADER) ================= -->
+<th:block th:if="${!isSellerRole}">
+
+    <div th:replace="common/header :: header"></div>
+
+    <div class="page-wrapper">
+        <div class="premium-container">
+
+            <h2 class="fw-bold text-center title">Register as Seller</h2>
+            <p class="text-center subtitle">Choose a seller package to register</p>
+
+            <!-- ===== ALERTS ===== -->
+            <div class="alert-premium">
+                You are not a seller yet. Please choose a package to register.
+            </div>
+
+            <div class="alert-warning-premium" th:if="${#lists.isEmpty(packages)}">
+                No seller packages are available at the moment.
+            </div>
+
+            <!-- ===== FORM ===== -->
+            <form th:action="@{/seller/register}" method="post" id="packageForm">
+
+                <div class="row g-4">
+                    <div class="col-md-4" th:each="pkg : ${packages}">
+                        <div class="package-card"
+                             th:attr="data-id=${pkg.id}"
+                             onclick="selectPackage(this)">
+
+                            <div>
+                                <div class="package-header">
+                                    <h4 th:text="${pkg.packageName}"></h4>
+                                    <div class="duration"
+                                         th:text="|Duration: ${pkg.durationInMonths} months|"></div>
+                                </div>
+
+                                <div class="price"
+                                     th:text="${#numbers.formatDecimal(pkg.price,0,'COMMA',0,'POINT')} + ' VND'">
+                                </div>
+
+                                <div class="desc"
+                                     th:if="${pkg.description != null}"
+                                     th:text="${pkg.description}">
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
 
-            </div>
+                <input type="hidden" name="packageId" id="selectedPackageId">
 
-            <button id="submitBtn" type="submit" class="btn-premium mt-4 w-100 fw-bold" style="display: none;">
-                Payment via VNPay
-            </button>
+                <div class="action-area">
+                    <button type="submit" class="btn-premium" id="submitBtn">
+                        Register & Pay
+                    </button>
 
-            <a href="/home" class="btn-back w-100 mt-3">Return to home page</a>
-        </form>
+                    <div class="mt-3">
+                        <a href="/home" class="btn-back">← Back</a>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
     </div>
-</div>
 
-<!-- Bootstrap JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</th:block>
 
-<!-- JS -->
+<!-- ================= JS ================= -->
 <script>
     function selectPackage(card) {
 
-        document.querySelectorAll(".package-card")
-            .forEach(c => c.classList.remove("selected"));
+        document.querySelectorAll('.package-card')
+            .forEach(c => c.classList.remove('selected'));
 
-        // Add selected class to clicked card
-        card.classList.add("selected");
+        card.classList.add('selected');
 
-        // Set hidden input value
-        document.getElementById("selectedPackage").value = card.getAttribute("data-id");
+        document.getElementById('selectedPackageId').value =
+            card.getAttribute('data-id');
 
-        document.getElementById("submitBtn").style.display = "block";
+        document.getElementById('submitBtn').style.display = 'inline-block';
     }
-
-    // Validate form before submit
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const selectedPackage = document.getElementById("selectedPackage").value;
-        if (!selectedPackage || selectedPackage === '') {
-            e.preventDefault();
-            alert('Vui lòng chọn một gói trước khi thanh toán!');
-            return false;
-        }
-        
-        // Show loading
-        const btn = document.getElementById("submitBtn");
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang chuyển đến VNPay...';
-    });
 </script>
-    </th:block>
-</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

@@ -76,6 +76,9 @@ public class SellerPackageController {
             expiryDate = latest.getEndDate();
             expired = expiryDate.isBefore(LocalDateTime.now());
         }
+        boolean isSellerRole = seller.getRole() != null
+                && "SELLER".equals(seller.getRole().getRoleName().toString());
+        model.addAttribute("isSellerRole", isSellerRole);
         model.addAttribute("isNewSeller", isNewSeller);
         model.addAttribute("expired", expired);
         model.addAttribute("currentExpiry", expiryDate);
