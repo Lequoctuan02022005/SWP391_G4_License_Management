@@ -263,11 +263,11 @@
                 menubar: true,
                 plugins: [
                     // Core editing features
-                    'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
+                    'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount', 'image',
                     // Premium features (free trial until Jan 2, 2026)
-                    'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'advtemplate', 'ai', 'uploadcare', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown', 'importword', 'exportword', 'exportpdf'
+                    'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'advtemplate', 'ai', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown', 'importword', 'exportword', 'exportpdf'
                 ],
-                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography uploadcare | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link media image table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
                 content_style: 'body { font-family: Arial, sans-serif; font-size: 14px }',
                 branding: false,
                 promotion: false,
@@ -278,10 +278,54 @@
                     { value: 'Email', title: 'Email' },
                 ],
                 ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
-                uploadcare_public_key: '9d73d3aae145432d5056',
+                images_upload_handler: function(blobInfo, progress) {
+                    return new Promise(function(resolve, reject) {
+                        if (blobInfo.blob().size > 5 * 1024 * 1024) {
+                            alert('Ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.');
+                            reject('File size exceeds 5MB');
+                            return;
+                        }
+                        // Convert to base64
+                        const reader = new FileReader();
+                        reader.onload = function() {
+                            resolve(reader.result);
+                        };
+                        reader.onerror = function() {
+                            reject('Image upload failed');
+                        };
+                        reader.readAsDataURL(blobInfo.blob());
+                    });
+                },
+                paste_postprocess: function(plugin, args) {
+                    const maxSize = 5 * 1024 * 1024;
+                    const imgRegex = /<img[^>]*src\s*=\s*["']?(data:image\/[^;]+;base64,[^"'\\s>]+)["']?[^>]*>/gi;
+                    args.node.innerHTML = args.node.innerHTML.replace(imgRegex, function(match, base64Data) {
+                        const base64Only = base64Data.substring(base64Data.indexOf('base64,') + 7);
+                        const size = (base64Only.length * 3) / 4;
+                        if (size > maxSize) {
+                            alert('Ảnh dán vượt quá 5MB. Ảnh đã bị xóa.');
+                            return '';
+                        }
+                        return match;
+                    });
+                },
                 setup: function(editor) {
                     editor.on('init', function() {
                         tinymceLoaded = true;
+                    });
+                    
+                    // Chặn drag-drop ảnh > 5MB
+                    editor.on('drop', function(e) {
+                        const files = e.dataTransfer.files;
+                        if (files && files.length > 0) {
+                            for (let i = 0; i < files.length; i++) {
+                                if (files[i].type.startsWith('image/') && files[i].size > 5 * 1024 * 1024) {
+                                    e.preventDefault();
+                                    alert('Ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.');
+                                    return false;
+                                }
+                            }
+                        }
                     });
                 }
             });
