@@ -16,7 +16,6 @@ import java.util.Optional;
 public interface ToolRepository extends JpaRepository<Tool, Long> {
     Optional<Tool> findByToolIdAndSeller(Long toolId, Account seller);
 
-    boolean existsByToolName(String toolName);
 
     // ========================= MODERATOR: PENDING LIST =========================
     @Query(""" 

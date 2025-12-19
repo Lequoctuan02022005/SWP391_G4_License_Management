@@ -28,9 +28,6 @@ public class ToolService {
     @Autowired private LicenseAccountRepository licenseAccountRepository;
 
     // ========== Finders ==========
-    public boolean existsByToolName(String name) {
-        return toolRepo.existsByToolName(name);
-    }
 
     public Tool getToolById(Long id) {
         return toolRepo.findById(id)
