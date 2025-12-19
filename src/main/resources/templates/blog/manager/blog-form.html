@@ -39,7 +39,7 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h2 th:text="${isEdit != null and isEdit ? 'Edit Blog' : 'Create New Blog'}">Create New Blog</h2>
     <div>
-        <a th:href="@{/manager/blogs}" class="btn btn-outline-secondary">
+        <a th:href="@{/moderator/blogs}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Back
         </a>
     </div>
@@ -55,7 +55,7 @@
 <form th:method="post" 
       enctype="multipart/form-data"
       th:object="${blog}"
-      th:action="@{${isEdit != null and isEdit ? '/manager/blogs/edit/' + blog.blogId : '/manager/blogs/create'}}">                
+      th:action="@{${isEdit != null and isEdit ? '/moderator/blogs/edit/' + blog.blogId : '/moderator/blogs/create'}}">                
     <!-- Hidden fields to preserve data in edit mode -->
     <input type="hidden" name="blogId" th:value="${blog.blogId}" th:if="${isEdit != null and isEdit}" />
     <input type="hidden" name="thumbnailImage" th:value="${blog.thumbnailImage}" th:if="${isEdit != null and isEdit}" />
@@ -235,7 +235,7 @@
                     <button type="submit" class="btn btn-primary w-100 mb-2">
                         <i class="bi bi-save"></i> <span th:text="${isEdit != null and isEdit ? 'Update' : 'Create'}">Create</span>
                     </button>
-                    <a th:href="@{/manager/blogs}" class="btn btn-outline-secondary w-100">
+                    <a th:href="@{/moderator/blogs}" class="btn btn-outline-secondary w-100">
                         <i class="bi bi-x-circle"></i> Cancel
                     </a>
                 </div>
