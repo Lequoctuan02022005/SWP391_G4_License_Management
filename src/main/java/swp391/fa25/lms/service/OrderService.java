@@ -18,35 +18,49 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final LicenseAccountRepository licenseAccountRepository;
+    private final OrderLicenseRepository orderLicenseRepository;
 
     @Autowired
     private ToolRepository toolRepository;
 
     /**
      * Tạo danh sách CustomerOrder từ CartItems và link với PaymentTransaction
+     * ✅ Mỗi Order có nhiều License thông qua OrderLicense
      */
     @Transactional
     public List<CustomerOrder> createOrdersFromCart(Cart cart, PaymentTransaction transaction) {
         List<CustomerOrder> orders = new ArrayList<>();
 
         for (CartItem item : cart.getItems()) {
+            // Tạo Order
             CustomerOrder order = new CustomerOrder();
             order.setAccount(cart.getAccount());
             order.setTool(item.getTool());
-            order.setLicense(item.getLicense());
-            order.setPrice(item.getTotalPrice());
+            order.setPrice(item.getTotalPrice()); // Tổng giá = unitPrice * quantity
             order.setOrderStatus(CustomerOrder.OrderStatus.PENDING);
             order.setPaymentMethod(CustomerOrder.PaymentMethod.BANK);
             order.setTransaction(transaction);
             order.setCreatedAt(LocalDateTime.now());
             order.setUpdatedAt(LocalDateTime.now());
+            order = orderRepository.save(order);
 
-            orders.add(orderRepository.save(order));
+            // Tạo OrderLicense (1 Order có 1 License với quantity)
+            OrderLicense orderLicense = new OrderLicense();
+            orderLicense.setOrder(order);
+            orderLicense.setLicense(item.getLicense());
+            orderLicense.setQuantity(item.getQuantity() != null ? item.getQuantity() : 1);
+            orderLicense.setUnitPrice(item.getUnitPrice() != null ? item.getUnitPrice() : item.getLicense().getPrice());
+            orderLicenseRepository.save(orderLicense);
+
+            orders.add(order);
         }
 
         return orders;
     }
 
+    /**
+     * ✅ Mỗi Order có nhiều License thông qua OrderLicense
+     */
     @Transactional
     public List<CustomerOrder> createOrdersFromCartItems(Account account,
                                                          List<CartItem> items,
@@ -55,22 +69,34 @@ public class OrderService {
         if (items == null || items.isEmpty()) return orders;
 
         for (CartItem item : items) {
+            // Tạo Order
             CustomerOrder order = new CustomerOrder();
             order.setAccount(account);
             order.setTool(item.getTool());
-            order.setLicense(item.getLicense());
-            order.setPrice(item.getTotalPrice());
+            order.setPrice(item.getTotalPrice()); // Tổng giá = unitPrice * quantity
             order.setOrderStatus(CustomerOrder.OrderStatus.PENDING);
             order.setPaymentMethod(CustomerOrder.PaymentMethod.BANK);
             order.setTransaction(transaction);
             order.setCreatedAt(LocalDateTime.now());
             order.setUpdatedAt(LocalDateTime.now());
+            order = orderRepository.save(order);
 
-            orders.add(orderRepository.save(order));
+            // Tạo OrderLicense (1 Order có 1 License với quantity)
+            OrderLicense orderLicense = new OrderLicense();
+            orderLicense.setOrder(order);
+            orderLicense.setLicense(item.getLicense());
+            orderLicense.setQuantity(item.getQuantity() != null ? item.getQuantity() : 1);
+            orderLicense.setUnitPrice(item.getUnitPrice() != null ? item.getUnitPrice() : item.getLicense().getPrice());
+            orderLicenseRepository.save(orderLicense);
+
+            orders.add(order);
         }
         return orders;
     }
 
+    /**
+     * ✅ Tạo 1 Order với 1 License (thông qua OrderLicense) có quantity = qty
+     */
     @Transactional
     public List<CustomerOrder> createOrderFromBuyNow(Account account,
                                                      Tool tool,
@@ -81,20 +107,27 @@ public class OrderService {
 
         List<CustomerOrder> orders = new ArrayList<>();
 
-        for (int i = 0; i < qty; i++) {
+        // Tạo Order
             CustomerOrder order = new CustomerOrder();
             order.setAccount(account);
             order.setTool(tool);
-            order.setLicense(license);
-            order.setPrice(license.getPrice());
+        order.setPrice(license.getPrice() != null ? license.getPrice() * qty : 0.0); // Tổng giá = unitPrice * quantity
             order.setOrderStatus(CustomerOrder.OrderStatus.PENDING);
             order.setPaymentMethod(CustomerOrder.PaymentMethod.BANK);
             order.setTransaction(transaction);
             order.setCreatedAt(LocalDateTime.now());
             order.setUpdatedAt(LocalDateTime.now());
+        order = orderRepository.save(order);
 
-            orders.add(orderRepository.save(order));
-        }
+        // Tạo OrderLicense
+        OrderLicense orderLicense = new OrderLicense();
+        orderLicense.setOrder(order);
+        orderLicense.setLicense(license);
+        orderLicense.setQuantity(qty);
+        orderLicense.setUnitPrice(license.getPrice());
+        orderLicenseRepository.save(orderLicense);
+
+        orders.add(order);
 
         return orders;
     }
@@ -116,18 +149,24 @@ public class OrderService {
             order.setUpdatedAt(LocalDateTime.now());
             orderRepository.save(order);
 
-            // 2) Giảm tool quantity
+            // 2) Giảm tool quantity và cấp LicenseAccount cho từng OrderLicense
             Tool tool = order.getTool();
+            List<OrderLicense> orderLicenses = orderLicenseRepository.findByOrder_OrderId(order.getOrderId());
+            
+            for (OrderLicense orderLicense : orderLicenses) {
+                // Giảm tool quantity
             if (tool != null) {
                 Integer currentQty = tool.getAvailableQuantity();
+                    Integer licenseQty = orderLicense.getQuantity() != null ? orderLicense.getQuantity() : 1;
                 if (currentQty != null && currentQty > 0) {
-                    tool.setAvailableQuantity(currentQty - 1);
+                        tool.setAvailableQuantity(Math.max(0, currentQty - licenseQty));
                     toolRepository.save(tool);
                 }
             }
 
-            // 3) ✅ Cấp LicenseAccount nhưng chưa kích hoạt
-            provisionLicenseAccount(order);
+                // 3) ✅ Cấp LicenseAccount thông qua License (theo quantity của OrderLicense)
+                provisionLicenseAccounts(orderLicense);
+            }
         }
     }
 
@@ -155,21 +194,23 @@ public class OrderService {
      * - Không dùng used để “reserve”, mà reserve bằng cách gán Order (order != null)
      * - Khi chọn token thì lọc acc.getOrder() == null để tránh cấp trùng token
      */
-    private void provisionLicenseAccount(CustomerOrder order) {
-        if (order == null) return;
+    private void provisionLicenseAccounts(OrderLicense orderLicense) {
+        if (orderLicense == null) return;
 
-        Tool tool = order.getTool();
-        License license = order.getLicense();
+        CustomerOrder order = orderLicense.getOrder();
+        License license = orderLicense.getLicense();
+        Tool tool = order != null ? order.getTool() : null;
+        
         if (tool == null || license == null) return;
 
-        // Nếu order đã có licenseAccount rồi thì thôi (idempotent)
-        if (order.getLicenseAccount() != null) return;
+        Integer quantity = orderLicense.getQuantity() != null ? orderLicense.getQuantity() : 1;
 
         if (Tool.LoginMethod.USER_PASSWORD.equals(tool.getLoginMethod())) {
-
+            // TH1: Tạo mới username/password cho mỗi account
+            for (int i = 0; i < quantity; i++) {
             LicenseAccount la = new LicenseAccount();
-            la.setLicense(license);
-            la.setOrder(order);
+                la.setLicense(license); // ✅ Gán qua License (không trực tiếp từ Order)
+                la.setOrder(order); // Tracking: biết account này thuộc order nào
 
             la.setUsername(generateUsername(tool.getToolName()));
             la.setPassword(generatePassword());
@@ -180,27 +221,31 @@ public class OrderService {
             la.setStartDate(null);
             la.setEndDate(null);
 
-            la = licenseAccountRepository.save(la);
-
-            // ✅ gắn ngược lại order để view order.getLicenseAccount() luôn có
-            order.setLicenseAccount(la);
-            orderRepository.save(order);
+                licenseAccountRepository.save(la);
+            }
 
         } else if (Tool.LoginMethod.TOKEN.equals(tool.getLoginMethod())) {
-
+            // TH2: Lấy token từ License (tool) theo số lượng quantity
             List<LicenseAccount> unusedTokens = licenseAccountRepository
                     .findByLicense_Tool_ToolId(tool.getToolId())
                     .stream()
                     .filter(acc -> acc.getToken() != null)
                     .filter(acc -> Boolean.FALSE.equals(acc.getUsed()))
                     .filter(acc -> acc.getOrder() == null) // ✅ chưa bị reserve
+                    .limit(quantity) // Lấy đúng số lượng cần
                     .toList();
 
-            if (!unusedTokens.isEmpty()) {
-                LicenseAccount tokenAcc = unusedTokens.get(0);
+            if (unusedTokens.size() < quantity) {
+                // Không đủ token, có thể throw exception hoặc log warning
+                throw new IllegalStateException(
+                    String.format("Không đủ token cho order. Cần %d token nhưng chỉ có %d token available", 
+                        quantity, unusedTokens.size())
+                );
+            }
 
+            for (LicenseAccount tokenAcc : unusedTokens) {
                 // reserve token cho order
-                tokenAcc.setOrder(order);
+                tokenAcc.setOrder(order); // Tracking: biết token này thuộc order nào
 
                 // ✅ đảm bảo license đúng với đơn mua (để durationDays đúng)
                 tokenAcc.setLicense(license);
@@ -211,10 +256,7 @@ public class OrderService {
                 tokenAcc.setStartDate(null);
                 tokenAcc.setEndDate(null);
 
-                tokenAcc = licenseAccountRepository.save(tokenAcc);
-
-                order.setLicenseAccount(tokenAcc);
-                orderRepository.save(order);
+                licenseAccountRepository.save(tokenAcc);
             }
         }
     }

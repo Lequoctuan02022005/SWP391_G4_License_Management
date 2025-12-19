@@ -1,27 +1,80 @@
 <footer th:fragment="footer" class="site-footer mt-5" xmlns:th="http://www.thymeleaf.org">
-    <link th:href="@{/css/footer.css}" rel="stylesheet">
+    <link th:href="@{/css/footer.css}" rel="stylesheet"/>
 
-    <div class="footer-container">
+    <div class="footer-main">
+        <div class="container">
+            <div class="footer-grid">
 
-        <!-- TOP LINKS -->
-        <div class="footer-links">
-            <a href="#">Giới thiệu</a>
+                <!-- Logo + description -->
+                <div class="footer-col">
+                    <div class="footer-brand">
+                        <div class="footer-logo-circle">
+                            <i class="bi bi-grid-3x3-gap-fill"></i>
+                        </div>
+                        <div>
+                            <h3 class="footer-title">ToolMarket</h3>
+                            <p class="footer-tagline">
+                                A secure and convenient digital tools marketplace.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-            <a href="/support">Liên hệ</a>
+                <!-- Quick links -->
+                <div class="footer-col">
+                    <h4 class="footer-heading">About ToolMarket</h4>
+                    <ul class="footer-link-list">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="/support">Customer Support</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div class="footer-col">
+                    <h4 class="footer-heading">Support</h4>
+                    <ul class="footer-info-list">
+                        <li>
+                            <span class="footer-label">Email:</span>
+                            <a href="mailto:support@toolmarket.vn">support@toolmarket.vn</a>
+                        </li>
+                        <li>
+                            <span class="footer-label">Fanpage:</span>
+                            <a href="#">ToolMarket Support</a>
+                        </li>
+                        <li>
+                            <span class="footer-label">Hotline:</span>
+                            <span>1800 0000 (toll-free)</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Company information -->
+                <div class="footer-col footer-company-col">
+                    <h4 class="footer-heading">Company Information</h4>
+                    <p class="footer-text">
+                        ToolMarket Company Limited<br>
+                        5th Floor, Sunrise Tower, District 7, Ho Chi Minh City, Vietnam<br>
+                        Business Registration No.: 0123456789 issued by HCMC DPI on 01/01/2020<br>
+                        Person in charge of content: Nguyen Van A
+                    </p>
+                </div>
+            </div>
         </div>
+    </div>
 
-
-
-        <!-- COMPANY INFO -->
-        <div class="footer-company">Công ty TNHH ToolMarket</div>
-
-        <div class="footer-text">
-            Địa chỉ: Tầng 5, Tòa nhà Sunrise Tower, Quận 7, TP. Hồ Chí Minh, Việt Nam<br>
-            Liên hệ hỗ trợ: support@toolmarket.vn (miễn phí) hoặc Fanpage ToolMarket Support<br>
-            Chịu trách nhiệm quản lý nội dung: Nguyễn Văn A<br>
-            Mã số doanh nghiệp: 0123456789 do Sở KH&ĐT TP.HCM cấp ngày 01/01/2020<br>
-            © 2025 - Bản quyền thuộc về Công ty TNHH ToolMarket
+    <!-- Bottom bar -->
+    <div class="footer-bottom">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <p class="mb-0 footer-bottom-text">
+                © 2025 – Copyright belongs to ToolMarket Company Limited
+            </p>
+            <div class="footer-bottom-links">
+                <a href="#">Terms</a>
+                <span class="dot"></span>
+                <a href="#">Privacy</a>
+            </div>
         </div>
-
     </div>
 </footer>

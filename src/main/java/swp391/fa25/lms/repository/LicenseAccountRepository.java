@@ -65,4 +65,7 @@ public interface LicenseAccountRepository extends JpaRepository<LicenseAccount, 
 
     @EntityGraph(attributePaths = {"license", "license.tool", "license.tool.files", "order", "order.transaction"})
     Optional<LicenseAccount> findByOrder_OrderIdAndOrder_Account_AccountId(Long orderId, Long accountId);
+
+    @EntityGraph(attributePaths = {"license", "license.tool", "order"})
+    List<LicenseAccount> findByOrder_OrderId(Long orderId);
 }

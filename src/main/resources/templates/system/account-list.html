@@ -167,7 +167,7 @@
                                 </button>
                             </form>
                             
-                            <!-- Deactivate button - show when ACTIVE và không phải ADMIN -->
+                            <!-- Deactivate button - show when ACTIVE and not ADMIN -->
                             <form th:if="${acc.status.name() == 'ACTIVE' && acc.role.roleName.name() != 'ADMIN' && acc.accountId != account.accountId}"
                                   th:action="@{/admin/accounts/deactivate/{id}(id=${acc.accountId})}" 
                                   method="post" 
@@ -181,7 +181,7 @@
                             <!-- Info badge for admin account -->
                             <span th:if="${acc.role.roleName.name() == 'ADMIN'}" 
                                   class="badge bg-info text-dark" 
-                                  title="Không thể vô hiệu hóa tài khoản Admin">
+                                  title="Cannot deactivate Admin account">
                                 <i class="bi bi-shield-check"></i> Protected
                             </span>
                         </td>

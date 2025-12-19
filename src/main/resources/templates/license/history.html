@@ -28,8 +28,8 @@
         </div>
 
         <div th:if="${history == null or #lists.isEmpty(history)}" class="empty">
-            <b>Chưa có lịch sử gia hạn.</b>
-            <div class="muted">Khi gia hạn thành công, hệ thống sẽ ghi log tại đây.</div>
+            <b>No renewal history.</b>
+            <div class="muted">When renewal is successful, the system will log here.</div>
         </div>
 
         <div th:if="${history != null and !#lists.isEmpty(history)}">

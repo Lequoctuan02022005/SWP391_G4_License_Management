@@ -53,10 +53,10 @@
 
         <h1>License Accounts</h1>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <a class="btn btn-ghost" th:href="@{/customer/orders}">← Danh sách</a>
+            <a class="btn btn-ghost" th:href="@{/customer/orders}">← List</a>
 
         </div>
-        <p class="sub">Quản lý các tài khoản license bạn đã mua. Có tìm kiếm, lọc, sắp xếp và phân trang.</p>
+        <p class="sub">Manage license accounts you have purchased. Includes search, filter, sort and pagination.</p>
 
         <div th:if="${successMsg != null}" class="msg msg-ok" th:text="${successMsg}">OK</div>
         <div th:if="${errorMsg != null}" class="msg msg-err" th:text="${errorMsg}">ERR</div>
@@ -65,16 +65,16 @@
         <form th:action="@{/customer/license-accounts}" method="get" class="row">
 
             <div class="field">
-                <label>Tìm kiếm</label>
+                <label>Search</label>
                 <input type="text" name="q"
                        placeholder="Tool / License / Username / Token / OrderId..."
                        th:value="${q}">
             </div>
 
             <div class="field">
-                <label>Trạng thái</label>
+                <label>Status</label>
                 <select name="status">
-                    <option value="" th:selected="${statusStr == ''}">Tất cả</option>
+                    <option value="" th:selected="${statusStr == ''}">All</option>
                     <option value="ACTIVE" th:selected="${statusStr == 'ACTIVE'}">ACTIVE</option>
                     <option value="EXPIRED" th:selected="${statusStr == 'EXPIRED'}">EXPIRED</option>
                     <option value="REVOKED" th:selected="${statusStr == 'REVOKED'}">REVOKED</option>
@@ -84,7 +84,7 @@
             <div class="field">
                 <label>Tool</label>
                 <select name="toolId">
-                    <option value="" th:selected="${toolId == null}">Tất cả</option>
+                    <option value="" th:selected="${toolId == null}">All</option>
                     <!-- tools: List<Tool> -->
                     <option th:each="t : ${tools}"
                             th:value="${t.toolId}"
@@ -97,47 +97,47 @@
             <div class="field">
                 <label>Login method</label>
                 <select name="loginMethod">
-                    <option value="" th:selected="${loginMethodStr == ''}">Tất cả</option>
+                    <option value="" th:selected="${loginMethodStr == ''}">All</option>
                     <option value="USER_PASSWORD" th:selected="${loginMethodStr == 'USER_PASSWORD'}">USER_PASSWORD</option>
                     <option value="TOKEN" th:selected="${loginMethodStr == 'TOKEN'}">TOKEN</option>
                 </select>
             </div>
 
             <div class="field">
-                <label>Từ (endDate)</label>
+                <label>From (endDate)</label>
                 <input type="datetime-local" name="from"
                        th:value="${from != null ? #temporals.format(from, 'yyyy-MM-dd''T''HH:mm') : ''}">
             </div>
 
             <div class="field">
-                <label>Đến (endDate)</label>
+                <label>To (endDate)</label>
                 <input type="datetime-local" name="to"
                        th:value="${to != null ? #temporals.format(to, 'yyyy-MM-dd''T''HH:mm') : ''}">
             </div>
 
             <div class="field">
-                <label>Sắp xếp theo</label>
+                <label>Sort by</label>
                 <select name="sort">
-                    <option value="endDate" th:selected="${sort == 'endDate'}">Hạn dùng</option>
-                    <option value="startDate" th:selected="${sort == 'startDate'}">Ngày bắt đầu</option>
-                    <option value="status" th:selected="${sort == 'status'}">Trạng thái</option>
-                    <option value="toolName" th:selected="${sort == 'toolName'}">Tên Tool</option>
-                    <option value="licenseName" th:selected="${sort == 'licenseName'}">Tên License</option>
-                    <option value="price" th:selected="${sort == 'price'}">Giá gói</option>
+                    <option value="endDate" th:selected="${sort == 'endDate'}">Expiry date</option>
+                    <option value="startDate" th:selected="${sort == 'startDate'}">Start date</option>
+                    <option value="status" th:selected="${sort == 'status'}">Status</option>
+                    <option value="toolName" th:selected="${sort == 'toolName'}">Tool name</option>
+                    <option value="licenseName" th:selected="${sort == 'licenseName'}">License name</option>
+                    <option value="price" th:selected="${sort == 'price'}">Package price</option>
                     <option value="orderId" th:selected="${sort == 'orderId'}">Order ID</option>
                 </select>
             </div>
 
             <div class="field">
-                <label>Chiều</label>
+                <label>Direction</label>
                 <select name="dir">
-                    <option value="desc" th:selected="${dir == 'desc'}">Giảm dần</option>
-                    <option value="asc" th:selected="${dir == 'asc'}">Tăng dần</option>
+                    <option value="desc" th:selected="${dir == 'desc'}">Descending</option>
+                    <option value="asc" th:selected="${dir == 'asc'}">Ascending</option>
                 </select>
             </div>
 
             <div class="field">
-                <label>Kích thước trang</label>
+                <label>Page size</label>
                 <select name="size">
                     <option value="5" th:selected="${safeSize == 5}">5</option>
                     <option value="10" th:selected="${safeSize == 10}">10</option>
@@ -147,7 +147,7 @@
 
             <div class="field">
                 <label>&nbsp;</label>
-                <button class="btn btn-primary" type="submit">Áp dụng</button>
+                <button class="btn btn-primary" type="submit">Apply</button>
             </div>
 
             <div class="field">
@@ -158,10 +158,10 @@
 
         <!-- EMPTY -->
         <div th:if="${pageData == null or pageData.totalElements == 0}" class="empty">
-            <b>Chưa có license account nào.</b>
-            <div class="muted">Sau khi mua tool thành công và hệ thống cấp license, danh sách sẽ xuất hiện ở đây.</div>
+            <b>No license accounts yet.</b>
+            <div class="muted">After successfully purchasing a tool and the system grants a license, the list will appear here.</div>
             <div style="margin-top:10px;">
-                <a class="btn btn-dark" th:href="@{/customer/orders}">← Về Order history</a>
+                <a class="btn btn-dark" th:href="@{/customer/orders}">← Back to Order history</a>
             </div>
         </div>
         <!-- TABLE -->
@@ -229,7 +229,7 @@
                     <td>
                         <div th:text="${la.license != null ? la.license.name : '(N/A)'}">License</div>
                         <div class="muted" th:if="${la.license != null and la.license.durationDays != null}">
-                            Duration: <span th:text="${la.license.durationDays}">0</span> ngày
+                            Duration: <span th:text="${la.license.durationDays}">0</span> days
                         </div>
                     </td>
 
@@ -268,7 +268,7 @@
                     </td>
 
                     <td class="actions">
-                        <a th:href="@{/customer/license-accounts/{id}(id=${la.licenseAccountId})}">Xem →</a>
+                        <a th:href="@{/customer/license-accounts/{id}(id=${la.licenseAccountId})}">View →</a>
                     </td>
                 </tr>
                 </tbody>
@@ -279,15 +279,15 @@
                  th:if="${pageData != null and pageData.totalPages > 1}"
                  th:with="cur=${pageData.number}, total=${pageData.totalPages}, sizeVal=${pageData.size}">
                 <div class="muted">
-                    Tổng: <b th:text="${pageData.totalElements}">0</b> ·
-                    Trang <b th:text="${cur + 1}">1</b>/<b th:text="${total}">1</b>
+                    Total: <b th:text="${pageData.totalElements}">0</b> ·
+                    Page <b th:text="${cur + 1}">1</b>/<b th:text="${total}">1</b>
                 </div>
 
                 <div class="page-links">
                     <a class="pill"
                        th:classappend="${pageData.first} ? ' disabled' : ''"
                        th:href="@{/customer/license-accounts(page=${cur > 0 ? cur - 1 : 0},size=${sizeVal},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
-                        ← Trước
+                        ← Previous
                     </a>
 
                     <a th:each="i : ${#numbers.sequence(0, total - 1)}"
@@ -301,7 +301,7 @@
                     <a class="pill"
                        th:classappend="${pageData.last} ? ' disabled' : ''"
                        th:href="@{/customer/license-accounts(page=${cur + 1 < total ? cur+1 : cur},size=${sizeVal},q=${q},status=${statusStr},toolId=${toolId},loginMethod=${loginMethodStr},from=${from},to=${to},sort=${sort},dir=${dir})}">
-                        Sau →
+                        Next →
                     </a>
                 </div>
             </div>

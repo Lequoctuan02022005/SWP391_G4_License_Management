@@ -2,7 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Xác minh mã đặt lại mật khẩu</title>
+    <title>Verify reset password</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -77,9 +77,9 @@
         <div class="row justify-content-center">
             <div class="col-md-5">
                 <div class="card p-4 position-relative" style="z-index:1">
-            <h3 class="text-center mb-3 fw-bold">Nhập mã xác minh</h3>
+            <h3 class="text-center mb-3 fw-bold">Enter verification code</h3>
             <p class="text-muted text-center mb-3">
-                Chúng tôi đã gửi mã xác minh tới email của bạn. Vui lòng kiểm tra hộp thư.
+                We have sent the verification code to your email. Please check your email.
             </p>
 
             <p th:if="${errorMessage}" class="text-danger text-center fw-semibold"
@@ -91,13 +91,13 @@
                            class="form-control" placeholder="••••••" required>
                 </div>
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-dark btn-custom">Xác minh</button>
+                    <button type="submit" class="btn btn-dark btn-custom">Verify</button>
                 </div>
             </form>
 
             <div class="text-center mt-3">
-                <small>Không nhận được mã?
-                    <a th:href="@{/forgot-password}" class="text-decoration-none">Gửi lại email</a>
+                <small>Did not receive the code?
+                    <a th:href="@{/forgot-password}" class="text-decoration-none">Send email again</a>
                 </small>
             </div>
         </div>

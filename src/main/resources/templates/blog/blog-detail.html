@@ -62,7 +62,7 @@
                 <!-- Category & Back Button -->
                 <div class="mb-3">
                     <a th:href="@{/blog}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Quay lại
+                        <i class="bi bi-arrow-left"></i> Back
                     </a>
                     <span class="badge bg-primary ms-2 px-3 py-2" th:text="${blog.categoryName}"></span>
                 </div>
@@ -139,7 +139,7 @@
                     <!-- Author Info -->
                     <div class="author-card mb-4">
                         <h5 class="fw-bold mb-3">
-                            <i class="bi bi-person-circle"></i> Tác giả
+                            <i class="bi bi-person-circle"></i> Author
                         </h5>
                         <div class="d-flex align-items-center">
                             <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" 
@@ -147,7 +147,7 @@
                                 <i class="bi bi-person-fill"></i>
                             </div>
                             <div>
-                                <h6 class="mb-0 fw-bold" th:text="${blog.authorName}">Tên tác giả</h6>
+                                <h6 class="mb-0 fw-bold" th:text="${blog.authorName}">Author name</h6>
                                 <small class="text-muted" th:text="${blog.authorEmail}">Email</small>
                             </div>
                         </div>
@@ -184,9 +184,9 @@
 <script>
     function copyLink() {
         navigator.clipboard.writeText(window.location.href).then(function() {
-            alert('Đã copy link!');
+            alert('Link copied!');
         }, function() {
-            alert('Không thể copy link');
+            alert('Cannot copy link');
         });
     }
 </script>

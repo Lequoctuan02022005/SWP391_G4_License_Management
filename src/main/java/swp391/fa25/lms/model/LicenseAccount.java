@@ -27,9 +27,9 @@ public class LicenseAccount {
     @JoinColumn(name = "license_id")
     private License license;
 
-    @OneToOne
-    @JoinColumn(name = "order_id", nullable = true, unique = true)
-    private CustomerOrder order; // mỗi order sinh ra 1 license account
+    @ManyToOne
+    @JoinColumn(name = "order_id", nullable = true)
+    private CustomerOrder order; // nhiều license account có thể thuộc về 1 order
 
     @OneToMany(mappedBy = "licenseAccount")
     @OrderBy("renewDate DESC")

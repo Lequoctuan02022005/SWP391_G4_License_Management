@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Email Verification</title>
+    <title>Email Verification Code</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -78,9 +78,9 @@
         <div class="row justify-content-center">
             <div class="col-md-5">
                 <div class="card p-4 position-relative" style="z-index:1">
-            <h3 class="text-center mb-4 fw-bold">Nhập mã xác minh</h3>
+            <h3 class="text-center mb-4 fw-bold">Enter verification code</h3>
 
-            <!-- Thông báo -->
+            <!-- Notification -->
             <p th:if="${errorMessage}" class="text-danger text-center fw-semibold" th:text="${errorMessage}"></p>
             <p th:if="${successMessage}" class="text-success text-center fw-semibold" th:text="${successMessage}"></p>
 
@@ -89,13 +89,13 @@
                     <input type="text" name="code" maxlength="6" class="form-control" placeholder="••••••" required>
                 </div>
                 <div class="d-grid">
-                    <button type="submit" class="btn btn-dark btn-custom">Xác minh</button>
+                    <button type="submit" class="btn btn-dark btn-custom">Verify</button>
                 </div>
             </form>
 
             <div class="text-center mt-3">
-                <small>Chưa nhận được mã?
-                    <a th:href="@{/register}" class="text-decoration-none">Đăng ký lại</a>
+                <small>Did not receive the code?
+                    <a th:href="@{/register}" class="text-decoration-none">Register again</a>
                 </small>
             </div>
         </div>

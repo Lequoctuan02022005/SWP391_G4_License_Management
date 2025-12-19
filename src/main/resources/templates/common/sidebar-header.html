@@ -33,19 +33,19 @@
 
                 <a href="/profile" class="action-item">
                     <i class="bi bi-person"></i>
-                    <span>Thông tin tài khoản</span>
+                    <span>Account Information</span>
                 </a>
 
                 <a href="/change-password" class="action-item">
                     <i class="bi bi-shield-lock"></i>
-                    <span>Đổi mật khẩu</span>
+                    <span>Change Password</span>
                 </a>
 
                 <a th:if="${account.role.roleName.name() == 'SELLER'}"
                    href="/seller/renew"
                    class="action-item">
                     <i class="bi bi-arrow-repeat"></i>
-                    <span>Gia hạn Seller</span>
+                    <span>Renew Seller</span>
                 </a>
 
 
@@ -58,15 +58,14 @@
                 <!-- SELLER -->
                 <th:block th:if="${account.role.roleName.name() == 'SELLER'}">
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
-                    <li><a href="/toollist"><i class="bi bi-box"></i> Sản phẩm</a></li>
-                    <li><a href="#"><i class="bi bi-grid"></i> Dịch vụ</a></li>
+                    <li><a href="/toollist"><i class="bi bi-box"></i> Products</a></li>
                     <li><a href="/seller/feedbacks"><i class="bi bi-star"></i> Feedback</a></li>
                     <li><a href="/seller-package/renew-history"><i class="bi bi-clock-history"></i> History renew Seller Package</a></li>
                     <li><a href="/license/renew-history"><i class="bi bi-key"></i><span>History renew License</span></a></li>
                     <li><a href="/support"><i class="bi bi-headset"></i> Support</a></li>
                     <li><a href="/logout" class="action-item logout">
                         <i class="bi bi-box-arrow-right"></i>
-                        <span>Thoát</span>
+                        <span>Logout</span>
                     </a></li>
                 </th:block>
 
@@ -79,7 +78,7 @@
                     <li><a href="/admin/financial-report"><i class="bi bi-cash-coin"></i> Financial report</a></li>
                     <li><a href="/logout" class="action-item logout">
                         <i class="bi bi-box-arrow-right"></i>
-                        <span>Thoát</span>
+                        <span>Logout</span>
                     </a></li>
                 </th:block>
 
@@ -93,7 +92,7 @@
                     
                     <li><a href="/logout" class="action-item logout">
                         <i class="bi bi-box-arrow-right"></i>
-                        <span>Thoát</span>
+                        <span>Logout</span>
                     </a></li>
                 </th:block>
 
@@ -102,7 +101,7 @@
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
                     <li><a href="/manager/upload-tools"><i class="bi bi-cloud-upload"></i><span>Upload Tool Requests</span></a></li>
                     <li><a href="/seller-packages"><i class="bi bi-box-seam"></i><span>Seller Packages</span></a></li>
-                    <li><a href="/logout" class="action-item logout"><i class="bi bi-box-arrow-right"></i><span>Thoát</span></a></li>
+                    <li><a href="/logout" class="action-item logout"><i class="bi bi-box-arrow-right"></i><span>Logout</span></a></li>
 
                 </th:block>
 

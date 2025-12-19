@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "Customer_Order")
@@ -27,13 +28,12 @@ public class CustomerOrder {
     @JsonIgnoreProperties({"orders", "licenses", "files", "seller", "category","feedbacks"})
     private Tool tool;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "license_id", nullable = false)
-    @JsonIgnoreProperties({"customerOrders", "tool"})
-    private License license;
-
     @Column(nullable = false)
-    private Double price;
+    private Double price; // Tổng giá của order (tổng của tất cả OrderLicense)
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties({"order", "license"})
+    private List<OrderLicense> licenses; // 1 Order có nhiều License
 
     @Enumerated(EnumType.STRING)
     @Column(name = "order_status", nullable = false)
@@ -52,12 +52,12 @@ public class CustomerOrder {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
-    private LicenseAccount licenseAccount;
-
     // Add fields để lưu trạng thái hiển thị trong View
     @Transient
     private boolean canFeedbackOrReport;
+
+    @Transient
+    private List<LicenseAccount> licenseAccounts; // Để dễ query trong view (load từ repository)
 
     // THÊM MỚI: Lưu txnRef unique cho retry (nullable)
     @Column(name = "last_txn_ref")
@@ -70,17 +70,16 @@ public class CustomerOrder {
     public CustomerOrder() {
     }
 
-    public CustomerOrder(Long orderId, Account account, Tool tool, License license, Double price, OrderStatus orderStatus, PaymentMethod paymentMethod, PaymentTransaction transaction, LocalDateTime createdAt, LicenseAccount licenseAccount) {
+    public CustomerOrder(Long orderId, Account account, Tool tool, Double price, OrderStatus orderStatus, PaymentMethod paymentMethod, PaymentTransaction transaction, LocalDateTime createdAt, List<OrderLicense> licenses) {
         this.orderId = orderId;
         this.account = account;
         this.tool = tool;
-        this.license = license;
         this.price = price;
         this.orderStatus = orderStatus;
         this.paymentMethod = paymentMethod;
         this.transaction = transaction;
         this.createdAt = createdAt;
-        this.licenseAccount = licenseAccount;
+        this.licenses = licenses;
     }
 
     // Getters/Setters (thêm cho lastTxnRef)
@@ -100,10 +99,9 @@ public class CustomerOrder {
         this.updatedAt = updatedAt;
     }
 
-    public CustomerOrder(Account account, Tool tool, License license, Double price) {
+    public CustomerOrder(Account account, Tool tool, Double price) {
         this.account = account;
         this.tool = tool;
-        this.license = license;
         this.price = price;
         this.createdAt = LocalDateTime.now();
     }
@@ -140,20 +138,20 @@ public class CustomerOrder {
         this.tool = tool;
     }
 
-    public License getLicense() {
-        return license;
-    }
-
-    public void setLicense(License license) {
-        this.license = license;
-    }
-
     public Double getPrice() {
         return price;
     }
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public List<OrderLicense> getLicenses() {
+        return licenses;
+    }
+
+    public void setLicenses(List<OrderLicense> licenses) {
+        this.licenses = licenses;
     }
 
     public OrderStatus getOrderStatus() {
@@ -189,12 +187,12 @@ public class CustomerOrder {
         this.createdAt = createdAt;
     }
 
-    public LicenseAccount getLicenseAccount() {
-        return licenseAccount;
+    public List<LicenseAccount> getLicenseAccounts() {
+        return licenseAccounts;
     }
 
-    public void setLicenseAccount(LicenseAccount licenseAccount) {
-        this.licenseAccount = licenseAccount;
+    public void setLicenseAccounts(List<LicenseAccount> licenseAccounts) {
+        this.licenseAccounts = licenseAccounts;
     }
 
     //    Thêm method helper để check retryable
