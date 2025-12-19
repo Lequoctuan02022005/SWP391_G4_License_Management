@@ -9,7 +9,9 @@
 </head>
 
 <body class="bg-light">
-
+<div th:replace="common/sidebar-header :: role-sidebar">
+    <th:block th:fragment="content">
+        <div class="container-fluid px-4 py-4">
 <div class="container mt-5">
     <h2>Edit Category</h2>
 
