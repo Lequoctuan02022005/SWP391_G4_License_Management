@@ -45,7 +45,6 @@
 
         <!-- HIDDEN FIELDS (bắt buộc tránh null) -->
         <input type="hidden" name="loginMethod" th:value="${tool.loginMethod.name()}">
-        <input type="hidden" name="quantity" th:value="${tool.quantity}">
         <input type="hidden" name="note" th:value="${tool.note}">
         <input type="hidden" name="category.categoryId" th:value="${tool.category.categoryId}">
 
@@ -116,19 +115,22 @@
                 <div class="mb-3" th:if="${tool.loginMethod.name() == 'USER_PASSWORD'}">
                     <label class="fw-bold">Quantity</label>
                     <input type="number" class="form-control"
-                           name="quantity" th:value="${tool.quantity}" required>
+                           name="quantity" th:value="${tool.quantity}"  min="0" required>
                 </div>
 
                 <div class="mb-3" th:if="${tool.loginMethod.name() == 'TOKEN'}">
                     <label class="fw-bold">Quantity</label>
-                    <input type="number" class="form-control" th:value="${tool.quantity}" disabled>
+                    <input type="number" class="form-control" th:value="${tool.quantity}"   readonly>
+                    <input type="hidden"
+                           name="quantity"
+                           th:value="${tool.quantity}">
                 </div>
 
                 <!-- License Packages -->
-                <div class="mb-3" th:if="${tool.loginMethod.name() == 'USER_PASSWORD'}">
+                <div class="mb-3">
                     <label class="fw-bold">License Packages</label>
                     <div id="licenseGroup">
-                        <div th:each="l : ${tool.licenses}" class="row mb-2 license-row">
+                        <div th:each="l : ${tool.licenses}" class="row mb-2">
                             <div class="col-5">
                                 <input type="number" name="licenseDays"
                                        th:value="${l.durationDays}" class="form-control" required>
@@ -137,10 +139,15 @@
                                 <input type="number" name="licensePrices"
                                        th:value="${l.price}" class="form-control" required>
                             </div>
-                            <div class="col-2 d-flex align-items-center">
-                                <span class="remove-license" onclick="removeLicense(this)">×</span>
-                            </div>
                         </div>
+
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                th:if="${#lists.size(tool.licenses) > 1}"
+                                onclick="removeLicense(this)">
+                            Remove
+                        </button>
+
                     </div>
                     <button type="button" onclick="addLicense()"
                             class="btn btn-outline-primary btn-sm">+ Add Package</button>
@@ -209,8 +216,13 @@
         group.appendChild(div);
     }
 
-    function removeLicense(el) {
-        el.parentElement.parentElement.remove();
+    function removeLicense(btn) {
+        const group = document.getElementById("licenseGroup");
+        if (group.children.length <= 1) {
+            alert("Tool must have at least one license.");
+            return;
+        }
+        btn.closest(".row").remove();
     }
 </script>
 

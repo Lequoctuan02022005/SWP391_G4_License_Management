@@ -82,7 +82,9 @@ public class ToolService {
         tool.setUpdatedAt(LocalDateTime.now());
         tool.setStatus(Tool.Status.PENDING);
         tool.setQuantity(newData.getQuantity());
-        tool.setAvailableQuantity(newData.getQuantity());
+        if (tool.getLoginMethod() == Tool.LoginMethod.USER_PASSWORD) {
+            tool.setAvailableQuantity(0);
+        }
 
         // CATEGORY
         if (newData.getCategory() != null) {
@@ -138,9 +140,19 @@ public class ToolService {
         toolRepo.save(tool);
     }
 
-    // ========== Update License + Quantity (TOKEN Mode) ==========
     public void updateQuantityAndLicenses(Long toolId, int qty, List<License> newLic) {
         Tool tool = getToolById(toolId);
+
+        // ✅ TOKEN EDIT KHÔNG ĐƯỢC ĐỤNG LICENSE
+        if (newLic == null || newLic.isEmpty()) {
+            tool.setQuantity(qty);
+            tool.setAvailableQuantity(0);
+            tool.setUpdatedAt(LocalDateTime.now());
+            toolRepo.save(tool);
+            return;
+        }
+
+        // ====== PHẦN DƯỚI CHỈ DÀNH CHO USER_PASSWORD ======
         List<License> old = licenseRepo.findByTool_ToolId(toolId);
 
         for (int i = 0; i < newLic.size(); i++) {
@@ -156,7 +168,6 @@ public class ToolService {
             target.setName(src.getName());
             target.setDurationDays(src.getDurationDays());
             target.setPrice(src.getPrice());
-
             licenseRepo.save(target);
         }
 
@@ -165,14 +176,11 @@ public class ToolService {
                 licenseRepo.delete(old.get(i));
             }
         }
+
         tool.setQuantity(qty);
-        int available = licenseAccountRepository.countByLicense_Tool_ToolIdAndUsedFalse(toolId);
-        tool.setAvailableQuantity(available);
         tool.setUpdatedAt(LocalDateTime.now());
         toolRepo.save(tool);
     }
-
-
     // ================== SEARCH + FILTER (giữ nguyên, chỉ đổi cách tính avg/count) ==================
     public Page<Tool> searchAndFilterTools(String keyword, Long categoryId, String dateFilter,
                                            String priceFilter, Integer ratingFilter,

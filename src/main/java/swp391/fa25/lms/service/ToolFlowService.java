@@ -28,7 +28,7 @@ public class ToolFlowService {
     private static final String SESSION_PENDING_EDIT = "pendingEditTool";
 
     // ============================================================
-    // 1️⃣ START CREATE TOOL (TOKEN)
+    // 1️ START CREATE TOOL (TOKEN)
     // ============================================================
     public void startCreateTool(
             Tool tool,
@@ -46,92 +46,87 @@ public class ToolFlowService {
 
         Category category = toolService.getCategoryById(categoryId);
 
-        String img;
-        String toolPath;
-
         try {
-            img = fileStorageService.uploadImage(imageFile);
-            toolPath = fileStorageService.uploadToolFile(toolFile);
+            tool.setImage(fileStorageService.uploadImage(imageFile));
+            String toolPath = fileStorageService.uploadToolFile(toolFile);
+
+            ToolFile tf = new ToolFile();
+            tf.setTool(tool);
+            tf.setFilePath(toolPath);
+            tf.setUploadedBy(seller);
+            tf.setCreatedAt(LocalDateTime.now());
+            tf.setFileType(ToolFile.FileType.ORIGINAL);
+            tool.setFiles(List.of(tf));
+
         } catch (IOException e) {
             throw new IllegalStateException("File upload failed: " + e.getMessage());
         }
-        tool.setImage(img);
+
         tool.setSeller(seller);
         tool.setCategory(category);
         tool.setStatus(Tool.Status.PENDING);
         tool.setCreatedAt(LocalDateTime.now());
         tool.setUpdatedAt(LocalDateTime.now());
 
-        // TOOL FILE ENTITY
-        ToolFile toolFileEntity = new ToolFile();
-        toolFileEntity.setTool(tool);
-        toolFileEntity.setFilePath(toolPath);
-        toolFileEntity.setUploadedBy(seller);
-        toolFileEntity.setCreatedAt(LocalDateTime.now());
-        toolFileEntity.setFileType(ToolFile.FileType.ORIGINAL);
-
-        tool.setFiles(List.of(toolFileEntity));
-
         // BUILD LICENSE LIST
         List<License> licenses = new ArrayList<>();
         for (int i = 0; i < licenseDays.size(); i++) {
-            License lic = new License();
-            lic.setName("License " + licenseDays.get(i) + " days");
-            lic.setDurationDays(licenseDays.get(i));
-            lic.setPrice(licensePrices.get(i));
-            licenses.add(lic);
+            License l = new License();
+            l.setName("License " + licenseDays.get(i) + " days");
+            l.setDurationDays(licenseDays.get(i));
+            l.setPrice(licensePrices.get(i));
+            licenses.add(l);
         }
 
-        // LOGIN METHOD = USER PASSWORD → Save immediately
+        // USERNAME/PASSWORD → SAVE NGAY
         if (tool.getLoginMethod() == Tool.LoginMethod.USER_PASSWORD) {
             Tool saved = toolService.createTool(tool, category);
             toolService.createLicensesForTool(saved, licenses);
             return;
         }
 
-        // LOGIN METHOD = TOKEN → RANDOM TOKENS
-        Set<String> existed = new HashSet<>();
-        List<String> tokens = tokenService.randomList(tool.getQuantity(), existed);
+        // TOKEN MODE → LƯU SESSION
+        List<String> tokens = tokenService.randomList(tool.getQuantity(), new HashSet<>());
 
-        // SAVE SESSION
-        session.setAttribute(SESSION_PENDING_TOOL,
-                new ToolSessionData(tool, category, licenses, toolPath, tokens));
+        session.setAttribute(
+                SESSION_PENDING_TOOL,
+                new ToolSessionData(tool, category, licenses, tokens)
+        );
     }
 
     // ============================================================
-    // 2️⃣ FINALIZE CREATE TOOL (TOKEN)
+    // 2️ FINALIZE CREATE TOOL (TOKEN)
     // ============================================================
     public void finalizeTokenTool(List<String> tokens, HttpSession session) {
 
-        ToolSessionData pending = (ToolSessionData) session.getAttribute(SESSION_PENDING_TOOL);
+        ToolSessionData pending =
+                (ToolSessionData) session.getAttribute(SESSION_PENDING_TOOL);
         if (pending == null)
             throw new IllegalStateException("Session expired.");
 
         Tool tool = pending.getTool();
-        List<License> licenses = pending.getLicenses();
 
-        // VALIDATE QUANTITY MATCH
-        if (tokens.size() != tool.getQuantity())
-            throw new IllegalArgumentException("Token count mismatch: expected "
-                    + tool.getQuantity());
-
-        // CHECK DUPLICATE TOKENS IN DB
-        for (String t : tokens) {
-            if (licenseAccountRepository.existsByToken(t))
-                throw new IllegalArgumentException("Token already exists: " + t);
-        }
+        // quantity = số token
+        tool.setQuantity(tokens.size());
+        tool.setAvailableQuantity(0);
+        tool.setStatus(Tool.Status.PENDING);
+        tool.setUpdatedAt(LocalDateTime.now());
 
         // SAVE TOOL
         Tool saved = toolService.createTool(tool, pending.getCategory());
 
-        // SAVE LICENSES
-        toolService.createLicensesForTool(saved, licenses);
+        // SAVE LICENSE
+        toolService.createLicensesForTool(saved, pending.getLicenses());
 
-        List<License> savedLic = licenseRepository.findByTool_ToolId(saved.getToolId());
-        License primary = savedLic.get(0);
+        // SAVE TOKENS
+        License primary = licenseRepository
+                .findByTool_ToolId(saved.getToolId())
+                .get(0);
 
-        // SAVE TOKEN ACCOUNTS
         for (String t : tokens) {
+            if (licenseAccountRepository.existsByToken(t))
+                throw new IllegalArgumentException("Token already exists: " + t);
+
             LicenseAccount acc = new LicenseAccount();
             acc.setLicense(primary);
             acc.setToken(t);
@@ -140,64 +135,21 @@ public class ToolFlowService {
             licenseAccountRepository.save(acc);
         }
 
+        //  CỰC KỲ QUAN TRỌNG
         session.removeAttribute(SESSION_PENDING_TOOL);
     }
-
     // ============================================================
-    // 3️⃣ START EDIT TOOL SESSION (TOKEN)
+    // 3️ START EDIT TOOL SESSION (TOKEN)
     // ============================================================
     public void startEditToolSession(
-            Tool existingTool,
-            Tool updatedData,
-            MultipartFile imageFile,
-            MultipartFile toolFile,
+            Long toolId,
             List<Integer> licenseDays,
             List<Double> licensePrices,
             HttpSession session
     ) {
 
-        if (existingTool.getLoginMethod() != updatedData.getLoginMethod())
-            throw new IllegalArgumentException("Login method cannot be changed.");
+        Tool tool = toolService.getToolById(toolId);
 
-        // UPDATE BASIC FIELDS
-        existingTool.setToolName(updatedData.getToolName());
-        existingTool.setDescription(updatedData.getDescription());
-        existingTool.setCategory(updatedData.getCategory());
-        existingTool.setNote(updatedData.getNote());
-        existingTool.setUpdatedAt(LocalDateTime.now());
-        existingTool.setStatus(Tool.Status.PENDING);
-
-        // HANDLE IMAGE
-        if (imageFile != null && !imageFile.isEmpty()) {
-            try {
-                existingTool.setImage(fileStorageService.uploadImage(imageFile));
-            } catch (IOException e) {
-                throw new IllegalStateException("Image upload failed: " + e.getMessage());
-            }
-        }
-
-        // ========== FIX ORPHAN REMOVAL: GIỮ NGUYÊN LIST ==========
-        List<ToolFile> currentFiles = existingTool.getFiles(); // giữ reference thật
-
-        if (toolFile != null && !toolFile.isEmpty()) {
-            try {
-                String newPath = fileStorageService.uploadToolFile(toolFile);
-
-                ToolFile f = new ToolFile();
-                f.setTool(existingTool);
-                f.setFilePath(newPath);
-                f.setUploadedBy(existingTool.getSeller());
-                f.setCreatedAt(LocalDateTime.now());
-                f.setFileType(ToolFile.FileType.ORIGINAL);
-
-                currentFiles.add(f); // MODIFY, KHÔNG REPLACE LIST
-
-            } catch (IOException e) {
-                throw new IllegalStateException("Tool file upload failed: " + e.getMessage());
-            }
-        }
-
-        // BUILD LICENSE LIST (tạm thời cho session)
         List<License> newLicenses = new ArrayList<>();
         for (int i = 0; i < licenseDays.size(); i++) {
             License l = new License();
@@ -207,44 +159,48 @@ public class ToolFlowService {
             newLicenses.add(l);
         }
 
-        // LOAD TOKENS
-        List<LicenseAccount> acc =
-                licenseAccountRepository.findByLicense_Tool_ToolId(existingTool.getToolId());
-
-        List<String> tokens = acc.stream()
+        List<String> tokens = licenseAccountRepository
+                .findByLicense_Tool_ToolId(toolId)
+                .stream()
                 .map(LicenseAccount::getToken)
                 .collect(Collectors.toList());
 
-        // SAVE TO SESSION
-        session.setAttribute(SESSION_PENDING_EDIT,
-                new ToolSessionData(existingTool, existingTool.getCategory(), newLicenses, null, tokens));
+        session.setAttribute(
+                SESSION_PENDING_EDIT,
+                new ToolSessionData(tool, tool.getCategory(), newLicenses, tokens)
+        );
     }
+
     // ============================================================
-    // 4️⃣ FINALIZE EDIT TOOL (TOKEN)
+    // 4️ FINALIZE EDIT TOOL (TOKEN)
     // ============================================================
     public void finalizeEditTokenTool(List<String> tokens, HttpSession session) {
 
-        ToolSessionData pending = (ToolSessionData) session.getAttribute(SESSION_PENDING_EDIT);
+        ToolSessionData pending =
+                (ToolSessionData) session.getAttribute(SESSION_PENDING_EDIT);
         if (pending == null)
             throw new IllegalStateException("Session expired.");
 
         Tool tool = pending.getTool();
 
-        // CHECK DUPLICATE
+        tool.setToolName(pending.getTool().getToolName());
+        tool.setDescription(pending.getTool().getDescription());
+        tool.setNote(pending.getTool().getNote());
+        tool.setCategory(pending.getCategory());
+
         for (String t : tokens) {
             LicenseAccount acc = licenseAccountRepository.findByToken(t);
-            if (acc != null && !Objects.equals(acc.getLicense().getTool().getToolId(), tool.getToolId())) {
+            if (acc != null &&
+                    !Objects.equals(acc.getLicense().getTool().getToolId(), tool.getToolId())) {
                 throw new IllegalStateException("Token belongs to another tool: " + t);
             }
         }
 
-        // UPDATE TOKENS
         tokenService.updateTokensForTool(tool, tokens);
-        int newQty = tokens.size();
-        // UPDATE LICENSES + QUANTITY
+
         toolService.updateQuantityAndLicenses(
                 tool.getToolId(),
-                newQty,
+                tokens.size(),
                 pending.getLicenses()
         );
 
@@ -252,7 +208,7 @@ public class ToolFlowService {
     }
 
     // ============================================================
-    // CANCEL SESSION
+    // CANCEL
     // ============================================================
     public void cancelToolCreation(HttpSession session) {
         session.removeAttribute(SESSION_PENDING_TOOL);
@@ -260,27 +216,29 @@ public class ToolFlowService {
     }
 
     // ============================================================
-    // SESSION MODEL
+    // SESSION DTO
     // ============================================================
     public static class ToolSessionData {
         private final Tool tool;
         private final Category category;
         private final List<License> licenses;
-        private final String filePath;
         private final List<String> tokens;
 
-        public ToolSessionData(Tool tool, Category category, List<License> licenses, String filePath, List<String> tokens) {
+        public ToolSessionData(
+                Tool tool,
+                Category category,
+                List<License> licenses,
+                List<String> tokens
+        ) {
             this.tool = tool;
             this.category = category;
             this.licenses = licenses;
-            this.filePath = filePath;
             this.tokens = tokens;
         }
 
         public Tool getTool() { return tool; }
         public Category getCategory() { return category; }
         public List<License> getLicenses() { return licenses; }
-        public String getFilePath() { return filePath; }
         public List<String> getTokens() { return tokens; }
     }
 }
