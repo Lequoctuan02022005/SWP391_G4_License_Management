@@ -23,25 +23,28 @@
 
                 <div class="col-md-2">
                     <label class="form-label">Từ ngày</label>
-                    <input type="date" name="fromDate" class="form-control">
+                    <input type="date" name="fromDate" class="form-control"
+                    th:value="${fromDate}">
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Đến ngày</label>
-                    <input type="date" name="toDate" class="form-control">
+                    <input type="date" name="toDate" class="form-control"
+                           th:value="${toDate}">
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label">Tên gói</label>
-                    <input type="text" name="packageName" class="form-control">
+                    <input type="text" name="packageName" class="form-control"
+                           th:value="${packageName}">
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Trạng thái</label>
                     <select name="status" class="form-select">
                         <option value="">Tất cả</option>
-                        <option value="ACTIVE">Đang hoạt động</option>
-                        <option value="EXPIRED">Hết hạn</option>
+                        <option value="ACTIVE" th:selected="${status == 'ACTIVE'}">Đang hoạt động</option>
+                        <option value="EXPIRED" th:selected="${status == 'EXPIRED'}">Hết hạn</option>
                     </select>
                 </div>
 
