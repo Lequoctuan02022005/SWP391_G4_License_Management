@@ -18,19 +18,19 @@
         <h2 class="title">Đăng nhập</h2>
         <div class="error-box" th:if="${param.error}">
             <span th:if="${param.error[0] == 'email_invalid'}">
-                Email phải có đuôi @gmail.com
+                Email addresses must end in @gmail.com.
             </span>
             <span th:if="${param.error[0] == 'account_not_verified'}">
-                Tài khoản chưa xác thực email
+               Account has not verified email
             </span>
             <span th:if="${param.error[0] == 'account_deactivated'}">
-                Tài khoản đã bị vô hiệu hóa
+                The account has been disabled.
             </span>
             <span th:if="${param.error[0] == 'account_not_found'}">
-                Email hoặc mật khẩu không đúng
+                Incorrect email or password
             </span>
             <span th:if="${param.error[0] == 'login_error'}">
-                Đăng nhập thất bại
+                Login failed
             </span>
         </div>
         <!-- EMAIL -->
@@ -44,7 +44,7 @@
 
         <!-- PASSWORD -->
         <div class="form-group">
-            <label>Mật khẩu <span>*</span></label>
+            <label>Password <span>*</span></label>
             <div class="password-wrapper">
                 <input type="password"
                        name="password"
@@ -60,10 +60,10 @@
         </div>
 
         <!-- BUTTON -->
-        <button type="submit" class="btn-login">Đăng nhập</button>
+        <button type="submit" class="btn-login">Log in</button>
         <p class="register-line">
-            Bạn chưa có tài khoản?
-            <a href="/register">Đăng ký ở đây</a>
+            Don't have an account yet?
+            <a href="/register">Register here</a>
         </p>
 
     </form>
