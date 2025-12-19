@@ -238,25 +238,25 @@
     letter-spacing: 0.5px;
 }
 
-.tl-badge-published { 
+.tl-badge-published {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
-.tl-badge-pending { 
+.tl-badge-pending {
     background: linear-gradient(135deg, #f5a623 0%, #f7dc6f 100%);
     color: #333;
     box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
 }
 
-.tl-badge-rejected { 
+.tl-badge-rejected {
     background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
     color: #fff;
     box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
 }
 
-.tl-badge-deactivated { 
+.tl-badge-deactivated {
     background: linear-gradient(135deg, #868f96 0%, #596164 100%);
     color: #fff;
     box-shadow: 0 2px 8px rgba(134, 143, 150, 0.3);
@@ -378,22 +378,22 @@
     min-width: 80px;
 }
 
-.status-published { 
+.status-published {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
 }
 
-.status-deactivated { 
+.status-deactivated {
     background: linear-gradient(135deg, #868f96 0%, #596164 100%);
     color: #fff;
 }
 
-.status-pending { 
+.status-pending {
     background: linear-gradient(135deg, #f5a623 0%, #f7dc6f 100%);
     color: #333;
 }
 
-.status-rejected { 
+.status-rejected {
     background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
     color: #fff;
 }
@@ -406,8 +406,8 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.tl-inline-form { 
-    display: inline-block; 
+.tl-inline-form {
+    display: inline-block;
     margin: 0;
 }
 

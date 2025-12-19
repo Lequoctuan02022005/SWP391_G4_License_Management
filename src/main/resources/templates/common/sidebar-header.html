@@ -87,6 +87,8 @@
                 <th:block th:if="${account.role.roleName.name() == 'MOD'}">
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
                     <li><a href="/moderator/upload-requests"><i class="bi bi-cloud-upload"></i> Upload Tool Requests</a></li>
+                    <li><a href="/moderator/blogs"><i class="bi bi-journal-text"></i><span>Blog Management</span></a></li>
+                    <li><a href="/moderator/blog-categories"><i class="bi bi-folder"></i><span>Blog Categories</span></a></li>
             <li><a href="/admin/accounts"><i class="bi bi-people"></i> Account Management</a></li>
                     
                     <li><a href="/logout" class="action-item logout">
@@ -100,8 +102,6 @@
                     <li><a href="/dashboard"><i class="bi bi-speedometer"></i> Dashboard</a></li>
                     <li><a href="/manager/upload-tools"><i class="bi bi-cloud-upload"></i><span>Upload Tool Requests</span></a></li>
                     <li><a href="/seller-packages"><i class="bi bi-box-seam"></i><span>Seller Packages</span></a></li>
-                    <li><a href="/manager/blogs"><i class="bi bi-journal-text"></i><span>Blog Management</span></a></li>
-                    <li><a href="/manager/blog-categories"><i class="bi bi-folder"></i><span>Blog Categories</span></a></li>
                     <li><a href="/logout" class="action-item logout"><i class="bi bi-box-arrow-right"></i><span>Thoát</span></a></li>
 
                 </th:block>
