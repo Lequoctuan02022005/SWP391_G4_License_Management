@@ -147,6 +147,7 @@ public class ToolService {
         if (newLic == null || newLic.isEmpty()) {
             tool.setQuantity(qty);
             tool.setAvailableQuantity(0);
+            tool.setStatus(Tool.Status.PENDING);
             tool.setUpdatedAt(LocalDateTime.now());
             toolRepo.save(tool);
             return;
@@ -178,6 +179,8 @@ public class ToolService {
         }
 
         tool.setQuantity(qty);
+        tool.setAvailableQuantity(0);
+        tool.setStatus(Tool.Status.PENDING);
         tool.setUpdatedAt(LocalDateTime.now());
         toolRepo.save(tool);
     }
