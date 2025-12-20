@@ -68,6 +68,7 @@ public class ToolReviewService {
             tool.setAvailableQuantity(tool.getQuantity());
         }
         tool.setStatus(Tool.Status.PUBLISHED);
+        tool.setAvailableQuantity(tool.getQuantity());
         tool.setReviewedBy(managerAccount.getRole().getRoleName().toString());
         tool.setUpdatedAt(LocalDateTime.now());
         toolRepository.save(tool);
