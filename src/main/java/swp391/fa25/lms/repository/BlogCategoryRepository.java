@@ -41,17 +41,11 @@ public interface BlogCategoryRepository extends JpaRepository<BlogCategory, Long
     Integer findMaxDisplayOrder();
 
     /**
-     * Search và sort categories
+     * Search categories (không sort, để service xử lý)
      */
     @Query("SELECT c FROM BlogCategory c WHERE " +
             "(:keyword IS NULL OR LOWER(c.categoryName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(c.slug) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
-            "(:status IS NULL OR c.status = :status) " +
-            "ORDER BY " +
-            "CASE WHEN :sortBy = 'categoryName' THEN c.categoryName END ASC, " +
-            "CASE WHEN :sortBy = 'displayOrder' THEN c.displayOrder END ASC, " +
-            "CASE WHEN :sortBy = 'createdAt' THEN c.createdAt END ASC, " +
-            "CASE WHEN :sortBy = 'status' THEN c.status END ASC")
-    List<BlogCategory> searchAndSort(@Param("keyword") String keyword,
-                                     @Param("status") BlogCategory.Status status,
-                                     @Param("sortBy") String sortBy);
+            "(:status IS NULL OR c.status = :status)")
+    List<BlogCategory> search(@Param("keyword") String keyword,
+                              @Param("status") BlogCategory.Status status);
 }

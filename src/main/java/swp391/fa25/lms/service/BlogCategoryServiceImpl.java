@@ -207,8 +207,79 @@ public class BlogCategoryServiceImpl implements BlogCategoryService {
             }
         }
         
-        // Sử dụng repository method để search và sort
-        categories = categoryRepository.searchAndSort(keyword, statusEnum, sortBy);
+        // Search categories
+        categories = categoryRepository.search(keyword, statusEnum);
+        
+        // Sort categories based on sortBy parameter
+        if (sortBy != null && !sortBy.trim().isEmpty()) {
+            switch (sortBy.toLowerCase()) {
+                case "categoryname":
+                    categories.sort((a, b) -> {
+                        if (a.getCategoryName() == null && b.getCategoryName() == null) return 0;
+                        if (a.getCategoryName() == null) return 1;
+                        if (b.getCategoryName() == null) return -1;
+                        return a.getCategoryName().compareToIgnoreCase(b.getCategoryName());
+                    });
+                    break;
+                case "displayorder":
+                    categories.sort((a, b) -> {
+                        Integer orderA = a.getDisplayOrder() != null ? a.getDisplayOrder() : 0;
+                        Integer orderB = b.getDisplayOrder() != null ? b.getDisplayOrder() : 0;
+                        int compare = orderA.compareTo(orderB);
+                        if (compare == 0) {
+                            // Secondary sort by category name
+                            String nameA = a.getCategoryName() != null ? a.getCategoryName() : "";
+                            String nameB = b.getCategoryName() != null ? b.getCategoryName() : "";
+                            return nameA.compareToIgnoreCase(nameB);
+                        }
+                        return compare;
+                    });
+                    break;
+                case "createdat":
+                    categories.sort((a, b) -> {
+                        if (a.getCreatedAt() == null && b.getCreatedAt() == null) return 0;
+                        if (a.getCreatedAt() == null) return 1;
+                        if (b.getCreatedAt() == null) return -1;
+                        return b.getCreatedAt().compareTo(a.getCreatedAt()); // DESC
+                    });
+                    break;
+                case "status":
+                    categories.sort((a, b) -> {
+                        if (a.getStatus() == null && b.getStatus() == null) return 0;
+                        if (a.getStatus() == null) return 1;
+                        if (b.getStatus() == null) return -1;
+                        return a.getStatus().name().compareTo(b.getStatus().name());
+                    });
+                    break;
+                default:
+                    // Default: sort by displayOrder
+                    categories.sort((a, b) -> {
+                        Integer orderA = a.getDisplayOrder() != null ? a.getDisplayOrder() : 0;
+                        Integer orderB = b.getDisplayOrder() != null ? b.getDisplayOrder() : 0;
+                        int compare = orderA.compareTo(orderB);
+                        if (compare == 0) {
+                            String nameA = a.getCategoryName() != null ? a.getCategoryName() : "";
+                            String nameB = b.getCategoryName() != null ? b.getCategoryName() : "";
+                            return nameA.compareToIgnoreCase(nameB);
+                        }
+                        return compare;
+                    });
+                    break;
+            }
+        } else {
+            // Default: sort by displayOrder
+            categories.sort((a, b) -> {
+                Integer orderA = a.getDisplayOrder() != null ? a.getDisplayOrder() : 0;
+                Integer orderB = b.getDisplayOrder() != null ? b.getDisplayOrder() : 0;
+                int compare = orderA.compareTo(orderB);
+                if (compare == 0) {
+                    String nameA = a.getCategoryName() != null ? a.getCategoryName() : "";
+                    String nameB = b.getCategoryName() != null ? b.getCategoryName() : "";
+                    return nameA.compareToIgnoreCase(nameB);
+                }
+                return compare;
+            });
+        }
         
         return categories.stream()
                 .map(category -> {

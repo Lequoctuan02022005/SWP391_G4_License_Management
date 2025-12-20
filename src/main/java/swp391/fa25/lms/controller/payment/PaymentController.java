@@ -197,6 +197,11 @@ public class PaymentController {
 
             subscriptionRepo.save(newSub);
 
+            // Update seller active status and expiry date
+            seller.setSellerActive(true);
+            seller.setSellerExpiryDate(newSub.getEndDate());
+            accountRepo.saveAndFlush(seller);
+
             session.setAttribute("loggedInAccount", seller);
 
             flashSuccess(ra, "Thanh toán thành công! Gói Seller đã được kích hoạt. Bạn có thể bắt đầu bán tool ngay bây giờ!");

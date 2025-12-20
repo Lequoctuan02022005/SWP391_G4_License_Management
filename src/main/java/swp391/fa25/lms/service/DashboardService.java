@@ -125,8 +125,12 @@ public class DashboardService {
         data.put("revenueValues", revenueValues);
 
         // ===== SELLER PACKAGE =====
-        Optional<SellerSubscription> optLast =
-                dashboardRepository.findLatestSellerSubscription(sellerId);
+        List<SellerSubscription> subscriptions =
+                dashboardRepository.findLatestSellerSubscriptions(sellerId);
+        
+        Optional<SellerSubscription> optLast = subscriptions.isEmpty() 
+                ? Optional.empty() 
+                : Optional.of(subscriptions.get(0));
 
         if (optLast.isPresent()) {
 

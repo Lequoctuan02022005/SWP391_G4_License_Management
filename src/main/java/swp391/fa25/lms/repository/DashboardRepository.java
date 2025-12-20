@@ -134,5 +134,11 @@ public interface DashboardRepository extends JpaRepository<Account, Long> {
     """)
     List<ToolReport> findPendingToolReports();
 
-    Optional<SellerSubscription> findLatestSellerSubscription(Long sellerId);
+    @Query("""
+        SELECT ss
+        FROM SellerSubscription ss
+        WHERE ss.account.accountId = :sellerId
+        ORDER BY ss.endDate DESC, ss.id DESC
+    """)
+    List<SellerSubscription> findLatestSellerSubscriptions(@Param("sellerId") Long sellerId);
 }
