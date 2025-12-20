@@ -225,10 +225,9 @@
     </div>
 
 <!-- Non-seller: render header then the content fragment once -->
-<div th:if="${account == null or account.role.roleName.name() != 'SELLER'}"
+<div th:if="${account == null or account.role.roleName.name() == 'CUSTOMER'}"
      th:fragment="content">
-    <div th:if="${account.role.roleName.name() == 'CUSTOMER'} || ${account.role.roleName.name() == 'GUEST'}"
-         th:replace="common/header :: header"></div>
+    <div th:replace="common/header "></div>
     <main class="tl-page">
 
         <!-- PAGE HEADER -->
