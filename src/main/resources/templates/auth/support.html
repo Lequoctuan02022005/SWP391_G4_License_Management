@@ -12,7 +12,6 @@
 </head>
 
 <body>
-
 <!-- CUSTOMER or guest: use top header -->
 <div th:if="${account == null or account.role.roleName.name() == 'CUSTOMER' or account.role.roleName.name() == 'GUEST'}">
     <div th:replace="common/header :: header"></div>
@@ -148,7 +147,8 @@
             </div>
         </div>
     </th:block>
-</div>
 
+</div>
+<div th:replace="common/footer :: footer"></div>
 </body>
 </html>
