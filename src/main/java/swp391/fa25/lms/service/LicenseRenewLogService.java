@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class LicenseRenewLogService {
 
     private final LicenseRenewLogRepository repo;
-    // ===== CUSTOMER =====
+    //CUSTOMER
     public Page<LicenseRenewLog> filterForCustomer(
             Long customerId,
             LocalDate fromDate,
@@ -33,7 +33,7 @@ public class LicenseRenewLogService {
                 pageable
         );
     }
-    // ===== SELLER =====
+    //SELLER
     public Page<LicenseRenewLog> filterForSeller(
             Long sellerId,
             LocalDate fromDate,

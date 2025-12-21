@@ -119,12 +119,22 @@
                                     </span>
                                 </td>
 
-                                <td>
+                                <td class="d-flex gap-2">
+
+                                    <!-- DOWNLOAD -->
                                     <a th:href="@{${f.filePath}}"
                                        target="_blank"
                                        class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-download"></i> Download
+                                        <i class="bi bi-download"></i>
                                     </a>
+
+                                    <th:block th:if="${account.role.roleName.name() == 'MOD'}">
+                                        <button class="btn btn-sm btn-outline-success"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#uploadModal">
+                                            <i class="bi bi-upload"></i>
+                                        </button>
+                                    </th:block>
                                 </td>
                             </tr>
                             </tbody>
@@ -142,8 +152,8 @@
 
                         <!-- MOD ACTION -->
                         <th:block th:if="${account.role.roleName.name() == 'MOD'
-                                          and tool.status.name() == 'PENDING'}">
-
+                                  and tool.status.name() == 'PENDING'
+                                  and hasWrappedFile}">
                             <form th:action="@{/moderator/tool/{id}/approve(id=${tool.toolId})}"
                                   method="post"
                                   class="d-inline">
@@ -248,6 +258,42 @@
             <div class="modal-footer">
                 <button type="submit" class="btn btn-warning">
                     Confirm Pending
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form th:action="@{/moderator/tool/{id}/upload-file(id=${tool.toolId})}"
+              method="post"
+              enctype="multipart/form-data"
+              class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Upload New Tool File</h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <label class="form-label fw-bold">
+                    Tool File (.zip / .rar)
+                </label>
+
+                <input type="file"
+                       name="file"
+                       class="form-control"
+                       accept=".zip,.rar"
+                       required>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit"
+                        class="btn btn-success">
+                    Upload
                 </button>
             </div>
 

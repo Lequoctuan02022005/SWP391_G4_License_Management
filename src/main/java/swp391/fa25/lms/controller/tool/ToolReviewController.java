@@ -6,9 +6,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import swp391.fa25.lms.model.Account;
 import swp391.fa25.lms.model.Tool;
+import swp391.fa25.lms.model.ToolFile;
 import swp391.fa25.lms.service.ToolReviewService;
 import swp391.fa25.lms.service.CategoryService;
 
@@ -61,7 +63,13 @@ public class ToolReviewController {
                                       HttpServletRequest request,
                                       Model model) {
         Tool tool = toolReviewService.getToolOrThrow(id);
+
+        boolean hasWrappedFile = tool.getFiles() != null
+                && tool.getFiles().stream()
+                .anyMatch(f -> f.getFileType() == ToolFile.FileType.WRAPPED);
+
         model.addAttribute("tool", tool);
+        model.addAttribute("hasWrappedFile", hasWrappedFile);
         model.addAttribute("account", getSessionAccount(request));
         return "tool/tool-upload-detail";
     }
@@ -179,5 +187,20 @@ public class ToolReviewController {
             throw new RuntimeException("Session expired or not logged in");
         }
         return acc;
+    }
+    @PostMapping("/moderator/tool/{id}/upload-file")
+    public String uploadWrappedFile(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request,
+            RedirectAttributes ra
+    ) {
+
+        Account mod = getSessionAccount(request);
+
+        toolReviewService.modUploadWrappedFile(id, file, mod);
+
+        ra.addFlashAttribute("message", "Wrapped file uploaded successfully.");
+        return "redirect:/moderator/tool/" + id;
     }
 }

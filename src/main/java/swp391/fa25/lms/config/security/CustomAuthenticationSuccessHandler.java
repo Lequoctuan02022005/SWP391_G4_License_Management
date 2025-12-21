@@ -33,7 +33,7 @@ public class CustomAuthenticationSuccessHandler
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication)
-            throws IOException, ServletException {
+            throws IOException {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Optional<Account> optionalAccount = accountRepository.findByEmail(userDetails.getUsername());

@@ -18,7 +18,7 @@ public class CustomAuthenticationFailureHandler
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException exception
-    ) throws IOException, ServletException {
+    ) throws IOException {
 
         String error = "login_error";
 

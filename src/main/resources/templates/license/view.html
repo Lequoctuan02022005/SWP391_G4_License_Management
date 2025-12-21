@@ -144,10 +144,17 @@
                     </div>
                     <div th:if="${tool != null and tool.files != null and !tool.files.isEmpty()}">
                         <div style="display:flex; flex-direction:column; gap:8px;">
-                            <div th:each="file, iterStat : ${tool.files}" style="display:flex; align-items:center; gap:10px; padding:8px; border:1px solid #edf0f5; border-radius:8px; background:#fbfcff;">
+                            <div th:each="file : ${tool.files}"
+                                 th:if="${file.fileType.name() == 'WRAPPED'}" style="display:flex; align-items:center; gap:10px; padding:8px; border:1px solid #edf0f5; border-radius:8px; background:#fbfcff;">
+
                                 <div style="flex:1;">
-                                    <div style="font-weight:600; font-size:14px;" th:text="${file.fileType != null ? file.fileType : 'FILE'}">File Type</div>
-                                    <div class="muted" style="font-size:12px; word-break:break-all;" th:text="${file.filePath}">file path</div>
+                                    <div style="font-weight:600; font-size:14px;">
+                                        WRAPPED
+                                    </div>
+                                    <div class="muted"
+                                         style="font-size:12px; word-break:break-all;"
+                                         th:text="${file.filePath}">
+                                    </div>
                                 </div>
                                 <a th:href="${file.filePath}" 
                                    target="_blank" 
@@ -230,9 +237,6 @@
                         Renew
                     </button>
 
-                    <a class="btn btn-ghost" th:href="@{/customer/license-accounts/{id}/history(id=${la.licenseAccountId})}">
-                        History
-                    </a>
                 </div>
 
                 <div class="muted" style="margin-top:8px;">
