@@ -31,7 +31,7 @@ public class ProfileController {
     @GetMapping
     public String viewProfile(Authentication auth, Model model) {
         Account acc = profileService.getByEmail(auth.getName());
-        model.addAttribute("profile", acc);
+        model.addAttribute("profile", acc); // CHỈ DÙNG profile
         return "common/profile";
     }
 
@@ -43,44 +43,43 @@ public class ProfileController {
                                 @RequestParam String address,
                                 RedirectAttributes redirectAttributes) {
 
-        // Server-side validation:
-        // phone: empty or starts with 09/03 and 10 digits
+        // Phone validation
         String phonePattern = "^(09|03)\\d{8}$";
         if (phone != null && !phone.isBlank() && !phone.matches(phonePattern)) {
-            redirectAttributes.addFlashAttribute("updateError", "Số điện thoại phải là 10 chữ số và bắt đầu bằng 09 hoặc 03");
+            redirectAttributes.addFlashAttribute("updateError",
+                    "Số điện thoại phải có 10 chữ số và bắt đầu bằng 09 hoặc 03.");
             redirectAttributes.addFlashAttribute("openUpdateModal", true);
             return "redirect:/profile";
         }
 
-        // fullName: required, 3-100 letters (allow unicode letters, spaces and basic punctuation)
-        String fullNamePattern = "^[\\p{L} .'-]{3,100}$";
+        // Full name validation
+        String fullNamePattern = "^[\\p{L} .'-]{5,100}$";
         if (fullName == null || fullName.isBlank() || !fullName.matches(fullNamePattern)) {
-            redirectAttributes.addFlashAttribute("updateError", "Họ tên không hợp lệ (5-100 ký tự, chỉ chữ và khoảng trắng)");
+            redirectAttributes.addFlashAttribute("updateError",
+                    "Họ tên không hợp lệ (5–100 ký tự, chỉ chữ).");
             redirectAttributes.addFlashAttribute("openUpdateModal", true);
             return "redirect:/profile";
         }
 
-        // address: optional but if provided should be reasonable length
+        // Address validation
         if (address != null && !address.isBlank()) {
             if (address.length() < 5 || address.length() > 200) {
-                redirectAttributes.addFlashAttribute("updateError", "Địa chỉ không hợp lệ (5-200 ký tự)");
+                redirectAttributes.addFlashAttribute("updateError",
+                        "Địa chỉ phải từ 5 đến 200 ký tự.");
                 redirectAttributes.addFlashAttribute("openUpdateModal", true);
                 return "redirect:/profile";
             }
         }
 
         Account acc = profileService.getByEmail(auth.getName());
-
         acc.setFullName(fullName);
         acc.setPhone(phone);
         acc.setAddress(address);
         acc.setUpdatedAt(LocalDateTime.now());
 
         profileService.save(acc);
-
         return "redirect:/profile?updated=true";
     }
-
 
     // ====================== UPLOAD AVATAR ======================
     @PostMapping("/update-avatar")
@@ -91,34 +90,30 @@ public class ProfileController {
         Account acc = profileService.getByEmail(auth.getName());
 
         if (file == null || file.isEmpty()) {
-            redirectAttributes.addFlashAttribute(
-                    "avatarError",
-                    "Vui lòng chọn một file ảnh."
-            );
+            redirectAttributes.addFlashAttribute("avatarError",
+                    "Vui lòng chọn một file ảnh.");
             redirectAttributes.addFlashAttribute("openAvatarModal", true);
             return "redirect:/profile";
         }
 
-        String originalFilename = file.getOriginalFilename();
+        String filename = file.getOriginalFilename();
         String ext = "";
 
-        if (originalFilename != null && originalFilename.contains(".")) {
-            ext = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        if (filename != null && filename.contains(".")) {
+            ext = filename.substring(filename.lastIndexOf(".")).toLowerCase();
         }
 
         boolean valid = false;
-        for (String allowed : ALLOWED_IMAGE_EXTENSIONS) {
-            if (ext.equals(allowed)) {
+        for (String allow : ALLOWED_IMAGE_EXTENSIONS) {
+            if (allow.equals(ext)) {
                 valid = true;
                 break;
             }
         }
 
         if (!valid) {
-            redirectAttributes.addFlashAttribute(
-                    "avatarError",
-                    "Chỉ được upload file ảnh có đuôi: jpg, jpeg, png, gif, webp"
-            );
+            redirectAttributes.addFlashAttribute("avatarError",
+                    "Chỉ được upload ảnh (jpg, jpeg, png, gif, webp).");
             redirectAttributes.addFlashAttribute("openAvatarModal", true);
             return "redirect:/profile";
         }
@@ -128,42 +123,25 @@ public class ProfileController {
             File uploadDir = new File(uploadDirPath);
             if (!uploadDir.exists()) uploadDir.mkdirs();
 
-            // Xóa avatar cũ
             if (acc.getImages() != null && !acc.getImages().isBlank()) {
                 File oldFile = new File(uploadDir, acc.getImages());
                 if (oldFile.exists()) oldFile.delete();
             }
 
-            String fileName = "AVT_" + acc.getAccountId() + "_" + System.currentTimeMillis() + ext;
-            File dest = new File(uploadDir, fileName);
-            file.transferTo(dest);
+            String newFile = "AVT_" + acc.getAccountId() + "_" + System.currentTimeMillis() + ext;
+            file.transferTo(new File(uploadDir, newFile));
 
-            acc.setImages(fileName);
+            acc.setImages(newFile);
             acc.setUpdatedAt(LocalDateTime.now());
             profileService.save(acc);
 
         } catch (IOException e) {
-            redirectAttributes.addFlashAttribute(
-                    "avatarError",
-                    "Lỗi khi upload ảnh. Vui lòng thử lại."
-            );
+            redirectAttributes.addFlashAttribute("avatarError",
+                    "Lỗi upload ảnh. Vui lòng thử lại.");
             redirectAttributes.addFlashAttribute("openAvatarModal", true);
             return "redirect:/profile";
         }
 
         return "redirect:/profile?avatarUpdated=true";
     }
-
-    private boolean isValidImageExtension(String filename) {
-        String lower = filename.toLowerCase();
-        for (String ext : ALLOWED_IMAGE_EXTENSIONS) {
-            if (lower.endsWith(ext)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-
 }
