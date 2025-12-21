@@ -391,7 +391,7 @@
                             <input type="text" class="form-control"
                                    name="fullName"
                                    th:value="${profile.fullName}"
-                                   pattern="^[A-Za-zÀ-ÖØ-öø-ÿ .'-]{3,100}$"
+                                   pattern="^[\p{L} .'-]{3,100}$"
                                    minlength="3" maxlength="100"
                                    title="Full name 3-100 characters, only letters and spaces" required>
                         </div>
