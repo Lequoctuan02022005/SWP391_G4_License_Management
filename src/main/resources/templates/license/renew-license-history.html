@@ -105,29 +105,57 @@
                             <b th:text="${page.totalPages}"></b> —
                             Total <b th:text="${page.totalElements}"></b> records
                         </span>
+                        <div class="d-flex align-items-center gap-2">
 
+                            <span>Show</span>
+
+                            <form method="get" class="d-inline">
+                                <select name="size"
+                                        class="form-select form-select-sm d-inline w-auto"
+                                        onchange="this.form.submit()">
+
+                                    <option value="5"  th:selected="${page.size == 5}">5</option>
+                                    <option value="10" th:selected="${page.size == 10}">10</option>
+                                    <option value="20" th:selected="${page.size == 20}">20</option>
+                                    <option value="50" th:selected="${page.size == 50}">50</option>
+                                </select>
+
+                                <!-- reset về trang đầu -->
+                                <input type="hidden" name="page" value="0">
+
+                                <!-- giữ filter -->
+                                <input type="hidden" name="fromDate" th:value="${fromDate}">
+                                <input type="hidden" name="toDate" th:value="${toDate}">
+                                <input type="hidden" name="minAmount" th:value="${minAmount}">
+                                <input type="hidden" name="maxAmount" th:value="${maxAmount}">
+                            </form>
+
+                            <span>entries</span>
+                        </div>
                         <div class="btn-group">
                             <a class="btn btn-outline-secondary"
                                th:if="${page.hasPrevious()}"
-                               th:href="@{
-                                 ?page=${page.number - 1}
-                                 &fromDate=${fromDate}
-                                 &toDate=${toDate}
-                                 &minAmount=${minAmount}
-                                 &maxAmount=${maxAmount}
-                               }">
+                               th:href="@{/license/renew-history(
+                                page=${page.number - 1},
+                                size=${page.size},
+                                fromDate=${fromDate},
+                                toDate=${toDate},
+                                minAmount=${minAmount},
+                                maxAmount=${maxAmount}
+                                )}">
                                 « Previous
                             </a>
 
                             <a class="btn btn-outline-secondary"
-                               th:if="${page.hasNext()}"
-                               th:href="@{
-                                 ?page=${page.number + 1}
-                                 &fromDate=${fromDate}
-&toDate=${toDate}
-                                 &minAmount=${minAmount}
-                                 &maxAmount=${maxAmount}
-                               }">
+                                th:if="${page.hasNext()}"
+                                th:href="@{/license/renew-history(
+                                page=${page.number + 1},
+                                size=${page.size},
+                                fromDate=${fromDate},
+                                toDate=${toDate},
+                                minAmount=${minAmount},
+                                maxAmount=${maxAmount}
+                                         )}">
                                 Next »
                             </a>
                         </div>
@@ -155,10 +183,6 @@
             <div class="card-header bg-white">
                 <h5 class="fw-bold mb-0">License Renewal History</h5>
             </div>
-
-            <!-- FILTER + TABLE + PAGINATION (Y HỆT SELLER) -->
-            <!-- COPY NGUYÊN KHỐI Ở TRÊN XUỐNG, KHÔNG ĐỔI GÌ -->
-
             <!-- FILTER -->
             <div class="card-body border-bottom">
                 <form method="get" class="row g-3 align-items-end">
@@ -216,19 +240,47 @@
                     </tr>
                     </tbody>
                 </table>
-            </div><!-- PAGINATION -->
-            <div class="card-footer bg-white d-flex justify-content-between">
-                <span>
-                    Page <b th:text="${page.number + 1}"></b> /
-                    <b th:text="${page.totalPages}"></b> —
-                    Total <b th:text="${page.totalElements}"></b> records
-                </span>
+            </div>
 
+            <div class="card-footer bg-white d-flex justify-content-between">
+                        <span>
+                            Page <b th:text="${page.number + 1}"></b> /
+                            <b th:text="${page.totalPages}"></b> —
+                            Total <b th:text="${page.totalElements}"></b> records
+                        </span>
+            <div class="d-flex align-items-center gap-2">
+
+                <span>Show</span>
+
+                <form method="get" class="d-inline">
+                    <select name="size"
+                            class="form-select form-select-sm d-inline w-auto"
+                            onchange="this.form.submit()">
+
+                        <option value="5"  th:selected="${page.size == 5}">5</option>
+                        <option value="10" th:selected="${page.size == 10}">10</option>
+                        <option value="20" th:selected="${page.size == 20}">20</option>
+                        <option value="50" th:selected="${page.size == 50}">50</option>
+                    </select>
+
+                    <!-- reset về trang đầu -->
+                    <input type="hidden" name="page" value="0">
+
+                    <!-- giữ filter -->
+                    <input type="hidden" name="fromDate" th:value="${fromDate}">
+                    <input type="hidden" name="toDate" th:value="${toDate}">
+                    <input type="hidden" name="minAmount" th:value="${minAmount}">
+                    <input type="hidden" name="maxAmount" th:value="${maxAmount}">
+                </form>
+
+                <span>entries</span>
+            </div>
                 <div class="btn-group">
                     <a class="btn btn-outline-secondary"
                        th:if="${page.hasPrevious()}"
                        th:href="@{
                          ?page=${page.number - 1}
+                         &size=${page.size}
                          &fromDate=${fromDate}
                          &toDate=${toDate}
                          &minAmount=${minAmount}
@@ -241,6 +293,7 @@
                        th:if="${page.hasNext()}"
                        th:href="@{
                          ?page=${page.number + 1}
+                         &size=${page.size}
                          &fromDate=${fromDate}
                          &toDate=${toDate}
                          &minAmount=${minAmount}
