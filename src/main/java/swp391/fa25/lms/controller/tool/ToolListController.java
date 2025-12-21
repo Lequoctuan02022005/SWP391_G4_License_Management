@@ -33,7 +33,7 @@ public class ToolListController {
             @RequestParam(required = false) String priceMax,
             @RequestParam(required = false) String sort,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "6") int size,
+            @RequestParam(defaultValue = "8") int size,
             Model model,
             Authentication auth) {
 

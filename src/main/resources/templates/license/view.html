@@ -137,6 +137,35 @@
             </div>
 
             <div class="box full">
+                <div class="label">Tool Files (Download)</div>
+                <div class="value">
+                    <div th:if="${tool == null or tool.files == null or tool.files.isEmpty()}" class="muted">
+                        No files available for download
+                    </div>
+                    <div th:if="${tool != null and tool.files != null and !tool.files.isEmpty()}">
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <div th:each="file, iterStat : ${tool.files}" style="display:flex; align-items:center; gap:10px; padding:8px; border:1px solid #edf0f5; border-radius:8px; background:#fbfcff;">
+                                <div style="flex:1;">
+                                    <div style="font-weight:600; font-size:14px;" th:text="${file.fileType != null ? file.fileType : 'FILE'}">File Type</div>
+                                    <div class="muted" style="font-size:12px; word-break:break-all;" th:text="${file.filePath}">file path</div>
+                                </div>
+                                <a th:href="${file.filePath}" 
+                                   target="_blank" 
+                                   class="btn btn-primary" 
+                                   style="text-decoration:none; white-space:nowrap;"
+                                   download>
+                                     Download
+                                </a>
+                            </div>
+                        </div>
+                        <div class="muted" style="margin-top:8px; font-size:12px;">
+                            Click "Download" to download the tool file.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box full">
                 <div class="label">Login info</div>
                 <div class="value">
 

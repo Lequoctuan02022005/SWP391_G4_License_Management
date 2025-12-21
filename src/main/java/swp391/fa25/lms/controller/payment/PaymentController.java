@@ -52,7 +52,6 @@ public class PaymentController {
         return "00".equals(code);
     }
 
-    /** set cả 2 key để view nào đọc success/successMsg đều chạy */
     private void flashSuccess(RedirectAttributes ra, String msg) {
         ra.addFlashAttribute("success", msg);
         ra.addFlashAttribute("successMsg", msg);
@@ -67,8 +66,6 @@ public class PaymentController {
         if (tx == null || params == null) return;
 
         tx.setVnpayResponseCode(params.get("vnp_ResponseCode"));
-
-        // các field này anh đã dùng ở renew => assume entity có setter
         tx.setVnpayTransactionNo(params.get("vnp_TransactionNo"));
         tx.setVnpayBankCode(params.get("vnp_BankCode"));
         tx.setVnpayBankTranNo(params.get("vnp_BankTranNo"));

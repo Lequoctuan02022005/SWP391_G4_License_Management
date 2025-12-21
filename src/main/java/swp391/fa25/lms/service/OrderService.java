@@ -24,41 +24,6 @@ public class OrderService {
     private ToolRepository toolRepository;
 
     /**
-     * Tạo danh sách CustomerOrder từ CartItems và link với PaymentTransaction
-     * ✅ Mỗi Order có nhiều License thông qua OrderLicense
-     */
-    @Transactional
-    public List<CustomerOrder> createOrdersFromCart(Cart cart, PaymentTransaction transaction) {
-        List<CustomerOrder> orders = new ArrayList<>();
-
-        for (CartItem item : cart.getItems()) {
-            // Tạo Order
-            CustomerOrder order = new CustomerOrder();
-            order.setAccount(cart.getAccount());
-            order.setTool(item.getTool());
-            order.setPrice(item.getTotalPrice()); // Tổng giá = unitPrice * quantity
-            order.setOrderStatus(CustomerOrder.OrderStatus.PENDING);
-            order.setPaymentMethod(CustomerOrder.PaymentMethod.BANK);
-            order.setTransaction(transaction);
-            order.setCreatedAt(LocalDateTime.now());
-            order.setUpdatedAt(LocalDateTime.now());
-            order = orderRepository.save(order);
-
-            // Tạo OrderLicense (1 Order có 1 License với quantity)
-            OrderLicense orderLicense = new OrderLicense();
-            orderLicense.setOrder(order);
-            orderLicense.setLicense(item.getLicense());
-            orderLicense.setQuantity(item.getQuantity() != null ? item.getQuantity() : 1);
-            orderLicense.setUnitPrice(item.getUnitPrice() != null ? item.getUnitPrice() : item.getLicense().getPrice());
-            orderLicenseRepository.save(orderLicense);
-
-            orders.add(order);
-        }
-
-        return orders;
-    }
-
-    /**
      * ✅ Mỗi Order có nhiều License thông qua OrderLicense
      */
     @Transactional
